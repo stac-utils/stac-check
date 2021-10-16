@@ -9,7 +9,8 @@ setup(
     url="https://github.com/jonhealy1/stac-check",
     packages=find_packages(),
     install_requires=[
-        "click"
+        "click",
+        "stac-validator"
     ],
     entry_points={
         'console_scripts': ['stac_check=stac_check.main:main']

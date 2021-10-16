@@ -1,19 +1,14 @@
 import click
-import json
-import jsonschema
-from jsonschema import validate
+from stac_validator import stac_validator
 
 def parse_file(file):
-    f = open(file, "r")
-    valid = validate_file(f)
+    valid = validate_file(file)
     print(valid)
 
 def validate_file(file):
-    try:
-        json.load(file)
-    except ValueError as err:
-        return False
-    return True
+    stac = stac_validator.StacValidate(file)
+    stac.run()
+    return stac.message[0]["valid_stac"]
 
 @click.command()
 @click.argument('file')
