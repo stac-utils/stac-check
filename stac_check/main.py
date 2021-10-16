@@ -3,7 +3,7 @@ from stac_validator import stac_validator
 
 def parse_file(file):
     valid = validate_file(file)
-    print(valid)
+    print(f"Is this a valid stac? {valid}")
 
 def validate_file(file):
     stac = stac_validator.StacValidate(file)

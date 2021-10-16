@@ -10,7 +10,10 @@ setup(
     packages=find_packages(),
     install_requires=[
         "click",
-        "stac-validator"
+        "stac_validator==2.3.0"
+    ],
+    dependency_links=[
+        "https://test.pypi.org/simple/"
     ],
     entry_points={
         'console_scripts': ['stac_check=stac_check.main:main']
