@@ -2,6 +2,7 @@
 Linting and validation tool for STAC assets
 
 ``` pipenv shell ```   
+``` pip install -i https://test.pypi.org/simple/ stac-validator==2.3.0 ```   
 ``` pip install -e . ```   
 ``` stac_check sample_files/0.9.0/landsat8-sample.json```
 

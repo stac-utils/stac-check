@@ -2,9 +2,11 @@ import click
 import json
 from .lint.lint import Linter
 
-def cli_message(file):
+def load_linter(file):
     linter = Linter(file)
-    info = linter.parse_file()
+    return linter
+
+def cli_message(linter):
     if linter.version == "1.0.0":
         click.secho(linter.update_msg, fg='green')
     else:
@@ -17,9 +19,11 @@ def cli_message(file):
     click.secho(f"Schemas validated: {json.dumps(linter.schema, indent=4)}", fg="blue")
 
     ### Stac validator response for reference
-    click.secho(json.dumps(info, indent=4))
+    # info = linter.parse_file()
+    # click.secho(json.dumps(info, indent=4))
 
 @click.command()
 @click.argument('file')
 def main(file):
-    cli_message(file)
+    linter = load_linter(file)
+    cli_message(linter)

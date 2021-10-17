@@ -4,6 +4,9 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+pystac = "==0.5.6"
+jsonschema = "*"
+requests = "*"
 
 [dev-packages]
 
