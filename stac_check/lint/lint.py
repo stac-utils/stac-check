@@ -16,7 +16,7 @@ class Linter:
  
     def check_version(self, info):
         if self.message["valid_stac"] and self.message["version"] != "1.0.0":
-            info["update"] = "Please upgrade to STAC version 1.0.0!"
+            info["update"] = f"Please upgrade from version {self.message['version']} to version 1.0.0!"
         else:
             info["update"] = "Thanks for using STAC version 1.0.0!"
         return info
