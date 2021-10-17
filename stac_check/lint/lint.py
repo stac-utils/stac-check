@@ -1,14 +1,19 @@
 from stac_validator import stac_validator
 
 class Linter:
-    def __init__(self, item):
+    def __init__(
+        self, 
+        item = str
+    ):
         self.item = item
+        self.message = self.validate_file(self.item)
 
     def parse_file(self):
-        info = self.validate_file(self.item)
-        return info
+        return self.message
 
     def validate_file(self, file):
         stac = stac_validator.StacValidate(file)
         stac.run()
-        return stac.message[0]["valid_stac"]
+        return stac.message
+
+    
