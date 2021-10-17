@@ -14,11 +14,10 @@ def cli_message(file):
         click.secho(f"Valid stac: {info['stac_validator']['valid_stac']}", fg='green')
     else:
         click.secho(f"Valid stac: {info['stac_validator']['valid_stac']}", fg='red')
-    click.secho(f"Schemas validated: {json.dumps(info['stac_validator']['schema'], indent=4)}", fg="blue")
+    click.secho(f"Schemas validated: {json.dumps(info['schema'], indent=4)}", fg="blue")
 
-
-
-    click.secho(json.dumps(info["stac_validator"], indent=4))
+    ### Stac validator response for reference
+    # click.secho(json.dumps(info["stac_validator"], indent=4))
 
 @click.command()
 @click.argument('file')

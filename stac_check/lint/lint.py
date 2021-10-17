@@ -20,6 +20,7 @@ class Linter:
             info["update"] = f"Please upgrade from version {self.message['version']} to version 1.0.0!"
         else:
             info["update"] = "Thanks for using STAC version 1.0.0!"
+        info["schema"] = self.message["schema"]
         return info
 
     def validate_file(self, file):

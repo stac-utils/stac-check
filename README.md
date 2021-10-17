@@ -6,19 +6,13 @@ Linting and validation tool for STAC assets
 ``` stac_check sample_files/0.9.0/landsat8-sample.json```
 
 ```
+stac_check sample_files/0.9.0/landsat8-sample.json
 Please upgrade from version 0.9.0 to version 1.0.0!
-Validator: stac-validator 2.3.0  
+Validator: stac-validator 2.3.0 
 Valid stac: True
-{
-    "version": "0.9.0",
-    "path": "sample_files/0.9.0/landsat8-sample.json",
-    "schema": [
-        "https://cdn.staclint.com/v0.9.0/extension/eo.json",
-        "https://cdn.staclint.com/v0.9.0/extension/view.json",
-        "https://cdn.staclint.com/v0.9.0/item.json"
-    ],
-    "valid_stac": true,
-    "asset_type": "ITEM",
-    "validation_method": "default"
-}
+Schemas validated: [
+    "https://cdn.staclint.com/v0.9.0/extension/eo.json",
+    "https://cdn.staclint.com/v0.9.0/extension/view.json",
+    "https://cdn.staclint.com/v0.9.0/item.json"
+]
 ```
