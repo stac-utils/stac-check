@@ -7,7 +7,7 @@ class Linter:
     ):
         self.item = item
         self.version = ""
-        self.message = self.validate_file(self.item)
+        self.message = {}
         self.validator_version = "2.3.0"
         self.schema = []
         self.update_msg = ""
@@ -15,11 +15,11 @@ class Linter:
         self.valid_stac = False
 
     def parse_file(self):
+        self.message = self.validate_file(self.item)
         self.check_version()
         self.schema = self.message["schema"]
         self.asset_type = self.message["asset_type"]
         self.valid_stac = self.message["valid_stac"]
-        return self.message
  
     def check_version(self):
         self.version = self.message["version"]
