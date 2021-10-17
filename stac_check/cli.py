@@ -1,4 +1,5 @@
 import click
+import json
 from .lint.lint import Linter
 
 def cli_message(file):
@@ -10,4 +11,4 @@ def cli_message(file):
 @click.argument('file')
 def main(file):
     message = cli_message(file)
-    click.echo(message)
+    click.echo(json.dumps(message, indent=3))
