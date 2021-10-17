@@ -7,6 +7,7 @@ def load_linter(file):
     return linter
 
 def cli_message(linter):
+    info = linter.parse_file()
     if linter.version == "1.0.0":
         click.secho(linter.update_msg, fg='green')
     else:
@@ -19,8 +20,7 @@ def cli_message(linter):
     click.secho(f"Schemas validated: {json.dumps(linter.schema, indent=4)}", fg="blue")
 
     ### Stac validator response for reference
-    # info = linter.parse_file()
-    # click.secho(json.dumps(info, indent=4))
+    click.secho(json.dumps(info, indent=4))
 
 @click.command()
 @click.argument('file')
