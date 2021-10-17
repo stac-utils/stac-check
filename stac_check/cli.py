@@ -1,16 +1,12 @@
 import click
-from stac_validator import stac_validator
+from .lint.lint import Linter
 
-def parse_file(file):
-    valid = validate_file(file)
-    print(f"Is this a valid stac? {valid}")
-
-def validate_file(file):
-    stac = stac_validator.StacValidate(file)
-    stac.run()
-    return stac.message[0]["valid_stac"]
+def cli_message(info):
+    pass
 
 @click.command()
 @click.argument('file')
 def main(file):
-    parse_file(file)
+    linter = Linter(file)
+    info = linter.parse_file()
+    click.echo(info)
