@@ -7,6 +7,7 @@ class Linter:
     ):
         self.item = item
         self.message = self.validate_file(self.item)
+        self.validator_version = "2.3.0"
 
     def parse_file(self):
         info = {}
