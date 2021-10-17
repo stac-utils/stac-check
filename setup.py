@@ -16,7 +16,7 @@ setup(
         "https://test.pypi.org/simple/"
     ],
     entry_points={
-        'console_scripts': ['stac_check=stac_check.main:main']
+        'console_scripts': ['stac_check=stac_check.cli:main']
     },
     author="Jonathan Healy",
     license="MIT"
