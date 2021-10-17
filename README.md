@@ -6,7 +6,6 @@ Linting and validation tool for STAC assets
 ``` stac_check sample_files/0.9.0/landsat8-sample.json```
 
 ```
-stac_check sample_files/0.9.0/landsat8-sample.json
 Please upgrade from version 0.9.0 to version 1.0.0!
 Validator: stac-validator 2.3.0 
 Valid stac: True
