@@ -8,7 +8,7 @@ Linting and validation tool for STAC assets
 ```
 Please upgrade from version 0.9.0 to version 1.0.0!
 Validator: stac-validator 2.3.0 
-Valid stac: True
+Valid ITEM: True
 Schemas validated: [
     "https://cdn.staclint.com/v0.9.0/extension/eo.json",
     "https://cdn.staclint.com/v0.9.0/extension/view.json",

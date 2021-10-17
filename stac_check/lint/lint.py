@@ -6,22 +6,27 @@ class Linter:
         item = str
     ):
         self.item = item
+        self.version = ""
         self.message = self.validate_file(self.item)
         self.validator_version = "2.3.0"
+        self.schema = []
+        self.update_msg = ""
+        self.asset_type = ""
+        self.valid_stac = False
 
     def parse_file(self):
-        info = {}
-        info = self.check_version(info)
-        info["stac_validator"] = self.message
-        return info
+        self.check_version()
+        self.schema = self.message["schema"]
+        self.asset_type = self.message["asset_type"]
+        self.valid_stac = self.message["valid_stac"]
+        return self.message
  
-    def check_version(self, info):
-        if self.message["valid_stac"] and self.message["version"] != "1.0.0":
-            info["update"] = f"Please upgrade from version {self.message['version']} to version 1.0.0!"
+    def check_version(self):
+        self.version = self.message["version"]
+        if self.message["valid_stac"] and self.version != "1.0.0":
+            self.update_msg = f"Please upgrade from version {self.version} to version 1.0.0!"
         else:
-            info["update"] = "Thanks for using STAC version 1.0.0!"
-        info["schema"] = self.message["schema"]
-        return info
+            self.update_msg = "Thanks for using STAC version 1.0.0!"
 
     def validate_file(self, file):
         stac = stac_validator.StacValidate(file)
