@@ -29,3 +29,19 @@ Schemas validated:
 Link format error(s): 
     http:/remotdata.io/catalog/20201211_223832_CS2/index.html
 </pre>
+  
+  
+    
+``` stac_check sample_files/1.0.0/core-item-bad-links.json```    
+<pre>
+<b>stac-check: STAC spec validaton and linting tool</b>
+Please upgrade from version 0.9.0 to version 1.0.0!
+Validator: stac-validator 2.3.0
+Valid : False
+Schemas validated: 
+    https://cdn.staclint.com/v0.9.0/item.json
+Validation error type: 
+    ValidationError
+Validation error message: 
+    'id' is a required property of the root of the STAC object
+</pre>

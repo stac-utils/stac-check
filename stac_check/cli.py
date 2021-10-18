@@ -31,15 +31,17 @@ def cli_message(linter):
             click.secho(f"    {link}")
 
     if linter.error_type != "":
-        click.secho(f"Validation error type: {linter.error_type}", fg="red")
+        click.secho(f"Validation error type: ", fg="red")
+        click.secho(f"    {linter.error_type}")
 
     if linter.error_msg != "":
-        click.secho(f"Validation error message: {linter.error_msg}")
+        click.secho(f"Validation error message: ", fg='red')
+        click.secho(f"    {linter.error_msg}")
 
     click.secho()
 
     ### Stac validator response for reference
-    click.secho(json.dumps(linter.message, indent=4))
+    # click.secho(json.dumps(linter.message, indent=4))
 
 
 @click.command()
