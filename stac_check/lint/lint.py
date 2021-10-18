@@ -22,11 +22,14 @@ class Linter:
         self.check_version()
         self.check_link_format()
         self.check_errors()
+        self.check_asset_type()
         self.schema = self.message["schema"]
+        self.valid_stac = self.message["valid_stac"]
+
+    def check_asset_type(self):
         if "asset_type" in self.message:
             self.asset_type = self.message["asset_type"]
-        self.valid_stac = self.message["valid_stac"]
- 
+
     def check_version(self):
         self.version = self.message["version"]
         if self.version != "1.0.0":
