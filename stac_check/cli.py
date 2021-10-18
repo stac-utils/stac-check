@@ -19,11 +19,22 @@ def cli_message(linter):
         click.secho(f"Valid {linter.asset_type}: {linter.valid_stac}", fg='green')
     else:
         click.secho(f"Valid {linter.asset_type}: {linter.valid_stac}", fg='red')
-    click.secho(f"Schemas validated: {json.dumps(linter.schema, indent=4)}", fg="blue")
+
+    if len(linter.schema) > 0:
+        click.secho("Schemas validated: ", fg="blue")
+        for schema in linter.schema:
+            click.secho(f"    {schema}")
+
+    if len(linter.link_format) > 0:
+        click.secho("Link format error(s): ", fg="red")
+        for link in linter.link_format:
+            click.secho(f"    {link}")
+
     click.secho()
 
     ### Stac validator response for reference
     # click.secho(json.dumps(linter.message, indent=4))
+
 
 @click.command()
 @click.argument('file')

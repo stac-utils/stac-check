@@ -13,10 +13,12 @@ class Linter:
         self.update_msg = ""
         self.asset_type = ""
         self.valid_stac = False
+        self.link_format = []
 
     def parse_file(self):
         self.message = self.validate_file(self.item)
         self.check_version()
+        self.check_link_format()
         self.schema = self.message["schema"]
         self.asset_type = self.message["asset_type"]
         self.valid_stac = self.message["valid_stac"]
@@ -28,8 +30,11 @@ class Linter:
         else:
             self.update_msg = "Thanks for using STAC version 1.0.0!"
 
+    def check_link_format(self):
+        self.link_format = self.message["links_validated"]["format_invalid"]
+
     def validate_file(self, file):
-        stac = stac_validator.StacValidate(file)
+        stac = stac_validator.StacValidate(file, links=True)
         stac.run()
         return stac.message[0]
 
