@@ -32,7 +32,7 @@ Link format error(s):
   
   
     
-``` stac_check sample_files/1.0.0/core-item-bad-links.json```    
+``` stac_check sample_files/0.9.0/bad-item.json```    
 <pre>
 <b>stac-check: STAC spec validaton and linting tool</b>
 Please upgrade from version 0.9.0 to version 1.0.0!
