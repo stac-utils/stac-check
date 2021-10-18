@@ -30,6 +30,9 @@ def cli_message(linter):
         for link in linter.link_format:
             click.secho(f"    {link}")
 
+    if linter.error_type != "":
+        click.secho(f"Validation error type: {linter.error_type}", fg="red")
+
     click.secho()
 
     ### Stac validator response for reference
