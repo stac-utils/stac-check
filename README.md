@@ -11,9 +11,9 @@ Linting and validation tool for STAC assets
 <span style="background-color:#12488B"><font color="#D0CFCC">Validator: stac-validator 2.3.0</font></span>
 <font color="#26A269">Valid ITEM: True</font>
 <font color="#12488B">Schemas validated: </font>
-<font color="#12488B">    &quot;https://cdn.staclint.com/v0.9.0/extension/eo.json&quot;,</font>
-<font color="#12488B">    &quot;https://cdn.staclint.com/v0.9.0/extension/view.json&quot;,</font>
-<font color="#12488B">    &quot;https://cdn.staclint.com/v0.9.0/item.json&quot;</font>
+<font color="#12488B">    https://cdn.staclint.com/v0.9.0/extension/eo.json,</font>
+<font color="#12488B">    https://cdn.staclint.com/v0.9.0/extension/view.json,</font>
+<font color="#12488B">    https://cdn.staclint.com/v0.9.0/item.json,</font>
 <font color="#12488B"></font>
 </pre>
 
