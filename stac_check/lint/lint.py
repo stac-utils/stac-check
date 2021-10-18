@@ -1,11 +1,11 @@
 from stac_validator import stac_validator
+from dataclasses import dataclass
 
+@dataclass
 class Linter:
-    def __init__(
-        self, 
-        item = str
-    ):
-        self.item = item
+    item: str
+
+    def __post_init__(self):
         self.version = ""
         self.message = {}
         self.validator_version = "2.3.0"
