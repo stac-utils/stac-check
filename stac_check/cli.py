@@ -33,6 +33,9 @@ def cli_message(linter):
     if linter.error_type != "":
         click.secho(f"Validation error type: {linter.error_type}", fg="red")
 
+    if linter.error_msg != "":
+        click.secho(f"Validation error message: {linter.error_msg}")
+
     click.secho()
 
     ### Stac validator response for reference

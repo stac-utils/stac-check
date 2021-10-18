@@ -41,6 +41,8 @@ class Linter:
     def check_errors(self):
         if "error_type" in self.message:
             self.error_type = self.message["error_type"]
+        if "error_message" in self.message:
+            self.error_msg = self.message["error_message"]
 
     def validate_file(self, file):
         stac = stac_validator.StacValidate(file, links=True)
