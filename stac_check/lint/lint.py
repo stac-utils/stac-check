@@ -11,27 +11,28 @@ class Linter:
         self.link_format = self.check_link_format()
         self.asset_type = self.check_asset_type()
         self.validator_version = "2.3.0"
-        self.schema = []
+        self.schema = self.check_schema()
         self.update_msg = self.set_update_message()
-        self.valid_stac = False
-        self.error_type = ""
-        self.error_msg = ""
+        self.valid_stac = self.message["valid_stac"]
+        self.error_type = self.check_error_type()
+        self.error_msg = self.check_error_message()
 
     def validate_file(self, file):
         stac = stac_validator.StacValidate(file, links=True)
         stac.run()
         return stac.message[0]
 
-    def parse_file(self):
-        self.check_errors()
-        self.schema = self.message["schema"]
-        self.valid_stac = self.message["valid_stac"]
-
     def check_asset_type(self):
         if "asset_type" in self.message:
             return self.message["asset_type"]
         else:
             return ""
+
+    def check_schema(self):
+        if "schema" in self.message:
+            return self.message["schema"]
+        else:
+            return []
 
     def check_version(self):
         if "version" in self.message:
@@ -51,10 +52,16 @@ class Linter:
         else:
             return []
 
-    def check_errors(self):
+    def check_error_type(self):
         if "error_type" in self.message:
-            self.error_type = self.message["error_type"]
+            return self.message["error_type"]
+        else:
+            return ""
+
+    def check_error_message(self):
         if "error_message" in self.message:
-            self.error_msg = self.message["error_message"]
+            return self.message["error_message"]
+        else:
+            return ""
 
     

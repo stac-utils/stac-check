@@ -4,7 +4,6 @@ from .lint.lint import Linter
 
 def load_linter(file):
     linter = Linter(file)
-    linter.parse_file()
     return linter
 
 def cli_message(linter):
