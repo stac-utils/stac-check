@@ -6,6 +6,7 @@ class Linter:
     item: str
 
     def __post_init__(self):
+        self.message = self.validate_file(self.item)
         self.asset_type = self.check_asset_type()
         self.version = self.check_version()
         self.validator_version = "2.3.0"
@@ -16,7 +17,6 @@ class Linter:
         self.invalid_asset_format = self.check_asset_format(10)
         self.invalid_link_format = self.check_link_format(10)
         self.invalid_link_request = self.check_link_request(10)
-        self.message = self.validate_file(self.item)
         self.schema = self.check_schema()
 
     def validate_file(self, file):
