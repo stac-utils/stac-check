@@ -52,7 +52,8 @@ class Linter:
         invalid_assets_format = []
         if "assets_validated" in self.message:
             for invalid_format_url in self.message["assets_validated"]["format_invalid"]:
-                invalid_assets_format.append(invalid_format_url)
+                if invalid_format_url not in invalid_assets_format:
+                    invalid_assets_format.append(invalid_format_url)
                 num_links = num_links - 1
                 if num_links == 0:
                     return invalid_assets_format
@@ -62,7 +63,8 @@ class Linter:
         invalid_links_format = []
         if "links_validated" in self.message:
             for invalid_format_url in self.message["links_validated"]["format_invalid"]:
-                invalid_links_format.append(invalid_format_url)
+                if invalid_format_url not in invalid_links_format:
+                    invalid_links_format.append(invalid_format_url)
                 num_links = num_links - 1
                 if num_links == 0:
                     return invalid_links_format
