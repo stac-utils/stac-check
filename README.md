@@ -26,6 +26,8 @@ Validator: stac-validator 2.3.0
 Valid ITEM: True
 Schemas validated: 
     https://schemas.stacspec.org/v1.0.0/item-spec/json-schema/item.json
+Asset format error(s): 
+    https:/storage.googleapis.com/open-cogs/stac-examples/20201211_223832_CS2.jpg
 Link format error(s): 
     http:/remotdata.io/catalog/20201211_223832_CS2/index.html
 Link request error(s): 

@@ -50,7 +50,7 @@ def cli_message(linter):
     click.secho()
 
     ### Stac validator response for reference
-    click.secho(json.dumps(linter.message, indent=4))
+    # click.secho(json.dumps(linter.message, indent=4))
 
 
 @click.command()

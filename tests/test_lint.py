@@ -8,9 +8,13 @@ def test_linter_bad_links():
         "http://catalog/collection.json", 
         "http:/remotdata.io/catalog/20201211_223832_CS2/index.html"
     ]
+    asset_format_errors = [
+        "https:/storage.googleapis.com/open-cogs/stac-examples/20201211_223832_CS2.jpg"
+    ]
     assert linter.version == "1.0.0"
     assert linter.valid_stac == True
     assert linter.asset_type == "ITEM"
     assert len(linter.invalid_link_format) > 0
+    assert linter.invalid_asset_format == asset_format_errors
     assert linter.invalid_link_format == link_format_errors
     assert linter.invalid_link_request == link_request_errors
