@@ -34,8 +34,3 @@ jobs:
           pip install -i https://test.pypi.org/simple/ stac-validator==2.3.0
           pip install .
           pytest -v
-
-      - name: Run tox
-        run: |
-          pip install tox
-          tox -e py
