@@ -9,6 +9,7 @@ class Linter:
         self.message = self.validate_file(self.item)
         self.version = self.check_version()
         self.invalid_link_format = self.check_link_format()
+        self.invalid_link_request = self.check_link_request()
         self.asset_type = self.check_asset_type()
         self.validator_version = "2.3.0"
         self.schema = self.check_schema()
