@@ -28,6 +28,9 @@ Schemas validated:
     https://schemas.stacspec.org/v1.0.0/item-spec/json-schema/item.json
 Link format error(s): 
     http:/remotdata.io/catalog/20201211_223832_CS2/index.html
+Link request error(s): 
+    http://catalog/collection.json
+    http:/remotdata.io/catalog/20201211_223832_CS2/index.html
 </pre>
   
   
