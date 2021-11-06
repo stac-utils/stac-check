@@ -7,6 +7,7 @@ name = "pypi"
 pystac = "==0.5.6"
 jsonschema = "*"
 requests = "*"
+pytest = "*"
 
 [dev-packages]
 

@@ -8,7 +8,7 @@ class Linter:
     def __post_init__(self):
         self.message = self.validate_file(self.item)
         self.version = self.check_version()
-        self.link_format = self.check_link_format()
+        self.invalid_link_format = self.check_link_format()
         self.asset_type = self.check_asset_type()
         self.validator_version = "2.3.0"
         self.schema = self.check_schema()
@@ -47,10 +47,11 @@ class Linter:
             return "Thanks for using STAC version 1.0.0!"
 
     def check_link_format(self):
+        invalid_links_format = []
         if "links_validated" in self.message:
-            return self.message["links_validated"]["format_invalid"]
-        else:
-            return []
+            for invalid_format_url in self.message["links_validated"]["format_invalid"]:
+                invalid_links_format.append(invalid_format_url)
+        return invalid_links_format
 
     def check_error_type(self):
         if "error_type" in self.message:
