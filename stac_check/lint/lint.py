@@ -61,7 +61,8 @@ class Linter:
         invalid_links_request = []
         if "links_validated" in self.message:
             for invalid_request_url in self.message["links_validated"]["request_invalid"]:
-                invalid_links_request.append(invalid_request_url)
+                if invalid_request_url not in invalid_links_request and 'http' in invalid_request_url:
+                    invalid_links_request.append(invalid_request_url)
                 num_links = num_links - 1
                 if num_links == 0:
                     return invalid_links_request
