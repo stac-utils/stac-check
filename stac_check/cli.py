@@ -29,6 +29,11 @@ def cli_message(linter):
         for link in linter.invalid_link_format:
             click.secho(f"    {link}")
 
+    if len(linter.invalid_link_request) > 0:
+        click.secho("Link request error(s): ", fg="red")
+        for link in linter.invalid_link_request:
+            click.secho(f"    {link}")
+
     if linter.error_type != "":
         click.secho(f"Validation error type: ", fg="red")
         click.secho(f"    {linter.error_type}")
