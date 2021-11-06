@@ -15,6 +15,7 @@ class Linter:
         self.error_type = self.check_error_type()
         self.error_msg = self.check_error_message()
         self.invalid_asset_format = self.check_links_assets(10, "assets", "format")
+        self.invalid_asset_request = self.check_links_assets(10, "assets", "request")
         self.invalid_link_format = self.check_links_assets(10, "links", "format")
         self.invalid_link_request = self.check_links_assets(10, "links", "request")
         self.schema = self.check_schema()
