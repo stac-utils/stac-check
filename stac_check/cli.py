@@ -24,6 +24,11 @@ def cli_message(linter):
         for schema in linter.schema:
             click.secho(f"    {schema}")
 
+    if len(linter.invalid_asset_format) > 0:
+        click.secho("Asset format error(s): ", fg="red")
+        for asset in linter.invalid_asset_format:
+            click.secho(f"    {asset}")
+
     if len(linter.invalid_link_format) > 0:
         click.secho("Link format error(s): ", fg="red")
         for link in linter.invalid_link_format:
@@ -45,7 +50,7 @@ def cli_message(linter):
     click.secho()
 
     ### Stac validator response for reference
-    click.secho(json.dumps(linter.message, indent=4))
+    # click.secho(json.dumps(linter.message, indent=4))
 
 
 @click.command()
