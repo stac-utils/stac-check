@@ -71,5 +71,3 @@ class Linter:
             return self.message["error_message"]
         else:
             return ""
-
-    
