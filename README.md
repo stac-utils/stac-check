@@ -17,8 +17,9 @@ Linting and validation tool for STAC assets
 <font color="#12488B"></font>
 </pre>
 
-   
-``` stac_check sample_files/1.0.0/core-item-bad-links.json```    
+
+
+``` stac_check sample_files/1.0.0/core-item.json --assets```    
 <pre>
 <b>stac-check: STAC spec validaton and linting tool</b>
 Thanks for using STAC version 1.0.0!
@@ -26,11 +27,29 @@ Validator: stac-validator 2.3.0
 Valid ITEM: True
 Schemas validated: 
     https://schemas.stacspec.org/v1.0.0/item-spec/json-schema/item.json
-Asset format error(s): 
+No ASSET format errors!
+ASSET request errors: 
+    http://cool-sat.com/catalog/20201211_223832_CS2/20201211_223832_CS2.EPH
+</pre>
+
+
+   
+``` stac_check sample_files/1.0.0/core-item-bad-links.json --links --assets```    
+<pre>
+<b>stac-check: STAC spec validaton and linting tool</b>
+Thanks for using STAC version 1.0.0!
+Validator: stac-validator 2.3.0
+Valid ITEM: True
+Schemas validated: 
+    https://schemas.stacspec.org/v1.0.0/item-spec/json-schema/item.json
+ASSET format errors: 
     https:/storage.googleapis.com/open-cogs/stac-examples/20201211_223832_CS2.jpg
-Link format error(s): 
+ASSET request errors: 
+    https:/storage.googleapis.com/open-cogs/stac-examples/20201211_223832_CS2.jpg
+    http://cool-sat.com/catalog/20201211_223832_CS2/20201211_223832_CS2.EPH
+LINK format errors: 
     http:/remotdata.io/catalog/20201211_223832_CS2/index.html
-Link request error(s): 
+LINK request errors: 
     http://catalog/collection.json
     http:/remotdata.io/catalog/20201211_223832_CS2/index.html
 </pre>
