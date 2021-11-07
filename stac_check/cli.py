@@ -30,12 +30,12 @@ def cli_message(linter):
         for asset in linter.invalid_asset_request:
             click.secho(f"    {asset}")
 
-    if len(linter.invalid_link_format) > 0:
+    if linter.invalid_link_format and len(linter.invalid_link_format) > 0:
         click.secho("Link format error(s): ", fg="red")
         for link in linter.invalid_link_format:
             click.secho(f"    {link}")
 
-    if len(linter.invalid_link_request) > 0:
+    if linter.invalid_link_request and len(linter.invalid_link_request) > 0:
         click.secho("Link request error(s): ", fg="red")
         for link in linter.invalid_link_request:
             click.secho(f"    {link}")
@@ -51,13 +51,16 @@ def cli_message(linter):
     click.secho()
 
     ### Stac validator response for reference
-    click.secho(json.dumps(linter.message, indent=4))
+    # click.secho(json.dumps(linter.message, indent=4))
 
 @click.option(
     "-a", "--assets", is_flag=True, help="Validate assets for format and response."
 )
+@click.option(
+    "-l", "--links", is_flag=True, help="Validate links for format and response."
+)
 @click.command()
 @click.argument('file')
-def main(file, assets):
-    linter = Linter(file, assets)
+def main(file, assets, links):
+    linter = Linter(file, assets, links)
     cli_message(linter)
