@@ -23,7 +23,7 @@ class Linter:
         self.schema = self.check_schema()
 
     def validate_file(self, file):
-        stac = stac_validator.StacValidate(file, links=True, assets=self.assets)
+        stac = stac_validator.StacValidate(file, links=self.links, assets=self.assets)
         stac.run()
         return stac.message[0]
 

@@ -2,6 +2,14 @@ import click
 import json
 from .lint.lint import Linter
 
+def link_asset_message(link_list:list, type: str, format: str):
+    if len(link_list) > 0:
+        click.secho(f"{type.upper()} {format} errors: ", fg="red")
+        for asset in link_list:
+            click.secho(f"    {asset}")
+    else:
+        click.secho(f"No {type.upper()} {format} errors!", fg="green")
+
 def cli_message(linter):
     click.secho()
     click.secho("stac-check: STAC spec validaton and linting tool", bold=True)
@@ -20,25 +28,17 @@ def cli_message(linter):
         for schema in linter.schema:
             click.secho(f"    {schema}")
 
-    if linter.invalid_asset_format and len(linter.invalid_asset_format) > 0:
-        click.secho("Asset format error(s): ", fg="red")
-        for asset in linter.invalid_asset_format:
-            click.secho(f"    {asset}")
+    if linter.invalid_asset_format is not None:
+        link_asset_message(linter.invalid_asset_format, "asset", "format")
 
-    if linter.invalid_asset_request and len(linter.invalid_asset_request) > 0:
-        click.secho("Asset request error(s): ", fg="red")
-        for asset in linter.invalid_asset_request:
-            click.secho(f"    {asset}")
+    if linter.invalid_asset_request is not None:
+        link_asset_message(linter.invalid_asset_request, "asset", "request")
 
-    if linter.invalid_link_format and len(linter.invalid_link_format) > 0:
-        click.secho("Link format error(s): ", fg="red")
-        for link in linter.invalid_link_format:
-            click.secho(f"    {link}")
+    if linter.invalid_link_format is not None:
+        link_asset_message(linter.invalid_link_format, "link", "format")
 
-    if linter.invalid_link_request and len(linter.invalid_link_request) > 0:
-        click.secho("Link request error(s): ", fg="red")
-        for link in linter.invalid_link_request:
-            click.secho(f"    {link}")
+    if linter.invalid_link_request is not None:
+        link_asset_message(linter.invalid_link_request, "link", "request")
 
     if linter.error_type != "":
         click.secho(f"Validation error type: ", fg="red")
