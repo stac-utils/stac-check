@@ -1,6 +1,18 @@
 from stac_check.lint.lint import Linter
 import pytest
 
+def test_linter_bad_asset_requests():
+    file = "sample_files/1.0.0/core-item.json"
+    linter = Linter(file, assets=True)
+    asset_request_errors = [
+        "http://cool-sat.com/catalog/20201211_223832_CS2/20201211_223832_CS2.EPH"
+    ]
+    assert linter.version == "1.0.0"
+    assert linter.valid_stac == True
+    assert linter.asset_type == "ITEM"
+    assert linter.invalid_asset_format == []
+    assert linter.invalid_asset_request == asset_request_errors
+
 def test_linter_bad_assets():
     file = "sample_files/1.0.0/core-item-bad-links.json"
     linter = Linter(file, assets=True)
