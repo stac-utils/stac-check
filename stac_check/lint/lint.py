@@ -4,6 +4,7 @@ from dataclasses import dataclass
 @dataclass
 class Linter:
     item: str
+    assets: bool = False
 
     def __post_init__(self):
         self.message = self.validate_file(self.item)
