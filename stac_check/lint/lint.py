@@ -4,6 +4,7 @@ from dataclasses import dataclass
 @dataclass
 class Linter:
     item: str
+    assets: bool = False
 
     def __post_init__(self):
         self.message = self.validate_file(self.item)
@@ -14,14 +15,14 @@ class Linter:
         self.valid_stac = self.message["valid_stac"]
         self.error_type = self.check_error_type()
         self.error_msg = self.check_error_message()
-        self.invalid_asset_format = self.check_links_assets(10, "assets", "format")
-        self.invalid_asset_request = self.check_links_assets(10, "assets", "request")
+        self.invalid_asset_format = self.check_links_assets(10, "assets", "format") if self.assets else None
+        self.invalid_asset_request = self.check_links_assets(10, "assets", "request") if self.assets else None
         self.invalid_link_format = self.check_links_assets(10, "links", "format")
         self.invalid_link_request = self.check_links_assets(10, "links", "request")
         self.schema = self.check_schema()
 
     def validate_file(self, file):
-        stac = stac_validator.StacValidate(file, links=True, assets=True)
+        stac = stac_validator.StacValidate(file, links=True, assets=self.assets)
         stac.run()
         return stac.message[0]
 
@@ -51,7 +52,7 @@ class Linter:
 
     def check_links_assets(self, num_links:int, url_type:str, format_type:str):
         links = []
-        if "links_validated" in self.message:
+        if f"{url_type}_validated" in self.message:
             for invalid_request_url in self.message[f"{url_type}_validated"][f"{format_type}_invalid"]:
                 if invalid_request_url not in links and 'http' in invalid_request_url:
                     links.append(invalid_request_url)

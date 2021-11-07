@@ -2,10 +2,6 @@ import click
 import json
 from .lint.lint import Linter
 
-def load_linter(file):
-    linter = Linter(file)
-    return linter
-
 def cli_message(linter):
     click.secho()
     click.secho("stac-check: STAC spec validaton and linting tool", bold=True)
@@ -24,12 +20,12 @@ def cli_message(linter):
         for schema in linter.schema:
             click.secho(f"    {schema}")
 
-    if len(linter.invalid_asset_format) > 0:
+    if linter.invalid_asset_format and len(linter.invalid_asset_format) > 0:
         click.secho("Asset format error(s): ", fg="red")
         for asset in linter.invalid_asset_format:
             click.secho(f"    {asset}")
 
-    if len(linter.invalid_asset_request) > 0:
+    if linter.invalid_asset_request and len(linter.invalid_asset_request) > 0:
         click.secho("Asset request error(s): ", fg="red")
         for asset in linter.invalid_asset_request:
             click.secho(f"    {asset}")
@@ -55,11 +51,13 @@ def cli_message(linter):
     click.secho()
 
     ### Stac validator response for reference
-    # click.secho(json.dumps(linter.message, indent=4))
+    click.secho(json.dumps(linter.message, indent=4))
 
-
+@click.option(
+    "-a", "--assets", is_flag=True, help="Validate assets for format and response."
+)
 @click.command()
 @click.argument('file')
-def main(file):
-    linter = load_linter(file)
+def main(file, assets):
+    linter = Linter(file, assets)
     cli_message(linter)
