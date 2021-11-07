@@ -51,7 +51,7 @@ def cli_message(linter):
     click.secho()
 
     ### Stac validator response for reference
-    click.secho(json.dumps(linter.message, indent=4))
+    # click.secho(json.dumps(linter.message, indent=4))
 
 @click.option(
     "-a", "--assets", is_flag=True, help="Validate assets for format and response."
@@ -61,6 +61,6 @@ def cli_message(linter):
 )
 @click.command()
 @click.argument('file')
-def main(file, assets):
-    linter = Linter(file, assets)
+def main(file, assets, links):
+    linter = Linter(file, assets, links)
     cli_message(linter)

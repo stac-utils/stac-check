@@ -14,11 +14,10 @@ def test_linter_bad_assets():
     assert linter.version == "1.0.0"
     assert linter.valid_stac == True
     assert linter.asset_type == "ITEM"
-    assert len(linter.invalid_link_format) > 0
     assert linter.invalid_asset_format == asset_format_errors
     assert linter.invalid_asset_request == asset_request_errors
 
-@pytest.mark.skip(reason="links option not enabled")
+# @pytest.mark.skip(reason="links option not enabled")
 def test_linter_bad_links():
     file = "sample_files/1.0.0/core-item-bad-links.json"
     linter = Linter(file, links=True)
@@ -34,7 +33,7 @@ def test_linter_bad_links():
     assert linter.invalid_link_format == link_format_errors
     assert linter.invalid_link_request == link_request_errors
 
-@pytest.mark.skip(reason="links option not enabled")
+# @pytest.mark.skip(reason="links option not enabled")
 def test_linter_bad_links_assets():
     file = "sample_files/1.0.0/core-item-bad-links.json"
     linter = Linter(file, assets=True, links=True)

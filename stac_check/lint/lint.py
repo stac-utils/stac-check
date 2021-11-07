@@ -5,6 +5,7 @@ from dataclasses import dataclass
 class Linter:
     item: str
     assets: bool = False
+    links: bool = False
 
     def __post_init__(self):
         self.message = self.validate_file(self.item)
@@ -17,8 +18,8 @@ class Linter:
         self.error_msg = self.check_error_message()
         self.invalid_asset_format = self.check_links_assets(10, "assets", "format") if self.assets else None
         self.invalid_asset_request = self.check_links_assets(10, "assets", "request") if self.assets else None
-        self.invalid_link_format = self.check_links_assets(10, "links", "format")
-        self.invalid_link_request = self.check_links_assets(10, "links", "request")
+        self.invalid_link_format = self.check_links_assets(10, "links", "format") if self.links else None
+        self.invalid_link_request = self.check_links_assets(10, "links", "request") if self.links else None
         self.schema = self.check_schema()
 
     def validate_file(self, file):
