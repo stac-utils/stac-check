@@ -1,6 +1,8 @@
 # stac-check
 Linting and validation tool for STAC assets
 
+This project is a work in progress. The intent is to provide a validation tool that also follows tthe official STAC Best Practices document: https://github.com/radiantearth/stac-spec/blob/master/best-practices.md
+
 ``` pipenv shell ```   
 ``` pip install -i https://test.pypi.org/simple/ stac-validator==2.3.0 ```   
 ``` pip install -e . ```   
