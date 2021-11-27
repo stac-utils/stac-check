@@ -69,3 +69,19 @@ def test_linter_bad_links_assets():
     assert linter.invalid_asset_request == asset_request_errors
     assert linter.invalid_link_format == link_format_errors
     assert linter.invalid_link_request == link_request_errors
+
+def test_linter_collection():
+    file = "sample_files/1.0.0/collection.json"
+    linter = Linter(file, assets=False, links=False)
+    assert linter.version == "1.0.0"
+    assert linter.valid_stac == True
+    assert linter.asset_type == "COLLECTION"
+    assert linter.summaries == True
+
+def test_linter_collection_no_summaries():
+    file = "sample_files/1.0.0/collection_no_summaries.json"
+    linter = Linter(file, assets=False, links=False)
+    assert linter.version == "1.0.0"
+    assert linter.valid_stac == True
+    assert linter.asset_type == "COLLECTION"
+    assert linter.summaries == False
