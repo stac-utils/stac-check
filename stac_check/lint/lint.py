@@ -1,5 +1,6 @@
 from stac_validator import stac_validator
 from dataclasses import dataclass
+import json
 
 @dataclass
 class Linter:
@@ -9,6 +10,7 @@ class Linter:
 
     def __post_init__(self):
         self.message = self.validate_file(self.item)
+        self.data = self.load_data(self.item)
         self.asset_type = self.check_asset_type()
         self.version = self.check_version()
         self.validator_version = "2.3.0"
@@ -21,6 +23,12 @@ class Linter:
         self.invalid_link_format = self.check_links_assets(10, "links", "format") if self.links else None
         self.invalid_link_request = self.check_links_assets(10, "links", "request") if self.links else None
         self.schema = self.check_schema()
+        self.summaries = self.check_summaries()
+
+    def load_data(self, file):
+        with open(file) as json_file:
+            data = json.load(json_file)
+        return data
 
     def validate_file(self, file):
         stac = stac_validator.StacValidate(file, links=self.links, assets=self.assets)
@@ -73,3 +81,9 @@ class Linter:
             return self.message["error_message"]
         else:
             return ""
+
+    def check_summaries(self):
+        if "summaries" in self.data:
+            return True
+        else:
+            return False

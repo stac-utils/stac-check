@@ -10,7 +10,7 @@ def link_asset_message(link_list:list, type: str, format: str):
     else:
         click.secho(f"No {type.upper()} {format} errors!", fg="green")
 
-def cli_message(linter, data):
+def cli_message(linter):
     click.secho()
     click.secho("stac-check: STAC spec validaton and linting tool", bold=True)
     if linter.version == "1.0.0":
@@ -49,7 +49,7 @@ def cli_message(linter, data):
         click.secho(f"    {linter.error_msg}")
 
     if linter.asset_type == "COLLECTION":
-        if "summaries" not in data:
+        if linter.summaries == False:
             click.secho(f"WARNING: STAC Best Practices asks for a summaries field in a STAC collection", fg="red")
             click.secho(f"    https://github.com/radiantearth/stac-spec/blob/master/collection-spec/collection-spec.md")
     click.secho()
@@ -67,6 +67,4 @@ def cli_message(linter, data):
 @click.argument('file')
 def main(file, assets, links):
     linter = Linter(file, assets, links)
-    with open(file) as json_file:
-        data = json.load(json_file)
-    cli_message(linter, data)
+    cli_message(linter)
