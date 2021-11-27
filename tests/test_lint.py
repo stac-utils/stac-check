@@ -76,3 +76,12 @@ def test_linter_collection():
     assert linter.version == "1.0.0"
     assert linter.valid_stac == True
     assert linter.asset_type == "COLLECTION"
+    assert linter.summaries == True
+
+def test_linter_collection_no_summaries():
+    file = "sample_files/1.0.0/collection_no_summaries.json"
+    linter = Linter(file, assets=False, links=False)
+    assert linter.version == "1.0.0"
+    assert linter.valid_stac == True
+    assert linter.asset_type == "COLLECTION"
+    assert linter.summaries == False
