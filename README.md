@@ -20,6 +20,19 @@ This project is a work in progress. The intent is to provide a validation tool t
 </pre>
 
 
+``` stac_check sample_files/1.0.0/collection_no_summaries.json --assets```    
+<pre>
+<b>stac-check: STAC spec validaton and linting tool</b>
+Thanks for using STAC version 1.0.0!
+Validator: stac-validator 2.3.0
+Valid COLLECTION: True
+Schemas validated: 
+    https://schemas.stacspec.org/v1.0.0/collection-spec/json-schema/collection.json
+WARNING: STAC Best Practices asks for a summaries field in a STAC collection
+    https://github.com/radiantearth/stac-spec/blob/master/collection-spec/collection-spec.md
+</pre>
+
+
 
 ``` stac_check sample_files/1.0.0/core-item.json --assets```    
 <pre>
