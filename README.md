@@ -3,8 +3,7 @@ Linting and validation tool for STAC assets
 
 This project is a work in progress. The intent is to provide a validation tool that also follows the official STAC Best Practices document: https://github.com/radiantearth/stac-spec/blob/master/best-practices.md
 
-``` pipenv shell ```   
-``` pip install -i https://test.pypi.org/simple/ stac-validator==2.3.0 ```   
+``` pipenv shell ```     
 ``` pip install -e . ```   
 ``` stac_check sample_files/0.9.0/landsat8-sample.json```
 
