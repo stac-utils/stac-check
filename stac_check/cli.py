@@ -48,11 +48,20 @@ def cli_message(linter):
         click.secho(f"Validation error message: ", fg='red')
         click.secho(f"    {linter.error_msg}")
 
+    click.secho()
+
     if linter.asset_type == "COLLECTION" and linter.summaries == False:
         click.secho(f"WARNING: STAC Best Practices asks for a summaries field in a STAC collection", fg="red")
         click.secho(f"    https://github.com/radiantearth/stac-spec/blob/master/collection-spec/collection-spec.md")
-    click.secho()
+        click.secho()
 
+    if linter.num_links >= 20:
+        click.secho(f"WARNING: You have {linter.num_links} links. Please consider using sub-collections", fg="red")
+        click.secho(f"    https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#catalog--collection-practices")
+    else:
+        click.secho(f"This object has {linter.num_links} links", fg="green")
+
+    click.secho()
     ### Stac validator response for reference
     # click.secho(json.dumps(linter.message, indent=4))
 
