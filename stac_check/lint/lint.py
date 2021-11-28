@@ -24,6 +24,7 @@ class Linter:
         self.invalid_link_request = self.check_links_assets(10, "links", "request") if self.links else None
         self.schema = self.check_schema()
         self.summaries = self.check_summaries()
+        self.num_links = self.get_num_links()
 
     def load_data(self, file):
         with open(file) as json_file:
@@ -87,3 +88,9 @@ class Linter:
             return True
         else:
             return False
+
+    def get_num_links(self):
+        if "links" in self.data:
+            return len(self.data["links"])
+        else:
+            return 0

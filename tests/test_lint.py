@@ -92,3 +92,4 @@ def test_linter_catalog():
     assert linter.version == "1.0.0"
     assert linter.valid_stac == True
     assert linter.asset_type == "CATALOG"
+    assert linter.num_links == 6
