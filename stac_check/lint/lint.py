@@ -1,6 +1,6 @@
-from stac_validator import stac_validator
-from dataclasses import dataclass
+from stac_check.stac_validator.validate import StacValidate
 import json
+from dataclasses import dataclass
 
 @dataclass
 class Linter:
@@ -31,7 +31,7 @@ class Linter:
         return data
 
     def validate_file(self, file):
-        stac = stac_validator.StacValidate(file, links=self.links, assets=self.assets)
+        stac = StacValidate(file, links=self.links, assets=self.assets)
         stac.run()
         return stac.message[0]
 

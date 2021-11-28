@@ -9,8 +9,7 @@ setup(
     url="https://github.com/jonhealy1/stac-check",
     packages=find_packages(),
     install_requires=[
-        "click",
-        "stac_validator==2.3.0"
+        "click"
     ],
     dependency_links=[
         "https://test.pypi.org/simple/"
