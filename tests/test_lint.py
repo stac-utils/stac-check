@@ -85,3 +85,11 @@ def test_linter_collection_no_summaries():
     assert linter.valid_stac == True
     assert linter.asset_type == "COLLECTION"
     assert linter.summaries == False
+
+def test_linter_catalog():
+    file = "sample_files/1.0.0/catalog.json"
+    linter = Linter(file, assets=False, links=False)
+    assert linter.version == "1.0.0"
+    assert linter.valid_stac == True
+    assert linter.asset_type == "CATALOG"
+    assert linter.num_links == 6
