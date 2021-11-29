@@ -4,7 +4,7 @@ from stac_check.cli import main
 INTRO = "stac-check: STAC spec validaton and linting tool"
 VALID_ITEM = "Valid ITEM: True"
 VERSION_MSG_1 = "Thanks for using STAC version 1.0.0!"
-VALIDATOR = "Validator: stac-validator 2.3.0"
+VALIDATOR = "Validator: stac-validator 2.4.0"
 SCHEMA_MSG = "Schemas validated: "
 
 def test_core_item_100():
