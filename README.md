@@ -7,13 +7,12 @@ This project is a work in progress. The intent is to provide a validation tool t
 ``` pip install -e . ```   
 ``` stac_check sample_files/1.0.0/collection_no_summaries.json --recursive ```
 ```
-
      ____  ____  __    ___       ___  _  _  ____  ___  __ _ 
     / ___)(_  _)/ _\  / __)___  / __)/ )( \(  __)/ __)(  / )
     \___ \  )( /    \( (__(___)( (__ ) __ ( ) _)( (__  )  ( 
     (____/ (__)\_/\_/ \___)     \___)\_)(_/(____)\___)(__\_)
     
-<b>stac-check: STAC spec validaton and linting tool<b>
+stac-check: STAC spec validaton and linting tool
 
 Thanks for using STAC version 1.0.0!
 
