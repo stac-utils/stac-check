@@ -13,11 +13,19 @@ def link_asset_message(link_list:list, type: str, format: str):
 def cli_message(linter):
     click.secho()
     click.secho("stac-check: STAC spec validaton and linting tool", bold=True)
+
     if linter.version == "1.0.0":
         click.secho(linter.update_msg, fg='green')
     else:
         click.secho(linter.update_msg, fg='red')
-    click.secho(f"Validator: stac-validator {linter.validator_version}", bg="blue", fg="white")
+
+    if linter.recursive == True:
+        click.secho(f"Validator: pystac", bg="blue", fg="white")
+        click.secho(f"{linter.message}")
+        return
+    else:
+        click.secho(f"Validator: stac-validator {linter.validator_version}", bg="blue", fg="white")
+    
     if linter.valid_stac == True:
         click.secho(f"Valid {linter.asset_type}: {linter.valid_stac}", fg='green')
     else:
@@ -62,6 +70,7 @@ def cli_message(linter):
         click.secho(f"This object has {linter.num_links} links", fg="green")
 
     click.secho()
+
     ### Stac validator response for reference
     # click.secho(json.dumps(linter.message, indent=4))
 

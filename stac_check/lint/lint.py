@@ -1,15 +1,18 @@
 from stac_check.stac_validator.validate import StacValidate
 import json
 from dataclasses import dataclass
+import pystac
 
 @dataclass
 class Linter:
     item: str
     assets: bool = False
     links: bool = False
+    recursive: bool = False
 
     def __post_init__(self):
         self.message = self.validate_file(self.item)
+        self.validate_all = self.recursive_validation(self.load_data(self.item))
         self.data = self.load_data(self.item)
         self.asset_type = self.check_asset_type()
         self.version = self.check_version()
@@ -35,6 +38,15 @@ class Linter:
         stac = StacValidate(file, links=self.links, assets=self.assets)
         stac.run()
         return stac.message[0]
+
+    def recursive_validation(self, file):
+        if self.recursive:
+            try:
+                pystac.validation.validate_all(file, href="")
+                return True
+            except Exception as e:
+                self.message["error"] = f"Exception {str(e)}"
+                return False
 
     def check_asset_type(self):
         if "asset_type" in self.message:
