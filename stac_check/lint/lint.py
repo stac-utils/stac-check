@@ -2,6 +2,7 @@ from stac_check.stac_validator.validate import StacValidate
 import json
 from dataclasses import dataclass
 import pystac
+import requests
 
 @dataclass
 class Linter:
@@ -30,8 +31,12 @@ class Linter:
         self.validate_all = self.recursive_validation(self.load_data(self.item))
 
     def load_data(self, file):
-        with open(file) as json_file:
-            data = json.load(json_file)
+        if "http" or "https" in file:
+            resp = requests.get(file)
+            data = resp.json()
+        else:
+            with open(file) as json_file:
+                data = json.load(json_file)
         return data
 
     def validate_file(self, file):
