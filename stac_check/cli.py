@@ -74,6 +74,10 @@ def cli_message(linter):
         click.secho(f"Validation error message: ", fg='red')
         click.secho(f"    {linter.error_msg}")
 
+    if linter.recursive_error_msg != "":
+        click.secho(f"Recursive validation error message: ", fg='red')
+        click.secho(f"    {linter.recursive_error_msg}")
+
     click.secho()
 
     if linter.asset_type == "COLLECTION" and linter.summaries == False:

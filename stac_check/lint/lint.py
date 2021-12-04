@@ -30,6 +30,7 @@ class Linter:
         self.schema = self.check_schema()
         self.summaries = self.check_summaries()
         self.num_links = self.get_num_links()
+        self.recursive_error_msg = ""
         self.validate_all = self.recursive_validation(self.load_data(self.item))
 
     def load_data(self, file):
@@ -53,7 +54,7 @@ class Linter:
                 catalog.validate_all()
                 return True
             except Exception as e:
-                self.error_msg = f"Exception {str(e)}"
+                self.recursive_error_msg = f"Exception {str(e)}"
                 return False
 
     def check_asset_type(self):

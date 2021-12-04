@@ -93,3 +93,9 @@ def test_linter_catalog():
     assert linter.valid_stac == True
     assert linter.asset_type == "CATALOG"
     assert linter.num_links == 6
+
+def test_linter_collection_recursive_remote():
+    file = "https://raw.githubusercontent.com/stac-utils/pystac/main/tests/data-files/examples/0.9.0/collection-spec/examples/landsat-collection.json"
+    linter = Linter(file, assets=False, links=False, recursive=True)
+    assert linter.version == "0.9.0"
+    assert linter.recursive_error_msg == "Exception Could not read uri https://landsat-stac.s3.amazonaws.com/landsat-8-l1/paths/catalog.json"
