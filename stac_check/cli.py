@@ -49,10 +49,10 @@ def cli_message(linter):
 
     if linter.validate_all == True:
         click.secho()
-        click.secho(f"Pystac's validate_all passed!", fg='blue')
+        click.secho(f"Recursive validation has passed!", fg='blue')
     elif linter.validate_all == False and linter.recursive == True:
         click.secho()
-        click.secho(f"Pystac's validate_all failed!", fg='red')
+        click.secho(f"Recursive validation has failed!", fg='red')
 
     if linter.invalid_asset_format is not None:
         link_asset_message(linter.invalid_asset_format, "asset", "format")

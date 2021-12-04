@@ -5,30 +5,32 @@ This project is a work in progress. The intent is to provide a validation tool t
 
 ``` pipenv shell ```     
 ``` pip install -e . ```   
-``` stac_check sample_files/1.0.0/collection_no_summaries.json --recursive ```
+``` stac_check https://raw.githubusercontent.com/stac-utils/pystac/main/tests/data-files/examples/0.9.0/collection-spec/examples/landsat-collection.json --recursive ```
 ```
-     ____  ____  __    ___       ___  _  _  ____  ___  __ _ 
-    / ___)(_  _)/ _\  / __)___  / __)/ )( \(  __)/ __)(  / )
-    \___ \  )( /    \( (__(___)( (__ ) __ ( ) _)( (__  )  ( 
-    (____/ (__)\_/\_/ \___)     \___)\_)(_/(____)\___)(__\_)
+ ____  ____  __    ___       ___  _  _  ____  ___  __ _ 
+/ ___)(_  _)/ _\  / __)___  / __)/ )( \(  __)/ __)(  / )
+\___ \  )( /    \( (__(___)( (__ ) __ ( ) _)( (__  )  ( 
+(____/ (__)\_/\_/ \___)     \___)\_)(_/(____)\___)(__\_)
     
 stac-check: STAC spec validaton and linting tool
 
-Thanks for using STAC version 1.0.0!
+Please upgrade from version 0.9.0 to version 1.0.0!
 
 Validator: pystac 1.1.0
     Recursive: Validate all assets in a collection or catalog
 
 Valid COLLECTION: True
 Schemas validated: 
-    https://schemas.stacspec.org/v1.0.0/collection-spec/json-schema/collection.json
+    https://cdn.staclint.com/v0.9.0/collection.json
 
-Pystac's validate_all passed!
+Recursive validation has failed!
+Validation error message: 
+    Exception Could not read uri https://landsat-stac.s3.amazonaws.com/landsat-8-l1/paths/catalog.json
 
 WARNING: STAC Best Practices asks for a summaries field in a STAC collection
     https://github.com/radiantearth/stac-spec/blob/master/collection-spec/collection-spec.md
 
-This object has 5 links
+This object has 4 links
 ```
 
 ``` stac_check sample_files/0.9.0/landsat8-sample.json```
