@@ -66,6 +66,9 @@ def cli_message(linter):
     # click.secho(json.dumps(linter.message, indent=4))
 
 @click.option(
+    "-a", "--all", is_flag=True, help="Validate all assets in a collection or catalog."
+)
+@click.option(
     "-a", "--assets", is_flag=True, help="Validate assets for format and response."
 )
 @click.option(
