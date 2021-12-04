@@ -42,7 +42,8 @@ class Linter:
     def recursive_validation(self, file):
         if self.recursive:
             try:
-                pystac.validation.validate_all(file, href="")
+                catalog = pystac.read_dict(file)
+                catalog.validate_all()
                 return True
             except Exception as e:
                 self.error_msg = f"Exception {str(e)}"
