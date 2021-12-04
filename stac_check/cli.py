@@ -20,7 +20,7 @@ def cli_message(linter):
         click.secho(linter.update_msg, fg='red')
 
     if linter.recursive == True:
-        click.secho(f"Validator: pystac 0.5.6", bg="blue", fg="white")
+        click.secho(f"Validator: pystac 1.1.0", bg="blue", fg="white")
         click.secho(f"    Recursive: Validate all assets in a collection or catalog")
     else:
         click.secho(f"Validator: stac-validator {linter.validator_version}", bg="blue", fg="white")
