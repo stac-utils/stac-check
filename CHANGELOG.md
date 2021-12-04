@@ -7,6 +7,8 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 ## [v0.1.0] - 2021-11-26
 ### Added
 
+- Add url support, check for valid urls, validate urls
+- Add pystac validate_all to new cli option -> recursive
 - Update pystac from 0.5.6 to 1.1.0
 - Move stac-validator 2.3.0 into repository
 - Best practices check for too many links in object

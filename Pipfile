@@ -4,7 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-pystac = "==0.5.6"
+pystac = "==1.1.0"
 jsonschema = "*"
 requests = "*"
 pytest = "*"

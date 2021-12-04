@@ -1,16 +1,21 @@
 from stac_check.stac_validator.validate import StacValidate
+from stac_check.stac_validator.utilities import is_valid_url
 import json
 from dataclasses import dataclass
+import pystac
+import requests
+from urllib.parse import urlparse
 
 @dataclass
 class Linter:
     item: str
     assets: bool = False
     links: bool = False
+    recursive: bool = False
 
     def __post_init__(self):
-        self.message = self.validate_file(self.item)
         self.data = self.load_data(self.item)
+        self.message = self.validate_file(self.item)
         self.asset_type = self.check_asset_type()
         self.version = self.check_version()
         self.validator_version = "2.4.0"
@@ -25,16 +30,32 @@ class Linter:
         self.schema = self.check_schema()
         self.summaries = self.check_summaries()
         self.num_links = self.get_num_links()
+        self.recursive_error_msg = ""
+        self.validate_all = self.recursive_validation(self.load_data(self.item))
 
     def load_data(self, file):
-        with open(file) as json_file:
-            data = json.load(json_file)
+        if is_valid_url(file):
+            resp = requests.get(file)
+            data = resp.json()
+        else:
+            with open(file) as json_file:
+                data = json.load(json_file)
         return data
 
     def validate_file(self, file):
         stac = StacValidate(file, links=self.links, assets=self.assets)
         stac.run()
         return stac.message[0]
+
+    def recursive_validation(self, file):
+        if self.recursive:
+            try:
+                catalog = pystac.read_dict(file)
+                catalog.validate_all()
+                return True
+            except Exception as e:
+                self.recursive_error_msg = f"Exception {str(e)}"
+                return False
 
     def check_asset_type(self):
         if "asset_type" in self.message:
