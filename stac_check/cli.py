@@ -11,19 +11,31 @@ def link_asset_message(link_list:list, type: str, format: str):
         click.secho(f"No {type.upper()} {format} errors!", fg="green")
 
 def cli_message(linter):
-    click.secho()
+    click.secho("""
+     ____  ____  __    ___       ___  _  _  ____  ___  __ _ 
+    / ___)(_  _)/ _\  / __)___  / __)/ )( \(  __)/ __)(  / )
+    \___ \  )( /    \( (__(___)( (__ ) __ ( ) _)( (__  )  ( 
+    (____/ (__)\_/\_/ \___)     \___)\_)(_/(____)\___)(__\_)
+    """)
+
     click.secho("stac-check: STAC spec validaton and linting tool", bold=True)
+
+    click.secho()
 
     if linter.version == "1.0.0":
         click.secho(linter.update_msg, fg='green')
     else:
         click.secho(linter.update_msg, fg='red')
 
+    click.secho()
+
     if linter.recursive == True:
         click.secho(f"Validator: pystac 1.1.0", bg="blue", fg="white")
         click.secho(f"    Recursive: Validate all assets in a collection or catalog")
     else:
         click.secho(f"Validator: stac-validator {linter.validator_version}", bg="blue", fg="white")
+
+    click.secho()
     
     if linter.valid_stac == True:
         click.secho(f"Valid {linter.asset_type}: {linter.valid_stac}", fg='green')
@@ -34,6 +46,13 @@ def cli_message(linter):
         click.secho("Schemas validated: ", fg="blue")
         for schema in linter.schema:
             click.secho(f"    {schema}")
+
+    if linter.validate_all == True:
+        click.secho()
+        click.secho(f"Pystac's validate_all passed!", fg='blue')
+    elif linter.validate_all == False and linter.recursive == True:
+        click.secho()
+        click.secho(f"Pystac's validate_all failed!", fg='red')
 
     if linter.invalid_asset_format is not None:
         link_asset_message(linter.invalid_asset_format, "asset", "format")

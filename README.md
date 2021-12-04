@@ -5,6 +5,33 @@ This project is a work in progress. The intent is to provide a validation tool t
 
 ``` pipenv shell ```     
 ``` pip install -e . ```   
+``` stac_check sample_files/1.0.0/collection_no_summaries.json --recursive ```
+```
+
+     ____  ____  __    ___       ___  _  _  ____  ___  __ _ 
+    / ___)(_  _)/ _\  / __)___  / __)/ )( \(  __)/ __)(  / )
+    \___ \  )( /    \( (__(___)( (__ ) __ ( ) _)( (__  )  ( 
+    (____/ (__)\_/\_/ \___)     \___)\_)(_/(____)\___)(__\_)
+    
+stac-check: STAC spec validaton and linting tool
+
+Thanks for using STAC version 1.0.0!
+
+Validator: pystac 1.1.0
+    Recursive: Validate all assets in a collection or catalog
+
+Valid COLLECTION: True
+Schemas validated: 
+    https://schemas.stacspec.org/v1.0.0/collection-spec/json-schema/collection.json
+
+Pystac's validate_all passed!
+
+WARNING: STAC Best Practices asks for a summaries field in a STAC collection
+    https://github.com/radiantearth/stac-spec/blob/master/collection-spec/collection-spec.md
+
+This object has 5 links
+```
+
 ``` stac_check sample_files/0.9.0/landsat8-sample.json```
 
 <pre><b>stac-check: STAC spec validaton and linting tool</b>
@@ -17,21 +44,6 @@ This project is a work in progress. The intent is to provide a validation tool t
 <font color="#12488B">    https://cdn.staclint.com/v0.9.0/item.json,</font>
 <font color="#12488B"></font>
 </pre>
-
-
-``` stac_check sample_files/1.0.0/collection_no_summaries.json --assets```    
-<pre>
-<b>stac-check: STAC spec validaton and linting tool</b>
-Thanks for using STAC version 1.0.0!
-Validator: stac-validator 2.3.0
-Valid COLLECTION: True
-Schemas validated: 
-    https://schemas.stacspec.org/v1.0.0/collection-spec/json-schema/collection.json
-WARNING: STAC Best Practices asks for a summaries field in a STAC collection
-    https://github.com/radiantearth/stac-spec/blob/master/collection-spec/collection-spec.md
-</pre>
-
-
 
 ``` stac_check sample_files/1.0.0/core-item.json --assets```    
 <pre>
