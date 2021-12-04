@@ -12,7 +12,6 @@ class Linter:
 
     def __post_init__(self):
         self.message = self.validate_file(self.item)
-        self.validate_all = self.recursive_validation(self.load_data(self.item))
         self.data = self.load_data(self.item)
         self.asset_type = self.check_asset_type()
         self.version = self.check_version()
@@ -28,6 +27,7 @@ class Linter:
         self.schema = self.check_schema()
         self.summaries = self.check_summaries()
         self.num_links = self.get_num_links()
+        self.validate_all = self.recursive_validation(self.load_data(self.item))
 
     def load_data(self, file):
         with open(file) as json_file:
@@ -45,7 +45,7 @@ class Linter:
                 pystac.validation.validate_all(file, href="")
                 return True
             except Exception as e:
-                self.message["error"] = f"Exception {str(e)}"
+                self.error_msg = f"Exception {str(e)}"
                 return False
 
     def check_asset_type(self):
