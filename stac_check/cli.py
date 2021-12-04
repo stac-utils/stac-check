@@ -66,7 +66,7 @@ def cli_message(linter):
     # click.secho(json.dumps(linter.message, indent=4))
 
 @click.option(
-    "-a", "--all", is_flag=True, help="Validate all assets in a collection or catalog."
+    "-r", "--recursive", is_flag=True, help="Validate all assets in a collection or catalog."
 )
 @click.option(
     "-a", "--assets", is_flag=True, help="Validate assets for format and response."
@@ -76,6 +76,6 @@ def cli_message(linter):
 )
 @click.command()
 @click.argument('file')
-def main(file, assets, links):
-    linter = Linter(file, assets, links)
+def main(file, assets, links, recursive):
+    linter = Linter(file, assets, links, recursive)
     cli_message(linter)
