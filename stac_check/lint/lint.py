@@ -3,6 +3,7 @@ import json
 from dataclasses import dataclass
 import pystac
 import requests
+from urllib.parse import urlparse
 
 @dataclass
 class Linter:
@@ -12,8 +13,8 @@ class Linter:
     recursive: bool = False
 
     def __post_init__(self):
-        self.message = self.validate_file(self.item)
         self.data = self.load_data(self.item)
+        self.message = self.validate_file(self.item)
         self.asset_type = self.check_asset_type()
         self.version = self.check_version()
         self.validator_version = "2.4.0"
@@ -30,8 +31,15 @@ class Linter:
         self.num_links = self.get_num_links()
         self.validate_all = self.recursive_validation(self.load_data(self.item))
 
+    def is_valid_url(self, url: str) -> bool:
+        result = urlparse(url)
+        if result.scheme in ("http", "https"):
+            return True
+        else:
+            return False
+
     def load_data(self, file):
-        if "http" or "https" in file:
+        if self.is_valid_url(file):
             resp = requests.get(file)
             data = resp.json()
         else:
