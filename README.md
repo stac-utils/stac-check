@@ -13,7 +13,7 @@ This project is a work in progress. The intent is to provide a validation tool t
     \___ \  )( /    \( (__(___)( (__ ) __ ( ) _)( (__  )  ( 
     (____/ (__)\_/\_/ \___)     \___)\_)(_/(____)\___)(__\_)
     
-stac-check: STAC spec validaton and linting tool
+<b>stac-check: STAC spec validaton and linting tool<b>
 
 Thanks for using STAC version 1.0.0!
 
