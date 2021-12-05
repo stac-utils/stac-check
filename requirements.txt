@@ -1,4 +1,4 @@
-pystac==0.5.6
+pystac==1.1.0
 requests>=2.19.1
 jsonschema>=3.2.0
 pytest==6.2.5
