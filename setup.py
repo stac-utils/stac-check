@@ -15,7 +15,10 @@ setup(
     packages=find_packages(),
     install_requires=[
         "click",
-        "pystac[validation]==1.1.0"
+        "pystac[validation]==1.1.0",
+        "requests>=2.19.1",
+        "jsonschema>=3.2.0",
+        "pytest==6.2.5"
     ],
     entry_points={
         'console_scripts': ['stac_check=stac_check.cli:main']
