@@ -24,7 +24,7 @@ setup(
     license="MIT",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    download_url="https://github.com/sparkgeo/stac-check/archive/v0.1.0.tar.gz",
+    download_url="https://github.com/jonhealy1/stac-check/archive/refs/tags/v0.1.0.tar.gz",
     python_requires=">=3.7",
     tests_require=["pytest"]
 )
