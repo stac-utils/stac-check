@@ -45,24 +45,20 @@ def cli_message(linter):
     else:
         click.secho(f"Valid {linter.asset_type}: {linter.valid_stac}", fg='red')
 
-    ''' best practices - item ids should match file names'''
-    if linter.asset_type == "ITEM" and linter.object_id != linter.file_name:
-        click.secho()
-        click.secho("STAC Best Practices: Item names should match their ids.", fg='red')
-        click.secho(f"    '{linter.file_name}' not equal to '{linter.object_id}'")
-        click.secho()
-
-    ''' best practices - item ids should not contain ':' or '/' characters'''
-    if linter.asset_type == "ITEM" and "/" in linter.object_id or ":" in linter.object_id:
-        click.secho()
-        click.secho(f"STAC Best Practices: Item name '{linter.object_id}' should not contain ':' or '/'", fg='red')
-        click.secho(f"    https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#item-ids")
-        click.secho()
-
+    ''' schemas validated for core object '''
+    click.secho()
     if len(linter.schema) > 0:
         click.secho("Schemas validated: ", fg="blue")
         for schema in linter.schema:
             click.secho(f"    {schema}")
+
+    ''' best practices message'''
+    click.secho()
+    for message in linter.best_practices_msg:
+        if message == linter.best_practices_msg[0]:
+            click.secho(message, bg='blue')
+        else:
+            click.secho(message, fg='red')
 
     if linter.validate_all == True:
         click.secho()
@@ -101,16 +97,7 @@ def cli_message(linter):
 
     click.secho()
 
-    if linter.asset_type == "COLLECTION" and linter.summaries == False:
-        click.secho(f"WARNING: STAC Best Practices asks for a summaries field in a STAC collection", fg="red")
-        click.secho(f"    https://github.com/radiantearth/stac-spec/blob/master/collection-spec/collection-spec.md")
-        click.secho()
-
-    if linter.num_links >= 20:
-        click.secho(f"WARNING: You have {linter.num_links} links. Please consider using sub-collections or sub-catalogs", fg="red")
-        click.secho(f"    https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#catalog--collection-practices")
-    else:
-        click.secho(f"This object has {linter.num_links} links", fg="green")
+    click.secho(f"This object has {linter.num_links} links")
 
     click.secho()
 
