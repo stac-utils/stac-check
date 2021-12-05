@@ -7,6 +7,7 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 ## [v0.1.0] - 2021-11-26
 ### Added
 
+- Best practices check for item ids to see if they match file names
 - Add url support, check for valid urls, validate urls
 - Add pystac validate_all to new cli option -> recursive
 - Update pystac from 0.5.6 to 1.1.0
