@@ -66,15 +66,19 @@ def cli_message(linter):
         click.secho(f"Recursive validation has failed!", fg='red')
 
     if linter.invalid_asset_format is not None:
+        click.secho()
         link_asset_message(linter.invalid_asset_format, "asset", "format")
 
     if linter.invalid_asset_request is not None:
+        click.secho()
         link_asset_message(linter.invalid_asset_request, "asset", "request")
 
     if linter.invalid_link_format is not None:
+        click.secho()
         link_asset_message(linter.invalid_link_format, "link", "format")
 
     if linter.invalid_link_request is not None:
+        click.secho()
         link_asset_message(linter.invalid_link_request, "link", "request")
 
     if linter.error_type != "":
