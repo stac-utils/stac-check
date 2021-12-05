@@ -158,6 +158,13 @@ class Linter:
             best_practices.append(string_2)
             best_practices.append("")
 
+        if self.num_links >= 20:
+            string_1 = f"    You have {self.num_links} links. Please consider using sub-collections or sub-catalogs"
+            string_2 = f"    https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#catalog--collection-practices"
+            best_practices.append(string_1)
+            best_practices.append(string_2)
+            best_practices.append("")
+
         return best_practices
 
         

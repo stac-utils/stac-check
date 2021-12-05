@@ -94,11 +94,7 @@ def cli_message(linter):
 
     click.secho()
 
-    if linter.num_links >= 20:
-        click.secho(f"WARNING: You have {linter.num_links} links. Please consider using sub-collections or sub-catalogs", fg="red")
-        click.secho(f"    https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#catalog--collection-practices")
-    else:
-        click.secho(f"This object has {linter.num_links} links", fg="green")
+    click.secho(f"This object has {linter.num_links} links")
 
     click.secho()
 
