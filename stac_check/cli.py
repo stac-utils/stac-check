@@ -1,7 +1,7 @@
 import click
 import json
 import os
-from .lint.lint import Linter
+from .lint import Linter
 
 def link_asset_message(link_list:list, type: str, format: str):
     if len(link_list) > 0:
