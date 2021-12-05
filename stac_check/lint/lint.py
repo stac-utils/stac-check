@@ -126,4 +126,4 @@ class Linter:
             return ""
 
     def get_file_name(self):
-        return os.path.basename(self.item)
+        return os.path.basename(self.item).split('.')[0]

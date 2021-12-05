@@ -29,7 +29,7 @@ def test_linter_bad_assets():
     assert linter.invalid_asset_format == asset_format_errors
     assert linter.invalid_asset_request == asset_request_errors
 
-# @pytest.mark.skip(reason="links option not enabled")
+
 def test_linter_bad_links():
     file = "sample_files/1.0.0/core-item-bad-links.json"
     linter = Linter(file, links=True)
@@ -45,7 +45,7 @@ def test_linter_bad_links():
     assert linter.invalid_link_format == link_format_errors
     assert linter.invalid_link_request == link_request_errors
 
-# @pytest.mark.skip(reason="links option not enabled")
+
 def test_linter_bad_links_assets():
     file = "sample_files/1.0.0/core-item-bad-links.json"
     linter = Linter(file, assets=True, links=True)
@@ -100,3 +100,10 @@ def test_linter_collection_recursive_remote():
     assert linter.version == "0.9.0"
     assert linter.recursive == True
     assert linter.recursive_error_msg == "Exception Could not read uri https://landsat-stac.s3.amazonaws.com/landsat-8-l1/paths/catalog.json"
+
+def test_linter_item_id_not_matching_file_name():
+    file = "sample_files/1.0.0/core-item.json"
+    linter = Linter(file)
+    assert linter.file_name == "core-item"
+    assert linter.object_id == "20201211_223832_CS2"
+    assert linter.file_name != linter.object_id
