@@ -1,0 +1,10 @@
+[build-system]
+requires = [
+    "requests",
+    "jsonschema",
+    "pystac",
+    "click",
+    "setuptools",
+    "pytest"
+]
+build-backend = "setuptools.build_meta"

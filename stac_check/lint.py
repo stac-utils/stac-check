@@ -1,5 +1,5 @@
-from stac_check.stac_validator.validate import StacValidate
-from stac_check.stac_validator.utilities import is_valid_url
+from .validate import StacValidate
+from .utilities import is_valid_url
 import json
 import os
 from dataclasses import dataclass

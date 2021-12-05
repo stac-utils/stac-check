@@ -1,4 +1,4 @@
-from stac_check.lint.lint import Linter
+from stac_check.lint import Linter
 import pytest
 
 def test_linter_bad_asset_requests():
