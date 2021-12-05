@@ -85,6 +85,12 @@ def test_linter_collection_no_summaries():
     assert linter.valid_stac == True
     assert linter.asset_type == "COLLECTION"
     assert linter.summaries == False
+    assert linter.best_practices_msg == [
+        "STAC Best Practices: ",
+        "    A STAC collection should contain a summaries field",
+        "    https://github.com/radiantearth/stac-spec/blob/master/collection-spec/collection-spec.md",
+        ""
+    ]
 
 def test_linter_catalog():
     file = "sample_files/1.0.0/catalog.json"
@@ -107,3 +113,6 @@ def test_linter_item_id_not_matching_file_name():
     assert linter.file_name == "core-item"
     assert linter.object_id == "20201211_223832_CS2"
     assert linter.file_name != linter.object_id
+
+def test_linter_messages():
+    file = "sample_files/1.0.0/core-item.json"
