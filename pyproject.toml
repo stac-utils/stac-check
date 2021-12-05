@@ -2,8 +2,9 @@
 requires = [
     "requests",
     "jsonschema",
-    "pystac[validation]==1.1.0",
+    "pystac[validation]",
     "click",
     "setuptools"
+    "pytest"
 ]
 build-backend = "setuptools.build_meta"
