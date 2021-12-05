@@ -45,17 +45,20 @@ def cli_message(linter):
     else:
         click.secho(f"Valid {linter.asset_type}: {linter.valid_stac}", fg='red')
 
+    ''' schemas validated for core object '''
+    click.secho()
+    if len(linter.schema) > 0:
+        click.secho("Schemas validated: ", fg="blue")
+        for schema in linter.schema:
+            click.secho(f"    {schema}")
+
+    ''' best practices message'''
     click.secho()
     for message in linter.best_practices_msg:
         if message == linter.best_practices_msg[0]:
             click.secho(message, bg='blue')
         else:
             click.secho(message, fg='red')
-
-    if len(linter.schema) > 0:
-        click.secho("Schemas validated: ", fg="blue")
-        for schema in linter.schema:
-            click.secho(f"    {schema}")
 
     if linter.validate_all == True:
         click.secho()
