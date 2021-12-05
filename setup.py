@@ -2,7 +2,7 @@
 """
 from setuptools import setup, find_packages
 
-__version__ = "0.1.0"
+__version__ = "2.2.0"
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -24,7 +24,4 @@ setup(
     license="MIT",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    download_url="https://github.com/jonhealy1/stac-check/archive/refs/tags/v0.1.0.tar.gz",
-    python_requires=">=3.7",
-    tests_require=["pytest"]
 )
