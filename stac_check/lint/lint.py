@@ -142,6 +142,14 @@ class Linter:
             best_practices.append(string_2)
             best_practices.append("")
 
+        # best practices - item ids should match file names'''
+        if self.asset_type == "ITEM" and self.object_id != self.file_name:
+            string_1 = f"    Item names should match their ids"
+            string_2 = f"    '{self.file_name}' not equal to '{self.object_id}'"
+            best_practices.append(string_1)
+            best_practices.append(string_2)
+            best_practices.append("")
+
         return best_practices
 
         

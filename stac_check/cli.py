@@ -45,13 +45,7 @@ def cli_message(linter):
     else:
         click.secho(f"Valid {linter.asset_type}: {linter.valid_stac}", fg='red')
 
-    ''' best practices - item ids should match file names'''
-    if linter.asset_type == "ITEM" and linter.object_id != linter.file_name:
-        click.secho()
-        click.secho("STAC Best Practices: Item names should match their ids.", fg='red')
-        click.secho(f"    '{linter.file_name}' not equal to '{linter.object_id}'")
-        click.secho()
-
+    click.secho()
     for message in linter.best_practices_msg:
         if message == linter.best_practices_msg[0]:
             click.secho(message, bg='blue')
