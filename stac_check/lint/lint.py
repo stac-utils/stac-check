@@ -1,6 +1,7 @@
 from stac_check.stac_validator.validate import StacValidate
 from stac_check.stac_validator.utilities import is_valid_url
 import json
+import os
 from dataclasses import dataclass
 import pystac
 import requests
@@ -32,6 +33,8 @@ class Linter:
         self.num_links = self.get_num_links()
         self.recursive_error_msg = ""
         self.validate_all = self.recursive_validation(self.load_data(self.item))
+        self.object_id = self.return_id()
+        self.file_name = self.get_file_name()
 
     def load_data(self, file):
         if is_valid_url(file):
@@ -115,3 +118,12 @@ class Linter:
             return len(self.data["links"])
         else:
             return 0
+
+    def return_id(self):
+        if "id" in self.data:
+            return self.data["id"]
+        else:
+            return ""
+
+    def get_file_name(self):
+        return os.path.basename(self.item).split('.')[0]
