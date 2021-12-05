@@ -35,6 +35,7 @@ class Linter:
         self.validate_all = self.recursive_validation(self.load_data(self.item))
         self.object_id = self.return_id()
         self.file_name = self.get_file_name()
+        self.best_practices_msg = self.create_best_practices_msg()
 
     def load_data(self, file):
         if is_valid_url(file):
@@ -127,3 +128,41 @@ class Linter:
 
     def get_file_name(self):
         return os.path.basename(self.item).split('.')[0]
+
+    def create_best_practices_msg(self):
+        best_practices = list()
+        base_string = "STAC Best Practices: "
+        best_practices.append(base_string)
+
+        # best practices - item ids should not contain ':' or '/' characters
+        if self.asset_type == "ITEM" and "/" in self.object_id or ":" in self.object_id:
+            string_1 = f"    Item name '{self.object_id}' should not contain ':' or '/'"
+            string_2 = f"    https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#item-ids"
+            best_practices.append(string_1)
+            best_practices.append(string_2)
+            best_practices.append("")
+
+        # best practices - item ids should match file names
+        if self.asset_type == "ITEM" and self.object_id != self.file_name:
+            string_1 = f"    Item names should match their ids"
+            string_2 = f"    '{self.file_name}' not equal to '{self.object_id}'"
+            best_practices.append(string_1)
+            best_practices.append(string_2)
+            best_practices.append("")
+
+        # best practices - collections should contain summaries
+        if self.asset_type == "COLLECTION" and self.summaries == False:
+            string_1 = f"    A STAC collection should contain a summaries field"
+            string_2 = f"    https://github.com/radiantearth/stac-spec/blob/master/collection-spec/collection-spec.md"
+            best_practices.append(string_1)
+            best_practices.append(string_2)
+            best_practices.append("")
+
+        if self.num_links >= 20:
+            string_1 = f"    You have {self.num_links} links. Please consider using sub-collections or sub-catalogs"
+            string_2 = f"    https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#catalog--collection-practices"
+            best_practices.append(string_1)
+            best_practices.append(string_2)
+            best_practices.append("")
+
+        return best_practices
