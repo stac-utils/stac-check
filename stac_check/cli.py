@@ -1,5 +1,6 @@
 import click
 import json
+import os
 from .lint.lint import Linter
 
 def link_asset_message(link_list:list, type: str, format: str):
@@ -37,10 +38,20 @@ def cli_message(linter):
 
     click.secho()
     
+    # valid stac object message
     if linter.valid_stac == True:
         click.secho(f"Valid {linter.asset_type}: {linter.valid_stac}", fg='green')
     else:
         click.secho(f"Valid {linter.asset_type}: {linter.valid_stac}", fg='red')
+
+    # best practices - item ids should match file names
+    if linter.asset_type == "ITEM":
+        file_name = linter.file_name.split(".")[0]
+        if linter.object_id != file_name:
+            click.secho()
+            click.secho("STAC Best Practices: Item names should match their ids", fg='red')
+            click.secho(f"    '{file_name}' not equal to '{linter.object_id}'")
+            click.secho()
 
     if len(linter.schema) > 0:
         click.secho("Schemas validated: ", fg="blue")
