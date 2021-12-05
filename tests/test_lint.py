@@ -113,6 +113,3 @@ def test_linter_item_id_not_matching_file_name():
     assert linter.file_name == "core-item"
     assert linter.object_id == "20201211_223832_CS2"
     assert linter.file_name != linter.object_id
-
-def test_linter_messages():
-    file = "sample_files/1.0.0/core-item.json"
