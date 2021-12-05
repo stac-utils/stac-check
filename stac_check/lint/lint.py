@@ -130,4 +130,18 @@ class Linter:
         return os.path.basename(self.item).split('.')[0]
 
     def create_best_practices_msg(self):
-        pass
+        best_practices = list()
+        base_string = "STAC Best Practices: "
+        best_practices.append(base_string)
+
+        # best practices - item ids should not contain ':' or '/' characters
+        if self.asset_type == "ITEM" and "/" in self.object_id or ":" in self.object_id:
+            string_1 = f"    Item name '{self.object_id}' should not contain ':' or '/'"
+            string_2 = f"    https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#item-ids"
+            best_practices.append(string_1)
+            best_practices.append(string_2)
+            best_practices.append("")
+
+        return best_practices
+
+        

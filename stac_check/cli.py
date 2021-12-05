@@ -52,12 +52,11 @@ def cli_message(linter):
         click.secho(f"    '{linter.file_name}' not equal to '{linter.object_id}'")
         click.secho()
 
-    ''' best practices - item ids should not contain ':' or '/' characters'''
-    if linter.asset_type == "ITEM" and "/" in linter.object_id or ":" in linter.object_id:
-        click.secho()
-        click.secho(f"STAC Best Practices: Item name '{linter.object_id}' should not contain ':' or '/'", fg='red')
-        click.secho(f"    https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#item-ids")
-        click.secho()
+    for message in linter.best_practices_msg:
+        if message == linter.best_practices_msg[0]:
+            click.secho(message, bg='blue')
+        else:
+            click.secho(message, fg='red')
 
     if len(linter.schema) > 0:
         click.secho("Schemas validated: ", fg="blue")
