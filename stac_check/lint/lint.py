@@ -35,6 +35,7 @@ class Linter:
         self.validate_all = self.recursive_validation(self.load_data(self.item))
         self.object_id = self.return_id()
         self.file_name = self.get_file_name()
+        self.best_practices_msg = self.create_best_practices_msg()
 
     def load_data(self, file):
         if is_valid_url(file):
@@ -127,3 +128,6 @@ class Linter:
 
     def get_file_name(self):
         return os.path.basename(self.item).split('.')[0]
+
+    def create_best_practices_msg(self):
+        pass
