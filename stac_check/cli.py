@@ -115,6 +115,7 @@ def cli_message(linter):
 )
 @click.command()
 @click.argument('file')
+@click.version_option(version="0.1.4")
 def main(file, assets, links, recursive):
     linter = Linter(file, assets, links, recursive)
     cli_message(linter)
