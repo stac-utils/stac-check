@@ -30,6 +30,7 @@ def cli_message(linter):
 
     click.secho()
 
+    ''' validator used - pystac if recursive otherwise stac-validator '''
     if linter.recursive == True:
         click.secho(f"Validator: pystac 1.1.0", bg="blue", fg="white")
         click.secho(f"    Recursive: Validate all assets in a collection or catalog")
@@ -38,17 +39,24 @@ def cli_message(linter):
 
     click.secho()
     
-    # valid stac object message
+    ''' valid stac object message - true or false '''
     if linter.valid_stac == True:
         click.secho(f"Valid {linter.asset_type}: {linter.valid_stac}", fg='green')
     else:
         click.secho(f"Valid {linter.asset_type}: {linter.valid_stac}", fg='red')
 
-    # best practices - item ids should match file names
+    ''' best practices - item ids should match file names'''
     if linter.asset_type == "ITEM" and linter.object_id != linter.file_name:
         click.secho()
-        click.secho("STAC Best Practices: Item names should match their ids", fg='red')
+        click.secho("STAC Best Practices: Item names should match their ids.", fg='red')
         click.secho(f"    '{linter.file_name}' not equal to '{linter.object_id}'")
+        click.secho()
+
+    ''' best practices - item ids should not contain ':' or '/' characters'''
+    if linter.asset_type == "ITEM" and "/" in linter.object_id or ":" in linter.object_id:
+        click.secho()
+        click.secho(f"STAC Best Practices: Item name '{linter.object_id}' should not contain ':' or '/'", fg='red')
+        click.secho(f"    https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#item-ids")
         click.secho()
 
     if len(linter.schema) > 0:
