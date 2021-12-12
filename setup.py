@@ -2,7 +2,7 @@
 """
 from setuptools import setup
 
-__version__ = "0.1.5"
+__version__ = "0.1.6"
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -15,7 +15,7 @@ setup(
     packages=["stac_check"],
     install_requires=[
         "click>=7.1.2",
-        "pystac[validation]==1.1.0",
+        "pystac==1.1.0",
         "requests>=2.19.1",
         "jsonschema>=3.1.2b0",
         "pytest>=6.0.0"
