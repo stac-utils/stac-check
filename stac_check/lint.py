@@ -36,6 +36,7 @@ class Linter:
         self.object_id = self.return_id()
         self.file_name = self.get_file_name()
         self.searchable_identifiers = self.check_searchable_identifiers()
+        self.percent_encoded = self.check_percent_encoded()
         self.best_practices_msg = self.create_best_practices_msg()
 
     def load_data(self, file):
@@ -139,6 +140,11 @@ class Linter:
                     return False  
         return True
 
+    def check_percent_encoded(self):
+        if self.asset_type == "ITEM" and "/" in self.object_id or ":" in self.object_id:
+            return False
+        return True
+
     def create_best_practices_msg(self):
         best_practices = list()
         base_string = "STAC Best Practices: "
@@ -152,7 +158,7 @@ class Linter:
             best_practices.extend([string_1, string_2, string_3, ""])  
 
         # best practices - item ids should not contain ':' or '/' characters
-        if self.asset_type == "ITEM" and "/" in self.object_id or ":" in self.object_id:
+        if self.percent_encoded == False:
             string_1 = f"    Item name '{self.object_id}' should not contain ':' or '/'"
             string_2 = f"    https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#item-ids"
             best_practices.extend([string_1, string_2, ""])

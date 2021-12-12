@@ -118,3 +118,4 @@ def test_linter_item_id_format_best_practices():
     file = "sample_files/1.0.0/core-item-invalid-id.json"
     linter = Linter(file)
     assert linter.searchable_identifiers == False
+    assert linter.percent_encoded == False
