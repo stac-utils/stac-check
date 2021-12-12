@@ -134,6 +134,18 @@ class Linter:
         base_string = "STAC Best Practices: "
         best_practices.append(base_string)
 
+        # best practices - item ids should only contain searchable identifiers
+        if self.asset_type == "ITEM": 
+            for letter in self.object_id:
+                if letter.islower() or letter.isnumeric() or letter == '-' or letter == '_':
+                    pass
+                else:
+                    string_1 = f"    Item name '{self.object_id}' should only contain Searchable identifiers"
+                    string_2 = f"    Identifiers should consist of only lowercase characters, numbers, '_', and '-'"
+                    string_3 = f"    https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#searchable-identifiers"
+                    best_practices.extend([string_1, string_2, string_3, ""])  
+                    break
+
         # best practices - item ids should not contain ':' or '/' characters
         if self.asset_type == "ITEM" and "/" in self.object_id or ":" in self.object_id:
             string_1 = f"    Item name '{self.object_id}' should not contain ':' or '/'"
