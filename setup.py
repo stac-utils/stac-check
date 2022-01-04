@@ -1,8 +1,8 @@
 """stac-check setup.py
 """
-from setuptools import setup, find_packages
+from setuptools import setup
 
-__version__ = "0.1.9"
+__version__ = "0.1.10"
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -12,7 +12,7 @@ setup(
     version=__version__,
     description="Linting and validation tool for STAC assets",
     url="https://github.com/jonhealy1/stac-check",
-    packages=find_packages(','),
+    packages=["stac_check"],
     install_requires=[
         "click>=7.1.2",
         "pystac==1.1.0",
