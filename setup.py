@@ -2,13 +2,13 @@
 """
 from setuptools import setup
 
-__version__ = "0.1.4"
+__version__ = "0.1.7"
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(
-    name="stac_check",
+    name="stac-check",
     version=__version__,
     description="Linting and validation tool for STAC assets",
     url="https://github.com/jonhealy1/stac-check",
