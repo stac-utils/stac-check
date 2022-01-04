@@ -1,5 +1,5 @@
-from stac_check.stac_validator.validate import StacValidate
-from stac_check.stac_validator.utilities import is_valid_url
+from .validate import StacValidate
+from .utilities import is_valid_url
 import json
 import os
 from dataclasses import dataclass
@@ -35,6 +35,9 @@ class Linter:
         self.validate_all = self.recursive_validation(self.load_data(self.item))
         self.object_id = self.return_id()
         self.file_name = self.get_file_name()
+        self.searchable_identifiers = self.check_searchable_identifiers()
+        self.percent_encoded = self.check_percent_encoded()
+        self.best_practices_msg = self.create_best_practices_msg()
 
     def load_data(self, file):
         if is_valid_url(file):
@@ -127,3 +130,57 @@ class Linter:
 
     def get_file_name(self):
         return os.path.basename(self.item).split('.')[0]
+
+    def check_searchable_identifiers(self):
+        if self.asset_type == "ITEM": 
+            for letter in self.object_id:
+                if letter.islower() or letter.isnumeric() or letter == '-' or letter == '_':
+                    pass
+                else:
+                    return False  
+        return True
+
+    def check_percent_encoded(self):
+        if self.asset_type == "ITEM" and "/" in self.object_id or ":" in self.object_id:
+            return False
+        return True
+
+    def create_best_practices_msg(self):
+        best_practices = list()
+        base_string = "STAC Best Practices: "
+        best_practices.append(base_string)
+
+        # best practices - item ids should only contain searchable identifiers
+        if self.searchable_identifiers == False: 
+            string_1 = f"    Item name '{self.object_id}' should only contain Searchable identifiers"
+            string_2 = f"    Identifiers should consist of only lowercase characters, numbers, '_', and '-'"
+            string_3 = f"    https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#searchable-identifiers"
+            best_practices.extend([string_1, string_2, string_3, ""])  
+
+        # best practices - item ids should not contain ':' or '/' characters
+        if self.percent_encoded == False:
+            string_1 = f"    Item name '{self.object_id}' should not contain ':' or '/'"
+            string_2 = f"    https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#item-ids"
+            best_practices.extend([string_1, string_2, ""])
+
+        # best practices - item ids should match file names
+        if self.asset_type == "ITEM" and self.object_id != self.file_name:
+            string_1 = f"    Item names should match their ids"
+            string_2 = f"    '{self.file_name}' not equal to '{self.object_id}'"
+            best_practices.extend([string_1, string_2, ""])
+
+        # best practices - collections should contain summaries
+        if self.asset_type == "COLLECTION" and self.summaries == False:
+            string_1 = f"    A STAC collection should contain a summaries field"
+            string_2 = f"    https://github.com/radiantearth/stac-spec/blob/master/collection-spec/collection-spec.md"
+            best_practices.extend([string_1, string_2, ""])
+
+        if self.num_links >= 20:
+            string_1 = f"    You have {self.num_links} links. Please consider using sub-collections or sub-catalogs"
+            string_2 = f"    https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#catalog--collection-practices"
+            best_practices.extend([string_1, string_2, ""])
+
+        for x in best_practices:
+            print(x)
+
+        return best_practices
