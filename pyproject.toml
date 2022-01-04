@@ -1,9 +1,0 @@
-[build-system]
-requires = [
-    "requests",
-    "jsonschema",
-    "pystac == 1.1.0",
-    "click",
-    "setuptools"
-]
-build-backend = "setuptools.build_meta"
