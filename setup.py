@@ -2,13 +2,13 @@
 """
 from setuptools import setup
 
-__version__ = "0.1.11"
+__version__ = "0.1.12"
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(
-    name="stac-check",
+    name="stac_check",
     version=__version__,
     description="Linting and validation tool for STAC assets",
     url="https://github.com/jonhealy1/stac-check",
@@ -16,8 +16,8 @@ setup(
     install_requires=[
         "click>=7.1.2",
         "pystac==1.1.0",
+        "jsonschema",
         "requests",
-        "jsonschema>=3.1.2b0",
         "pytest>=6.0.0",
         "jsonpointer",
         "importlib-metadata"
