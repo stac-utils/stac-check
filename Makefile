@@ -3,11 +3,9 @@ build:
 	docker build \
 		-t stac_check .
 
-.PHONY: run
-run:
-	docker run \
+run_docker = docker run -it --rm \
 		stac_check
 
 .PHONY: shell
-shell:
+shell: 
 	$(run_docker) /bin/bash
