@@ -2,7 +2,7 @@
 """
 from setuptools import setup
 
-__version__ = "0.1.16"
+__version__ = "0.1.17"
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -15,7 +15,7 @@ setup(
     packages=["stac_check"],
     install_requires=[
         "click>=7.1.2",
-        "pystac",
+        "pystac==1.1.0",
         "jsonschema",
         "requests",
         "pytest"
@@ -24,10 +24,10 @@ setup(
         'console_scripts': ['stac_check=stac_check.cli:main']
     },
     author="Jonathan Healy",
-    author_email="jonatham.d.healy@gmail.com",
+    author_email="jonathan.d.healy@gmail.com",
     license="MIT",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    python_requires=">=3.7",
+    python_requires=">=3.8",
     tests_require=["pytest"]
 )
