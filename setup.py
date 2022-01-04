@@ -16,8 +16,7 @@ setup(
     install_requires=[
         "click>=7.1.2",
         "pystac==1.1.0",
-        "requests",
-        "jsonschema>=3.1.2b0",
+        "jsonschema",
         "pytest>=6.0.0",
         "jsonpointer",
         "importlib-metadata"
