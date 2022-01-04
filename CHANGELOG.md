@@ -13,6 +13,9 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 ## [v0.1.0] - 2021-11-26 - 2021-12-05
 ### Added
 
+- Best practices - searchable identifiers - lowercase, numbers, '_' or '-'
+  for id names
+  https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#searchable-identifiers
 - Best practices ensure item ids don't contain ':' or '/' characters  
   https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#item-ids
 - Best practices check for item ids to see if they match file names
