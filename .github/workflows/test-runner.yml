@@ -30,6 +30,5 @@ jobs:
 
       - name: Run unit tests
         run: |
-          pip install -r requirements.txt
           pip install .
           pytest -v
