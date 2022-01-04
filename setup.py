@@ -8,7 +8,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(
-    name="stac-check",
+    name="stac_check",
     version=__version__,
     description="Linting and validation tool for STAC assets",
     url="https://github.com/jonhealy1/stac-check",
