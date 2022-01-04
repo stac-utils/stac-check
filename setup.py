@@ -2,7 +2,7 @@
 """
 from setuptools import setup
 
-__version__ = "0.1.17"
+__version__ = "0.1.18"
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -16,9 +16,9 @@ setup(
     install_requires=[
         "click>=7.1.2",
         "pystac==1.1.0",
-        "jsonschema",
-        "requests",
-        "pytest"
+        "requests>=2.19.1",
+        "jsonschema>=3.1.2b0",
+        "pytest>=6.0.0"
     ],
     entry_points={
         'console_scripts': ['stac_check=stac_check.cli:main']
