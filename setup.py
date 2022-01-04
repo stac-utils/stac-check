@@ -18,7 +18,8 @@ setup(
         "pystac[validation]==1.1.0",
         "click>=7.1.2",
         "requests>=2.19.1",
-        "jsonschema>=3.1.2b0"
+        "jsonschema>=3.1.2b0",
+        "pytest"
     ],
     entry_points={
         'console_scripts': ['stac_check=stac_check.cli:main']
