@@ -2,7 +2,7 @@
 """
 from setuptools import setup
 
-__version__ = "0.1.15"
+__version__ = "0.1.16"
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -28,6 +28,6 @@ setup(
     license="MIT",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    python_requires=">=3.6",
+    python_requires=">=3.7",
     tests_require=["pytest"]
 )
