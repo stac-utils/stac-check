@@ -130,7 +130,6 @@ class Linter:
             return ""
 
     def check_datetime(self):
-        print("hello")
         if "properties" in self.data:
             if "datetime" in self.data["properties"]:
                 if self.data["properties"]["datetime"] == None:
@@ -194,8 +193,5 @@ class Linter:
             string_1 = f"    You have {self.num_links} links. Please consider using sub-collections or sub-catalogs"
             string_2 = f"    https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#catalog--collection-practices"
             best_practices.extend([string_1, string_2, ""])
-
-        for x in best_practices:
-            print(x)
 
         return best_practices
