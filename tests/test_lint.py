@@ -119,3 +119,9 @@ def test_linter_item_id_format_best_practices():
     linter = Linter(file)
     assert linter.searchable_identifiers == False
     assert linter.percent_encoded == False
+
+def test_datetime_set_to_null():
+    file = "sample_files/1.0.0/core-item-null-datetime.json"
+    linter = Linter(file)
+    assert linter.datetime_null == True
+
