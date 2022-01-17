@@ -32,6 +32,7 @@ class Linter:
         self.summaries = self.check_summaries()
         self.num_links = self.get_num_links()
         self.recursive_error_msg = ""
+        self.datetime_null = self.check_datetime()
         self.validate_all = self.recursive_validation(self.load_data(self.item))
         self.object_id = self.return_id()
         self.file_name = self.get_file_name()
@@ -128,6 +129,16 @@ class Linter:
         else:
             return ""
 
+    def check_datetime(self):
+        print("hello")
+        if "properties" in self.data:
+            if "datetime" in self.data["properties"]:
+                if self.data["properties"]["datetime"] == None:
+                    return True
+        else:
+            return False
+
+
     def get_file_name(self):
         return os.path.basename(self.item).split('.')[0]
 
@@ -165,9 +176,8 @@ class Linter:
 
         # best practices - item ids should match file names
         if self.asset_type == "ITEM" and self.object_id != self.file_name:
-            string_1 = f"    Item names should match their ids"
-            string_2 = f"    '{self.file_name}' not equal to '{self.object_id}'"
-            best_practices.extend([string_1, string_2, ""])
+            string_1 = f"    Item file names should match their ids: '{self.file_name}' not equal to '{self.object_id}"
+            best_practices.extend([string_1, ""])
 
         # best practices - collections should contain summaries
         if self.asset_type == "COLLECTION" and self.summaries == False:
@@ -175,6 +185,11 @@ class Linter:
             string_2 = f"    https://github.com/radiantearth/stac-spec/blob/master/collection-spec/collection-spec.md"
             best_practices.extend([string_1, string_2, ""])
 
+        # best practices - datetime files should not be set to null
+        if self.datetime_null == True:
+            string_1 = f"    Please avoid setting the datetime field to null, many clients search on this field"
+            best_practices.extend([string_1, ""])
+        
         if self.num_links >= 20:
             string_1 = f"    You have {self.num_links} links. Please consider using sub-collections or sub-catalogs"
             string_2 = f"    https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#catalog--collection-practices"
