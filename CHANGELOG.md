@@ -4,10 +4,10 @@ All notable changes to this project will be documented in this file.
 
 The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [v0.1.2] - 2022-01-17 -
+## [v0.1.2] - 2022-01-17 - 2022-01-22
 ### Added
 - Check for null datetime
-- Check for unlocated items, bbox shouldd be set to null if geometry is
+- Check for unlocated items, bbox should be set to null if geometry is
 
 ## [v0.1.1] - 2021-11-26 - 2021-12-12
 ### Added  
