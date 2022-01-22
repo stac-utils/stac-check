@@ -113,10 +113,7 @@ class Linter:
             return ""
 
     def check_summaries(self):
-        if "summaries" in self.data:
-            return True
-        else:
-            return False
+        return "summaries" in self.data
 
     def get_num_links(self):
         if "links" in self.data:
@@ -139,7 +136,8 @@ class Linter:
             return False
 
     def check_geometry(self):
-        return self.data["geometry"] is None and self.data["bbox"] is not None
+        if "geometry" in self.data:
+            return self.data["geometry"] is None and self.data["bbox"] is not None
 
     def get_file_name(self):
         return os.path.basename(self.item).split('.')[0]
@@ -154,9 +152,7 @@ class Linter:
         return True
 
     def check_percent_encoded(self):
-        if self.asset_type == "ITEM" and "/" in self.object_id or ":" in self.object_id:
-            return False
-        return True
+        return self.asset_type == "ITEM" and "/" in self.object_id or ":" in self.object_id
 
     def create_best_practices_msg(self):
         best_practices = list()
@@ -171,7 +167,7 @@ class Linter:
             best_practices.extend([string_1, string_2, string_3, ""])  
 
         # best practices - item ids should not contain ':' or '/' characters
-        if self.percent_encoded == False:
+        if self.percent_encoded:
             string_1 = f"    Item name '{self.object_id}' should not contain ':' or '/'"
             string_2 = f"    https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#item-ids"
             best_practices.extend([string_1, string_2, ""])
