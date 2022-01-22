@@ -188,10 +188,16 @@ class Linter:
             best_practices.extend([string_1, string_2, ""])
 
         # best practices - datetime files should not be set to null
-        if self.datetime_null == True:
+        if self.datetime_null:
             string_1 = f"    Please avoid setting the datetime field to null, many clients search on this field"
             best_practices.extend([string_1, ""])
-        
+
+        # best practices - check unlocated items to make sure bbox field is not set
+        if self.unlocated:
+            string_1 = f"    Unlocated item. Please avoid setting the bbox field when goemetry is set to null"
+            best_practices.extend([string_1, ""])
+
+        # check to see if there are too many links
         if self.num_links >= 20:
             string_1 = f"    You have {self.num_links} links. Please consider using sub-collections or sub-catalogs"
             string_2 = f"    https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#catalog--collection-practices"
