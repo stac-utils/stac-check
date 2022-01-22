@@ -33,6 +33,7 @@ class Linter:
         self.num_links = self.get_num_links()
         self.recursive_error_msg = ""
         self.datetime_null = self.check_datetime()
+        self.unlocated = self.check_geometry()
         self.validate_all = self.recursive_validation(self.load_data(self.item))
         self.object_id = self.return_id()
         self.file_name = self.get_file_name()
@@ -112,10 +113,7 @@ class Linter:
             return ""
 
     def check_summaries(self):
-        if "summaries" in self.data:
-            return True
-        else:
-            return False
+        return "summaries" in self.data
 
     def get_num_links(self):
         if "links" in self.data:
@@ -137,6 +135,9 @@ class Linter:
         else:
             return False
 
+    def check_geometry(self):
+        if "geometry" in self.data:
+            return self.data["geometry"] is None and self.data["bbox"] is not None
 
     def get_file_name(self):
         return os.path.basename(self.item).split('.')[0]
@@ -151,9 +152,7 @@ class Linter:
         return True
 
     def check_percent_encoded(self):
-        if self.asset_type == "ITEM" and "/" in self.object_id or ":" in self.object_id:
-            return False
-        return True
+        return self.asset_type == "ITEM" and "/" in self.object_id or ":" in self.object_id
 
     def create_best_practices_msg(self):
         best_practices = list()
@@ -168,7 +167,7 @@ class Linter:
             best_practices.extend([string_1, string_2, string_3, ""])  
 
         # best practices - item ids should not contain ':' or '/' characters
-        if self.percent_encoded == False:
+        if self.percent_encoded:
             string_1 = f"    Item name '{self.object_id}' should not contain ':' or '/'"
             string_2 = f"    https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#item-ids"
             best_practices.extend([string_1, string_2, ""])
@@ -185,10 +184,16 @@ class Linter:
             best_practices.extend([string_1, string_2, ""])
 
         # best practices - datetime files should not be set to null
-        if self.datetime_null == True:
+        if self.datetime_null:
             string_1 = f"    Please avoid setting the datetime field to null, many clients search on this field"
             best_practices.extend([string_1, ""])
-        
+
+        # best practices - check unlocated items to make sure bbox field is not set
+        if self.unlocated:
+            string_1 = f"    Unlocated item. Please avoid setting the bbox field when goemetry is set to null"
+            best_practices.extend([string_1, ""])
+
+        # check to see if there are too many links
         if self.num_links >= 20:
             string_1 = f"    You have {self.num_links} links. Please consider using sub-collections or sub-catalogs"
             string_2 = f"    https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#catalog--collection-practices"
