@@ -33,6 +33,7 @@ class Linter:
         self.num_links = self.get_num_links()
         self.recursive_error_msg = ""
         self.datetime_null = self.check_datetime()
+        self.unlocated = self.check_geometry()
         self.validate_all = self.recursive_validation(self.load_data(self.item))
         self.object_id = self.return_id()
         self.file_name = self.get_file_name()
@@ -137,6 +138,8 @@ class Linter:
         else:
             return False
 
+    def check_geometry(self):
+        return self.data["geometry"] is None and self.data["bbox"] is not None
 
     def get_file_name(self):
         return os.path.basename(self.item).split('.')[0]
