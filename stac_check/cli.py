@@ -97,7 +97,7 @@ def cli_message(linter):
 
     click.secho()
 
-    click.secho(f"This object has {linter.num_links} links")
+    click.secho(f"This object has {len(linter.data['links'])} links")
 
     click.secho()
 

@@ -98,7 +98,7 @@ def test_linter_catalog():
     assert linter.version == "1.0.0"
     assert linter.valid_stac == True
     assert linter.asset_type == "CATALOG"
-    assert linter.num_links == 6
+    assert linter.bloated_links == False
 
 def test_linter_collection_recursive_remote():
     file = "https://raw.githubusercontent.com/stac-utils/pystac/main/tests/data-files/examples/0.9.0/collection-spec/examples/landsat-collection.json"
@@ -130,3 +130,13 @@ def test_unlocated_item():
     linter = Linter(file)
     assert linter.unlocated == True
 
+def test_bloated_item():
+    file = "sample_files/1.0.0/core-item-bloated.json"
+    linter = Linter(file)
+    
+    assert linter.bloated_metadata == True
+    assert len(linter.data["properties"]) > 20
+
+    assert linter.bloated_links == True
+    assert len(linter.data["links"]) > 20
+    

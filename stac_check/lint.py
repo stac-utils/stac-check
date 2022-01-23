@@ -30,7 +30,8 @@ class Linter:
         self.invalid_link_request = self.check_links_assets(10, "links", "request") if self.links else None
         self.schema = self.check_schema()
         self.summaries = self.check_summaries()
-        self.num_links = self.get_num_links()
+        self.bloated_links = self.get_bloated_links()
+        self.bloated_metadata = self.get_bloated_metadata()
         self.recursive_error_msg = ""
         self.datetime_null = self.check_datetime()
         self.unlocated = self.check_geometry()
@@ -115,11 +116,13 @@ class Linter:
     def check_summaries(self):
         return "summaries" in self.data
 
-    def get_num_links(self):
+    def get_bloated_links(self):
         if "links" in self.data:
-            return len(self.data["links"])
-        else:
-            return 0
+            return len(self.data["links"]) > 20
+
+    def get_bloated_metadata(self):
+        if "properties" in self.data:
+            return len(self.data["properties"].keys()) > 20
 
     def return_id(self):
         if "id" in self.data:
@@ -194,9 +197,14 @@ class Linter:
             best_practices.extend([string_1, ""])
 
         # check to see if there are too many links
-        if self.num_links >= 20:
-            string_1 = f"    You have {self.num_links} links. Please consider using sub-collections or sub-catalogs"
+        if self.bloated_links:
+            string_1 = f"    You have {len(self.data['links'])} links. Please consider using sub-collections or sub-catalogs"
             string_2 = f"    https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#catalog--collection-practices"
             best_practices.extend([string_1, string_2, ""])
+
+        # best practices - check for bloated metadata in properties
+        if self.bloated_metadata:
+            string_1 = f"    You have {len(self.data['properties'])} properties. Please consider using links to avoid bloated metadata"
+            best_practices.extend([string_1, ""])
 
         return best_practices
