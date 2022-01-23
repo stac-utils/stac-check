@@ -31,6 +31,7 @@ class Linter:
         self.schema = self.check_schema()
         self.summaries = self.check_summaries()
         self.num_links = self.get_num_links()
+        self.num_properties = self.get_num_properties()
         self.recursive_error_msg = ""
         self.validate_all = self.recursive_validation(self.load_data(self.item))
         self.object_id = self.return_id()
@@ -122,6 +123,12 @@ class Linter:
         else:
             return 0
 
+    def get_num_properties(self):
+        if "properties" in self.data:
+            return len(self.data["properties"])
+        else:
+            return 0
+
     def return_id(self):
         if "id" in self.data:
             return self.data["id"]
@@ -180,7 +187,8 @@ class Linter:
             string_2 = f"    https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#catalog--collection-practices"
             best_practices.extend([string_1, string_2, ""])
 
-        for x in best_practices:
-            print(x)
+        if self.num_properties >= 20:
+            string_1 = f"    You have {self.num_properties} properties. Please consider using links to avoid bloated metadata"
+            best_practices.extend([string_1, ""])
 
         return best_practices
