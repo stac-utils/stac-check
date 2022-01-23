@@ -34,7 +34,8 @@ class Linter:
         self.bloated_metadata = self.get_bloated_metadata()
         self.recursive_error_msg = ""
         self.datetime_null = self.check_datetime()
-        self.unlocated = self.check_geometry()
+        self.unlocated = self.check_unlocated()
+        self.geometry = self.check_geometry()
         self.validate_all = self.recursive_validation(self.load_data(self.item))
         self.object_id = self.return_id()
         self.file_name = self.get_file_name()
@@ -138,9 +139,13 @@ class Linter:
         else:
             return False
 
-    def check_geometry(self):
+    def check_unlocated(self):
         if "geometry" in self.data:
             return self.data["geometry"] is None and self.data["bbox"] is not None
+
+    def check_geometry(self):
+        if "geometry" in self.data:
+            return self.data["geometry"] is not None
 
     def get_file_name(self):
         return os.path.basename(self.item).split('.')[0]
@@ -193,7 +198,12 @@ class Linter:
 
         # best practices - check unlocated items to make sure bbox field is not set
         if self.unlocated:
-            string_1 = f"    Unlocated item. Please avoid setting the bbox field when goemetry is set to null"
+            string_1 = f"    Unlocated item. Please avoid setting the bbox field when geometry is set to null"
+            best_practices.extend([string_1, ""])
+
+        # best practices - recommend items have a geometry
+        if not self.geometry and self.asset_type == "ITEM":
+            string_1 = f"    All items should have a geometry field. STAC is not meant for non-spatial data"
             best_practices.extend([string_1, ""])
 
         # check to see if there are too many links
