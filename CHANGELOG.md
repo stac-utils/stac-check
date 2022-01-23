@@ -7,6 +7,7 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 ## [v0.1.3] - 2022-01-23 - 
 ### Added
 - Check for bloated metadata, too many fields in properties
+- Check for geometry field, recommend that STAC not be used for non-spatial data
 
 ### Changed  
 - Changed bloated links check to a boolean to mirror bloated metadata
