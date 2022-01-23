@@ -4,15 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [v0.1.2] - 2022-01-17 - 2022-01-22
+### Added
+- Check for null datetime
+- Check for unlocated items, bbox should be set to null if geometry is
+
 ## [v0.1.1] - 2021-11-26 - 2021-12-12
-### Changed
+### Added  
+- Added github actions to test and push to pypi
+- Added makefile, dockerfile  
 
-- Remove pipenv
-
+### Changed  
+- Removed pipenv  
 
 ## [v0.1.0] - 2021-11-26 - 2021-12-05
 ### Added
-
 - Best practices - searchable identifiers - lowercase, numbers, '_' or '-'
   for id names
   https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#searchable-identifiers
@@ -27,7 +33,3 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 - Best practices check for summaries in collections
 - Validation from stac-validator 2.3.0  
 - Links and assets validation checks  
-
-### Changed
-
-- 
