@@ -8,6 +8,9 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 ### Added
 - Check for bloated metadata, too many fields in properties
 
+### Changed  
+- Changed bloated links check to a boolean to mirror bloated metadata
+
 ## [v0.1.2] - 2022-01-17 - 2022-01-22
 ### Added
 - Check for null datetime
