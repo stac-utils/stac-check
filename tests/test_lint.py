@@ -129,11 +129,12 @@ def test_unlocated_item():
     file = "sample_files/1.0.0/core-item-unlocated.json"
     linter = Linter(file)
     assert linter.unlocated == True
+    assert linter.geometry == False
 
 def test_bloated_item():
     file = "sample_files/1.0.0/core-item-bloated.json"
     linter = Linter(file)
-    
+
     assert linter.bloated_metadata == True
     assert len(linter.data["properties"]) > 20
 
