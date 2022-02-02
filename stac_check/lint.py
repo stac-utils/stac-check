@@ -165,7 +165,9 @@ class Linter:
 
     def check_thumbnail(self):
         if "assets" in self.data:
-            pass
+            if "thumbnail" in self.data["assets"]:
+                if "type" in self.data["assets"]["thumbnail"]:
+                    return self.data["assets"]["thumbnail"]["type"] in ["png", "jpeg", "jpg", "webp"]
 
     def create_best_practices_msg(self):
         best_practices = list()
@@ -220,6 +222,11 @@ class Linter:
         # best practices - check for bloated metadata in properties
         if self.bloated_metadata:
             string_1 = f"    You have {len(self.data['properties'])} properties. Please consider using links to avoid bloated metadata"
+            best_practices.extend([string_1, ""])
+
+        # best practices - ensure thumbnail is a small file size ["png", "jpeg", "jpg", "webp"]
+        if not self.check_thumbnail:
+            string_1 = f"    A thumbnail should have a small file size ie. png, jpeg, jpg, webp"
             best_practices.extend([string_1, ""])
 
         return best_practices
