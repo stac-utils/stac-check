@@ -226,7 +226,7 @@ class Linter:
             best_practices.extend([string_1, ""])
 
         # best practices - ensure thumbnail is a small file size ["png", "jpeg", "jpg", "webp"]
-        if not self.check_thumbnail():
+        if not self.check_thumbnail() and self.asset_type == "ITEM":
             string_1 = f"    A thumbnail should have a small file size ie. png, jpeg, jpg, webp"
             best_practices.extend([string_1, ""])
 
