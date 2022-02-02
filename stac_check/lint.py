@@ -42,6 +42,7 @@ class Linter:
         self.searchable_identifiers = self.check_searchable_identifiers()
         self.percent_encoded = self.check_percent_encoded()
         self.best_practices_msg = self.create_best_practices_msg()
+        self.thumbnail = self.check_thumbnail()
 
     def load_data(self, file):
         if is_valid_url(file):
@@ -161,6 +162,10 @@ class Linter:
 
     def check_percent_encoded(self):
         return self.asset_type == "ITEM" and "/" in self.object_id or ":" in self.object_id
+
+    def check_thumbnail(self):
+        if "assets" in self.data:
+            pass
 
     def create_best_practices_msg(self):
         best_practices = list()
