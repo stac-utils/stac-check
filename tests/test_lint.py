@@ -88,7 +88,7 @@ def test_linter_collection_no_summaries():
     assert linter.best_practices_msg == [
         "STAC Best Practices: ",
         "    A STAC collection should contain a summaries field",
-        "    https://github.com/radiantearth/stac-spec/blob/master/collection-spec/collection-spec.md",
+        "    It is recommended to store information like eo:bands in summaries",
         ""
     ]
 
