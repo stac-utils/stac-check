@@ -7,6 +7,7 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 ## [v0.2.0] - 2022-02-02 -
 ### Added
 - Recommend that eo:bands or similar information is provided in collection summaries
+- Check for small thumbnail image file type
 
 ## [v0.1.3] - 2022-01-23
 ### Added
