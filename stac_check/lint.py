@@ -188,7 +188,7 @@ class Linter:
         # best practices - collections should contain summaries
         if self.asset_type == "COLLECTION" and self.summaries == False:
             string_1 = f"    A STAC collection should contain a summaries field"
-            string_2 = f"    https://github.com/radiantearth/stac-spec/blob/master/collection-spec/collection-spec.md"
+            string_2 = f"    It is recommended to store information like eo:bands in summaries"
             best_practices.extend([string_1, string_2, ""])
 
         # best practices - datetime files should not be set to null
