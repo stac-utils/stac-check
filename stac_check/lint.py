@@ -42,7 +42,6 @@ class Linter:
         self.searchable_identifiers = self.check_searchable_identifiers()
         self.percent_encoded = self.check_percent_encoded()
         self.best_practices_msg = self.create_best_practices_msg()
-        self.thumbnail = self.check_thumbnail()
 
     def load_data(self, file):
         if is_valid_url(file):
@@ -167,7 +166,9 @@ class Linter:
         if "assets" in self.data:
             if "thumbnail" in self.data["assets"]:
                 if "type" in self.data["assets"]["thumbnail"]:
-                    return self.data["assets"]["thumbnail"]["type"] in ["png", "jpeg", "jpg", "webp"]
+                    if "png" in self.data["assets"]["thumbnail"]["type"] or "jpeg" in self.data["assets"]["thumbnail"]["type"] or \
+                        "jpg" in self.data["assets"]["thumbnail"]["type"] or "webp" in self.data["assets"]["thumbnail"]["type"]:
+                        return True
 
     def create_best_practices_msg(self):
         best_practices = list()
@@ -225,7 +226,7 @@ class Linter:
             best_practices.extend([string_1, ""])
 
         # best practices - ensure thumbnail is a small file size ["png", "jpeg", "jpg", "webp"]
-        if not self.check_thumbnail:
+        if not self.check_thumbnail():
             string_1 = f"    A thumbnail should have a small file size ie. png, jpeg, jpg, webp"
             best_practices.extend([string_1, ""])
 
