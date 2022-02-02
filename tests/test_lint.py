@@ -140,4 +140,15 @@ def test_bloated_item():
 
     assert linter.bloated_links == True
     assert len(linter.data["links"]) > 20
+
+def test_small_thumbnail():
+    file = "sample_files/1.0.0/core-item-large-thumbnail.json"
+    linter = Linter(file)
+
+    assert linter.check_thumbnail() != True
+
+    file = "sample_files/1.0.0/core-item.json"
+    linter = Linter(file)
+
+    assert linter.check_thumbnail() == True
     
