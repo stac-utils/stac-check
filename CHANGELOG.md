@@ -4,7 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [v0.1.3] - 2022-01-23 - 
+## [v0.2.0] - 2022-02-02 -
+### Added
+- Recommend that eo:bands or similar information is provided in collection summaries
+- Check for small thumbnail image file type
+
+## [v0.1.3] - 2022-01-23
 ### Added
 - Check for bloated metadata, too many fields in properties
 - Check for geometry field, recommend that STAC not be used for non-spatial data

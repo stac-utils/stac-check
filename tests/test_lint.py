@@ -88,7 +88,7 @@ def test_linter_collection_no_summaries():
     assert linter.best_practices_msg == [
         "STAC Best Practices: ",
         "    A STAC collection should contain a summaries field",
-        "    https://github.com/radiantearth/stac-spec/blob/master/collection-spec/collection-spec.md",
+        "    It is recommended to store information like eo:bands in summaries",
         ""
     ]
 
@@ -140,4 +140,15 @@ def test_bloated_item():
 
     assert linter.bloated_links == True
     assert len(linter.data["links"]) > 20
+
+def test_small_thumbnail():
+    file = "sample_files/1.0.0/core-item-large-thumbnail.json"
+    linter = Linter(file)
+
+    assert linter.check_thumbnail() != True
+
+    file = "sample_files/1.0.0/core-item.json"
+    linter = Linter(file)
+
+    assert linter.check_thumbnail() == True
     
