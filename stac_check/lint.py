@@ -170,6 +170,13 @@ class Linter:
                         "jpg" in self.data["assets"]["thumbnail"]["type"] or "webp" in self.data["assets"]["thumbnail"]["type"]:
                         return True
 
+    def check_title_field(self):
+        if self.asset_type == "COLLECTION" or self.asset_type == "CATALOG":
+            for link in self.data["links"]:
+                if "title" not in link:
+                    return False
+        return True
+
     def create_best_practices_msg(self):
         best_practices = list()
         base_string = "STAC Best Practices: "
@@ -229,5 +236,11 @@ class Linter:
         if not self.check_thumbnail() and self.asset_type == "ITEM":
             string_1 = f"    A thumbnail should have a small file size ie. png, jpeg, jpg, webp"
             best_practices.extend([string_1, ""])
+
+        # best practices - ensure that links in cattalogs and collections include a title field
+        if self.check_title_field == False:
+            string_1 = f"    Links in catalogs and collections should always have a title field"
+            best_practices.extend([string_1, ""])
+
 
         return best_practices
