@@ -177,6 +177,12 @@ class Linter:
                     return False
         return True
 
+    def check_item_id_file_name(self):
+        if self.asset_type == "ITEM" and self.object_id != self.file_name:
+            return False
+        else:
+            return True
+
     def create_best_practices_msg(self):
         best_practices = list()
         base_string = "STAC Best Practices: "
@@ -196,7 +202,7 @@ class Linter:
             best_practices.extend([string_1, string_2, ""])
 
         # best practices - item ids should match file names
-        if self.asset_type == "ITEM" and self.object_id != self.file_name:
+        if not self.check_item_id_file_name():
             string_1 = f"    Item file names should match their ids: '{self.file_name}' not equal to '{self.object_id}"
             best_practices.extend([string_1, ""])
 
