@@ -170,12 +170,19 @@ class Linter:
                         "jpg" in self.data["assets"]["thumbnail"]["type"] or "webp" in self.data["assets"]["thumbnail"]["type"]:
                         return True
 
-    def check_title_field(self):
+    def check_links_title_field(self):
         if self.asset_type == "COLLECTION" or self.asset_type == "CATALOG":
             for link in self.data["links"]:
                 if "title" not in link and link["rel"] != "self":
                     return False
         return True
+
+    def check_links_self(self):
+        if self.asset_type == "COLLECTION" or self.asset_type == "CATALOG":
+            for link in self.data["links"]:
+                if "self" in link["rel"]:
+                    return True
+        return False
 
     def check_item_id_file_name(self):
         if self.asset_type == "ITEM" and self.object_id != self.file_name:
@@ -257,9 +264,13 @@ class Linter:
             best_practices.extend([string_1, ""])
 
         # best practices - ensure that links in catalogs and collections include a title field
-        if not self.check_title_field():
-            string_1 = f"    Links in catalogs and collections should always have a title field"
+        if not self.check_links_title_field():
+            string_1 = f"    Links in catalogs and collections should always have a 'title' field"
             best_practices.extend([string_1, ""])
 
+        # best practices - ensure that links in catalogs and collections include self link
+        if not self.check_links_self():
+            string_1 = f"    A link to 'self' in links is strongly recommended"
+            best_practices.extend([string_1, ""])
 
         return best_practices
