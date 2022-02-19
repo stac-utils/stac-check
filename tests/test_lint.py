@@ -88,6 +88,8 @@ def test_linter_collection_no_summaries():
     assert linter.summaries == False
     assert linter.best_practices_msg == [
         "STAC Best Practices: ",
+        "    Object should be called 'collection.json' not 'collection-no-summaries.json'",
+        "",
         "    A STAC collection should contain a summaries field",
         "    It is recommended to store information like eo:bands in summaries",
         ""
@@ -114,6 +116,12 @@ def test_linter_item_id_not_matching_file_name():
     assert linter.file_name == "core-item"
     assert linter.object_id == "20201211_223832_CS2"
     assert linter.file_name != linter.object_id
+    assert linter.check_item_id_file_name() == False
+
+def test_linter_collection_catalog_id():
+    file = "sample_files/1.0.0/collection-no-title.json"
+    linter = Linter(file)
+    assert linter.check_catalog_id_file_name() == False
 
 def test_linter_item_id_format_best_practices():
     file = "sample_files/1.0.0/core-item-invalid-id.json"
