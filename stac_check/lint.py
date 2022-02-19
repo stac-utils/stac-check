@@ -170,6 +170,34 @@ class Linter:
                         "jpg" in self.data["assets"]["thumbnail"]["type"] or "webp" in self.data["assets"]["thumbnail"]["type"]:
                         return True
 
+    def check_links_title_field(self):
+        if self.asset_type == "COLLECTION" or self.asset_type == "CATALOG":
+            for link in self.data["links"]:
+                if "title" not in link and link["rel"] != "self":
+                    return False
+        return True
+
+    def check_links_self(self):
+        if self.asset_type == "COLLECTION" or self.asset_type == "CATALOG":
+            for link in self.data["links"]:
+                if "self" in link["rel"]:
+                    return True
+        return False
+
+    def check_item_id_file_name(self):
+        if self.asset_type == "ITEM" and self.object_id != self.file_name:
+            return False
+        else:
+            return True
+
+    def check_catalog_id_file_name(self):
+        if self.asset_type == "CATALOG" and self.file_name != 'catalog.json':
+            return False 
+        elif self.asset_type == "COLLECTION" and self.file_name != 'collection.json':
+            return False
+        else:
+            return True
+
     def create_best_practices_msg(self):
         best_practices = list()
         base_string = "STAC Best Practices: "
@@ -189,8 +217,13 @@ class Linter:
             best_practices.extend([string_1, string_2, ""])
 
         # best practices - item ids should match file names
-        if self.asset_type == "ITEM" and self.object_id != self.file_name:
+        if not self.check_item_id_file_name():
             string_1 = f"    Item file names should match their ids: '{self.file_name}' not equal to '{self.object_id}"
+            best_practices.extend([string_1, ""])
+
+        # best practices - collection and catalog file names should be collection.json and catalog.json 
+        if not self.check_catalog_id_file_name():
+            string_1 = f"    Object should be called '{self.asset_type.lower()}.json' not '{self.file_name}.json'"
             best_practices.extend([string_1, ""])
 
         # best practices - collections should contain summaries
@@ -228,6 +261,16 @@ class Linter:
         # best practices - ensure thumbnail is a small file size ["png", "jpeg", "jpg", "webp"]
         if not self.check_thumbnail() and self.asset_type == "ITEM":
             string_1 = f"    A thumbnail should have a small file size ie. png, jpeg, jpg, webp"
+            best_practices.extend([string_1, ""])
+
+        # best practices - ensure that links in catalogs and collections include a title field
+        if not self.check_links_title_field():
+            string_1 = f"    Links in catalogs and collections should always have a 'title' field"
+            best_practices.extend([string_1, ""])
+
+        # best practices - ensure that links in catalogs and collections include self link
+        if not self.check_links_self():
+            string_1 = f"    A link to 'self' in links is strongly recommended"
             best_practices.extend([string_1, ""])
 
         return best_practices
