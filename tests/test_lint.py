@@ -1,3 +1,4 @@
+from re import L
 from stac_check.lint import Linter
 import pytest
 
@@ -79,7 +80,7 @@ def test_linter_collection():
     assert linter.summaries == True
 
 def test_linter_collection_no_summaries():
-    file = "sample_files/1.0.0/collection_no_summaries.json"
+    file = "sample_files/1.0.0/collection-no-summaries.json"
     linter = Linter(file, assets=False, links=False)
     assert linter.version == "1.0.0"
     assert linter.valid_stac == True
@@ -151,4 +152,10 @@ def test_small_thumbnail():
     linter = Linter(file)
 
     assert linter.check_thumbnail() == True
+
+def test_title_field():
+    file = "sample_files/1.0.0/collection-no-title.json"
+    linter = Linter(file)
+
+    assert linter.check_title_field() == False
     
