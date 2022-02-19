@@ -101,11 +101,6 @@
         "href": "./extended-item.json",
         "type": "application/geo+json",
         "title": "Extended Item"
-      },
-      {
-        "rel": "self",
-        "href": "https://raw.githubusercontent.com/radiantearth/stac-spec/v1.0.0/examples/collection.json",
-        "type": "application/json"
       }
     ]
   }
