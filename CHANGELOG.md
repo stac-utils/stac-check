@@ -4,8 +4,9 @@ All notable changes to this project will be documented in this file.
 
 The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [v0.2.0] - 2022-02-02 -
+## [v0.2.0] - 2022-02-02 - 2022-02-20
 ### Added
+- Check that links in collections and catalogs have a title field
 - Recommend that eo:bands or similar information is provided in collection summaries
 - Check for small thumbnail image file type
 
