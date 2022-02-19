@@ -91,7 +91,7 @@
       "thumbnail": {
         "href": "https://storage.googleapis.com/open-cogs/stac-examples/20201211_223832_CS2.jpg",
         "title": "Thumbnail",
-        "type": "image/jpg",
+        "type": "image/avi",
         "roles": [
           "thumbnail"
         ]

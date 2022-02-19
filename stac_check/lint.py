@@ -1,5 +1,5 @@
-from .validate import StacValidate
-from .utilities import is_valid_url
+from stac_validator.validate import StacValidate
+from stac_validator.utilities import is_valid_url
 import json
 import os
 from dataclasses import dataclass
@@ -19,7 +19,7 @@ class Linter:
         self.message = self.validate_file(self.item)
         self.asset_type = self.check_asset_type()
         self.version = self.check_version()
-        self.validator_version = "2.4.0"
+        self.validator_version = "2.3.0"
         self.update_msg = self.set_update_message()
         self.valid_stac = self.message["valid_stac"]
         self.error_type = self.check_error_type()
@@ -162,6 +162,42 @@ class Linter:
     def check_percent_encoded(self):
         return self.asset_type == "ITEM" and "/" in self.object_id or ":" in self.object_id
 
+    def check_thumbnail(self):
+        if "assets" in self.data:
+            if "thumbnail" in self.data["assets"]:
+                if "type" in self.data["assets"]["thumbnail"]:
+                    if "png" in self.data["assets"]["thumbnail"]["type"] or "jpeg" in self.data["assets"]["thumbnail"]["type"] or \
+                        "jpg" in self.data["assets"]["thumbnail"]["type"] or "webp" in self.data["assets"]["thumbnail"]["type"]:
+                        return True
+
+    def check_links_title_field(self):
+        if self.asset_type == "COLLECTION" or self.asset_type == "CATALOG":
+            for link in self.data["links"]:
+                if "title" not in link and link["rel"] != "self":
+                    return False
+        return True
+
+    def check_links_self(self):
+        if self.asset_type == "COLLECTION" or self.asset_type == "CATALOG":
+            for link in self.data["links"]:
+                if "self" in link["rel"]:
+                    return True
+        return False
+
+    def check_item_id_file_name(self):
+        if self.asset_type == "ITEM" and self.object_id != self.file_name:
+            return False
+        else:
+            return True
+
+    def check_catalog_id_file_name(self):
+        if self.asset_type == "CATALOG" and self.file_name != 'catalog.json':
+            return False 
+        elif self.asset_type == "COLLECTION" and self.file_name != 'collection.json':
+            return False
+        else:
+            return True
+
     def create_best_practices_msg(self):
         best_practices = list()
         base_string = "STAC Best Practices: "
@@ -181,14 +217,19 @@ class Linter:
             best_practices.extend([string_1, string_2, ""])
 
         # best practices - item ids should match file names
-        if self.asset_type == "ITEM" and self.object_id != self.file_name:
+        if not self.check_item_id_file_name():
             string_1 = f"    Item file names should match their ids: '{self.file_name}' not equal to '{self.object_id}"
+            best_practices.extend([string_1, ""])
+
+        # best practices - collection and catalog file names should be collection.json and catalog.json 
+        if not self.check_catalog_id_file_name():
+            string_1 = f"    Object should be called '{self.asset_type.lower()}.json' not '{self.file_name}.json'"
             best_practices.extend([string_1, ""])
 
         # best practices - collections should contain summaries
         if self.asset_type == "COLLECTION" and self.summaries == False:
             string_1 = f"    A STAC collection should contain a summaries field"
-            string_2 = f"    https://github.com/radiantearth/stac-spec/blob/master/collection-spec/collection-spec.md"
+            string_2 = f"    It is recommended to store information like eo:bands in summaries"
             best_practices.extend([string_1, string_2, ""])
 
         # best practices - datetime files should not be set to null
@@ -215,6 +256,21 @@ class Linter:
         # best practices - check for bloated metadata in properties
         if self.bloated_metadata:
             string_1 = f"    You have {len(self.data['properties'])} properties. Please consider using links to avoid bloated metadata"
+            best_practices.extend([string_1, ""])
+
+        # best practices - ensure thumbnail is a small file size ["png", "jpeg", "jpg", "webp"]
+        if not self.check_thumbnail() and self.asset_type == "ITEM":
+            string_1 = f"    A thumbnail should have a small file size ie. png, jpeg, jpg, webp"
+            best_practices.extend([string_1, ""])
+
+        # best practices - ensure that links in catalogs and collections include a title field
+        if not self.check_links_title_field():
+            string_1 = f"    Links in catalogs and collections should always have a 'title' field"
+            best_practices.extend([string_1, ""])
+
+        # best practices - ensure that links in catalogs and collections include self link
+        if not self.check_links_self():
+            string_1 = f"    A link to 'self' in links is strongly recommended"
             best_practices.extend([string_1, ""])
 
         return best_practices
