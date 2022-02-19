@@ -6,6 +6,7 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 
 ## [v0.2.0] - 2022-02-02 - 2022-02-20
 ### Added
+- Added best practices docuument to repo
 - Recommend 'self' link in links
 - Check catalogs and collections use 'catalog.json' or 'collection.json' as a file name
 - Check that links in collections and catalogs have a title field
