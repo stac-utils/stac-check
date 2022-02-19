@@ -183,6 +183,14 @@ class Linter:
         else:
             return True
 
+    def check_catalog_id_file_name(self):
+        if self.asset_type == "CATALOG" and self.file_name != 'catalog.json':
+            return False 
+        elif self.asset_type == "COLLECTION" and self.file_name != 'collection.json':
+            return False
+        else:
+            return True
+
     def create_best_practices_msg(self):
         best_practices = list()
         base_string = "STAC Best Practices: "
@@ -204,6 +212,11 @@ class Linter:
         # best practices - item ids should match file names
         if not self.check_item_id_file_name():
             string_1 = f"    Item file names should match their ids: '{self.file_name}' not equal to '{self.object_id}"
+            best_practices.extend([string_1, ""])
+
+        # best practices - collection and catalog file names should be collection.json and catalog.json 
+        if not self.check_catalog_id_file_name():
+            string_1 = f"    Object should be called '{self.asset_type.lower()}.json' not '{self.file_name}.json'"
             best_practices.extend([string_1, ""])
 
         # best practices - collections should contain summaries
