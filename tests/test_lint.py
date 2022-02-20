@@ -144,7 +144,7 @@ def test_bloated_item():
     file = "sample_files/1.0.0/core-item-bloated.json"
     linter = Linter(file)
 
-    assert linter.bloated_metadata == True
+    assert linter.check_bloated_metadata() == True
     assert len(linter.data["properties"]) > 20
 
     assert linter.check_bloated_links() == True

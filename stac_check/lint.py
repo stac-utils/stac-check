@@ -27,7 +27,6 @@ class Linter:
         self.invalid_link_format = self.check_links_assets(10, "links", "format") if self.links else None
         self.invalid_link_request = self.check_links_assets(10, "links", "request") if self.links else None
         self.schema = self.message["schema"] if "schema" in self.message else []
-        self.bloated_metadata = self.get_bloated_metadata()
         self.recursive_error_msg = ""
         self.validate_all = self.recursive_validation(self.load_data(self.item))
         self.object_id = self.data["id"] if "id" in self.data else ""
@@ -95,9 +94,9 @@ class Linter:
         if "links" in self.data:
             return len(self.data["links"]) > 20
 
-    def get_bloated_metadata(self):
+    def check_bloated_metadata(self):
         if "properties" in self.data:
-            return len(self.data["properties"].keys()) > 2
+            return len(self.data["properties"].keys()) > 20
 
     def check_datetime_null(self):
         if "properties" in self.data:
@@ -219,7 +218,7 @@ class Linter:
             best_practices.extend([string_1, string_2, ""])
 
         # best practices - check for bloated metadata in properties
-        if self.bloated_metadata:
+        if self.check_bloated_metadata():
             string_1 = f"    You have {len(self.data['properties'])} properties. Please consider using links to avoid bloated metadata"
             best_practices.extend([string_1, ""])
 
