@@ -5,11 +5,11 @@
 
 ---
 ### Install
-`pip install stac-check`   
+`$ pip install stac-check`   
   
 or for local development   
 
-`pip install -e .` 
+`$ pip install -e .` 
 
 ---
 ### Usage
@@ -22,6 +22,13 @@ Options:
   -a, --assets     Validate assets for format and response.
   -r, --recursive  Validate all assets in a collection or catalog.
   --help           Show this message and exit.
+```
+---
+### Docker  
+
+```
+$ make build  
+$ make shell
 ```
 ---
 ### Examples
