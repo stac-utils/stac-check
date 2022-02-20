@@ -1,7 +1,7 @@
 # stac-check
 ## A linting and validation tool for STAC assets
 
-### The intent of this project is to provide a validation tool that also follows the official STAC Best Practices document: https://github.com/radiantearth/stac-spec/blob/master/best-practices.md   
+The intent of this project is to provide a validation tool that also follows the official STAC Best Practices document: https://github.com/radiantearth/stac-spec/blob/master/best-practices.md   
 
 ---
 ### Install
