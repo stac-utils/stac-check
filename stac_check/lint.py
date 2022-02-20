@@ -5,7 +5,6 @@ import os
 from dataclasses import dataclass
 import pystac
 import requests
-from urllib.parse import urlparse
 
 @dataclass
 class Linter:
@@ -34,7 +33,7 @@ class Linter:
         self.geometry = self.check_geometry()
         self.validate_all = self.recursive_validation(self.load_data(self.item))
         self.object_id = self.return_id()
-        self.file_name = self.get_file_name()
+        self.file_name = os.path.basename(self.item).split('.')[0]
         self.best_practices_msg = self.create_best_practices_msg()
 
     def load_data(self, file):
@@ -129,9 +128,6 @@ class Linter:
     def check_geometry(self):
         if "geometry" in self.data:
             return self.data["geometry"] is not None
-
-    def get_file_name(self):
-        return os.path.basename(self.item).split('.')[0]
 
     def check_searchable_identifiers(self):
         if self.asset_type == "ITEM": 
