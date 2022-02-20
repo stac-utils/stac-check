@@ -29,7 +29,6 @@ class Linter:
         self.invalid_link_format = self.check_links_assets(10, "links", "format") if self.links else None
         self.invalid_link_request = self.check_links_assets(10, "links", "request") if self.links else None
         self.schema = self.check_schema()
-        self.summaries = self.check_summaries()
         self.bloated_links = self.get_bloated_links()
         self.bloated_metadata = self.get_bloated_metadata()
         self.recursive_error_msg = ""
@@ -112,7 +111,8 @@ class Linter:
             return ""
 
     def check_summaries(self):
-        return "summaries" in self.data
+        if self.asset_type == "COLLECTION":
+            return "summaries" in self.data
 
     def get_bloated_links(self):
         if "links" in self.data:
@@ -224,7 +224,7 @@ class Linter:
             best_practices.extend([string_1, ""])
 
         # best practices - collections should contain summaries
-        if self.asset_type == "COLLECTION" and self.summaries == False:
+        if self.check_summaries() == False:
             string_1 = f"    A STAC collection should contain a summaries field"
             string_2 = f"    It is recommended to store information like eo:bands in summaries"
             best_practices.extend([string_1, string_2, ""])

@@ -77,7 +77,7 @@ def test_linter_collection():
     assert linter.version == "1.0.0"
     assert linter.valid_stac == True
     assert linter.asset_type == "COLLECTION"
-    assert linter.summaries == True
+    assert linter.check_summaries() == True
 
 def test_linter_collection_no_summaries():
     file = "sample_files/1.0.0/collection-no-summaries.json"
@@ -85,7 +85,7 @@ def test_linter_collection_no_summaries():
     assert linter.version == "1.0.0"
     assert linter.valid_stac == True
     assert linter.asset_type == "COLLECTION"
-    assert linter.summaries == False
+    assert linter.check_summaries() == False
     assert linter.best_practices_msg == [
         "STAC Best Practices: ",
         "    Object should be called 'collection.json' not 'collection-no-summaries.json'",
