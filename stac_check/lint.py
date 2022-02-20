@@ -17,7 +17,7 @@ class Linter:
     def __post_init__(self):
         self.data = self.load_data(self.item)
         self.message = self.validate_file(self.item)
-        self.asset_type = self.check_asset_type()
+        self.asset_type = self.message["asset_type"] if "asset_type" in self.message else ""
         self.version = self.check_version()
         self.validator_version = "2.3.0"
         self.update_msg = self.set_update_message()
@@ -63,11 +63,11 @@ class Linter:
                 self.recursive_error_msg = f"Exception {str(e)}"
                 return False
 
-    def check_asset_type(self):
-        if "asset_type" in self.message:
-            return self.message["asset_type"]
-        else:
-            return ""
+    # def check_asset_type(self):
+    #     if "asset_type" in self.message:
+    #         return self.message["asset_type"]
+    #     else:
+    #         return ""
 
     def check_schema(self):
         if "schema" in self.message:
