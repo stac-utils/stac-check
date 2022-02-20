@@ -20,15 +20,22 @@ Validator: pystac 1.1.0
     Recursive: Validate all assets in a collection or catalog
 
 Valid COLLECTION: True
+
 Schemas validated: 
     https://cdn.staclint.com/v0.9.0/collection.json
 
-Recursive validation has failed!
-Validation error message: 
-    Exception Could not read uri https://landsat-stac.s3.amazonaws.com/landsat-8-l1/paths/catalog.json
+STAC Best Practices: 
+    Object should be called 'collection.json' not 'landsat-collection.json'
 
-WARNING: STAC Best Practices asks for a summaries field in a STAC collection
-    https://github.com/radiantearth/stac-spec/blob/master/collection-spec/collection-spec.md
+    A STAC collection should contain a summaries field
+    It is recommended to store information like eo:bands in summaries
+
+    Links in catalogs and collections should always have a 'title' field
+
+
+Recursive validation has failed!
+Recursive validation error message: 
+    Exception Could not read uri https://landsat-stac.s3.amazonaws.com/landsat-8-l1/paths/catalog.json
 
 This object has 4 links
 ```
@@ -36,19 +43,27 @@ This object has 4 links
 ``` stac_check sample_files/0.9.0/landsat8-sample.json```
 
 <pre><b>stac-check: STAC spec validaton and linting tool</b>
+
 Please upgrade from version 0.9.0 to version 1.0.0!
 
-Validator: stac-validator 2.4.0
+Validator: stac-validator 2.3.0
 
 Valid ITEM: True
-
-STAC Best Practices: Item names should match their ids
-    'landsat8-sample' not equal to 'LC81530252014153LGN00'
 
 Schemas validated: 
     https://cdn.staclint.com/v0.9.0/extension/eo.json
     https://cdn.staclint.com/v0.9.0/extension/view.json
     https://cdn.staclint.com/v0.9.0/item.json
+
+STAC Best Practices: 
+    Item name 'LC81530252014153LGN00' should only contain Searchable identifiers
+    Identifiers should consist of only lowercase characters, numbers, '_', and '-'
+    https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#searchable-identifiers
+
+    Item file names should match their ids: 'landsat8-sample' not equal to 'LC81530252014153LGN00
+
+    A link to 'self' in links is strongly recommended
+
 
 This object has 4 links
 </pre>
@@ -56,17 +71,27 @@ This object has 4 links
 ``` stac_check sample_files/1.0.0/core-item.json --assets```    
 <pre>
 <b>stac-check: STAC spec validaton and linting tool</b>
+
 Thanks for using STAC version 1.0.0!
 
-Validator: stac-validator 2.4.0
+Validator: stac-validator 2.3.0
 
 Valid ITEM: True
 
-STAC Best Practices: Item names should match their ids
-    'core-item' not equal to '20201211_223832_CS2'
-
 Schemas validated: 
     https://schemas.stacspec.org/v1.0.0/item-spec/json-schema/item.json
+
+STAC Best Practices: 
+    Item name '20201211_223832_CS2' should only contain Searchable identifiers
+    Identifiers should consist of only lowercase characters, numbers, '_', and '-'
+    https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#searchable-identifiers
+
+    Item file names should match their ids: 'core-item' not equal to '20201211_223832_CS2
+
+    Please avoid setting the datetime field to null, many clients search on this field
+
+    A link to 'self' in links is strongly recommended
+
 
 No ASSET format errors!
 
@@ -81,17 +106,27 @@ This object has 4 links
 ``` stac_check sample_files/1.0.0/core-item-bad-links.json --links --assets```    
 <pre>
 <b>stac-check: STAC spec validaton and linting tool</b>
+
 Thanks for using STAC version 1.0.0!
 
-Validator: stac-validator 2.4.0
+Validator: stac-validator 2.3.0
 
 Valid ITEM: True
 
-STAC Best Practices: Item names should match their ids
-    'core-item-bad-links' not equal to '20201211_223832_CS2'
-
 Schemas validated: 
     https://schemas.stacspec.org/v1.0.0/item-spec/json-schema/item.json
+
+STAC Best Practices: 
+    Item name '20201211_223832_CS2' should only contain Searchable identifiers
+    Identifiers should consist of only lowercase characters, numbers, '_', and '-'
+    https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#searchable-identifiers
+
+    Item file names should match their ids: 'core-item-bad-links' not equal to '20201211_223832_CS2
+
+    Please avoid setting the datetime field to null, many clients search on this field
+
+    A link to 'self' in links is strongly recommended
+
 
 ASSET format errors: 
     https:/storage.googleapis.com/open-cogs/stac-examples/20201211_223832_CS2.jpg
@@ -110,18 +145,22 @@ LINK request errors:
 This object has 4 links
 </pre>
   
-  
-    
 ``` stac_check sample_files/0.9.0/bad-item.json```    
 <pre>
 <b>stac-check: STAC spec validaton and linting tool</b>
+
 Please upgrade from version 0.9.0 to version 1.0.0!
 
-Validator: stac-validator 2.4.0
+Validator: stac-validator 2.3.0
 
 Valid : False
+
 Schemas validated: 
     https://cdn.staclint.com/v0.9.0/item.json
+
+STAC Best Practices: 
+    A link to 'self' in links is strongly recommended
+
 Validation error type: 
     ValidationError
 Validation error message: 
