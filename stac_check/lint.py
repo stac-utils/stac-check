@@ -18,7 +18,7 @@ class Linter:
         self.data = self.load_data(self.item)
         self.message = self.validate_file(self.item)
         self.asset_type = self.message["asset_type"] if "asset_type" in self.message else ""
-        self.version = self.check_version()
+        self.version = self.message["version"] if "version" in self.message else ""
         self.validator_version = "2.3.0"
         self.update_msg = self.set_update_message()
         self.valid_stac = self.message["valid_stac"]
@@ -75,11 +75,11 @@ class Linter:
         else:
             return []
 
-    def check_version(self):
-        if "version" in self.message:
-            return self.message["version"]
-        else:
-            return ""
+    # def check_version(self):
+    #     if "version" in self.message:
+    #         return self.message["version"]
+    #     else:
+    #         return ""
 
     def set_update_message(self):
         if self.version != "1.0.0":
