@@ -1,9 +1,30 @@
 # stac-check
-## Linting and validation tool for STAC assets
+## A linting and validation tool for STAC assets
 
-This project is a work in progress. The intent is to provide a validation tool that also follows the official STAC Best Practices document: https://github.com/radiantearth/stac-spec/blob/master/best-practices.md
-    
-``` pip install -e . ```    
+### The intent of this project is to provide a validation tool that also follows the official STAC Best Practices document: https://github.com/radiantearth/stac-spec/blob/master/best-practices.md   
+
+---
+### Install
+`pip install stac-check`   
+  
+or for local development   
+
+`pip install -e .` 
+
+---
+### Usage
+```
+Usage: stac_check [OPTIONS] FILE
+
+Options:
+  --version        Show the version and exit.
+  -l, --links      Validate links for format and response.
+  -a, --assets     Validate assets for format and response.
+  -r, --recursive  Validate all assets in a collection or catalog.
+  --help           Show this message and exit.
+```
+---
+### Examples
     
 ``` stac_check https://raw.githubusercontent.com/stac-utils/pystac/main/tests/data-files/examples/0.9.0/collection-spec/examples/landsat-collection.json --recursive ```
 ```
