@@ -35,7 +35,6 @@ class Linter:
         self.validate_all = self.recursive_validation(self.load_data(self.item))
         self.object_id = self.return_id()
         self.file_name = self.get_file_name()
-        self.searchable_identifiers = self.check_searchable_identifiers()
         self.best_practices_msg = self.create_best_practices_msg()
 
     def load_data(self, file):
@@ -188,7 +187,7 @@ class Linter:
         best_practices.append(base_string)
 
         # best practices - item ids should only contain searchable identifiers
-        if self.searchable_identifiers == False: 
+        if self.check_searchable_identifiers() == False: 
             string_1 = f"    Item name '{self.object_id}' should only contain Searchable identifiers"
             string_2 = f"    Identifiers should consist of only lowercase characters, numbers, '_', and '-'"
             string_3 = f"    https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#searchable-identifiers"
