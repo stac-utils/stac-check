@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [v1.0.1] - 2022-02-20
+- Update readme
+
+## [v1.0.0] - 2022-02-20
+### Changed
+- Reorganized code for version 1.0.0 release
+
 ## [v0.2.0] - 2022-02-02 - 2022-02-19
 ### Added
 - Import main validator as stac-validator was updated to 2.3.0
