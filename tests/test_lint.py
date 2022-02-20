@@ -77,7 +77,7 @@ def test_linter_collection():
     assert linter.version == "1.0.0"
     assert linter.valid_stac == True
     assert linter.asset_type == "COLLECTION"
-    assert linter.summaries == True
+    assert linter.check_summaries() == True
 
 def test_linter_collection_no_summaries():
     file = "sample_files/1.0.0/collection-no-summaries.json"
@@ -85,7 +85,7 @@ def test_linter_collection_no_summaries():
     assert linter.version == "1.0.0"
     assert linter.valid_stac == True
     assert linter.asset_type == "COLLECTION"
-    assert linter.summaries == False
+    assert linter.check_summaries() == False
     assert linter.best_practices_msg == [
         "STAC Best Practices: ",
         "    Object should be called 'collection.json' not 'collection-no-summaries.json'",
@@ -101,7 +101,7 @@ def test_linter_catalog():
     assert linter.version == "1.0.0"
     assert linter.valid_stac == True
     assert linter.asset_type == "CATALOG"
-    assert linter.bloated_links == False
+    assert linter.check_bloated_links() == False
 
 def test_linter_collection_recursive_remote():
     file = "https://raw.githubusercontent.com/stac-utils/pystac/main/tests/data-files/examples/0.9.0/collection-spec/examples/landsat-collection.json"
@@ -126,28 +126,28 @@ def test_linter_collection_catalog_id():
 def test_linter_item_id_format_best_practices():
     file = "sample_files/1.0.0/core-item-invalid-id.json"
     linter = Linter(file)
-    assert linter.searchable_identifiers == False
-    assert linter.percent_encoded == True
+    assert linter.check_searchable_identifiers() == False
+    assert linter.check_percent_encoded() == True
 
 def test_datetime_set_to_null():
     file = "sample_files/1.0.0/core-item-null-datetime.json"
     linter = Linter(file)
-    assert linter.datetime_null == True
+    assert linter.check_datetime_null()== True
 
 def test_unlocated_item():
     file = "sample_files/1.0.0/core-item-unlocated.json"
     linter = Linter(file)
-    assert linter.unlocated == True
-    assert linter.geometry == False
+    assert linter.check_unlocated() == True
+    assert linter.check_geometry_null() == True
 
 def test_bloated_item():
     file = "sample_files/1.0.0/core-item-bloated.json"
     linter = Linter(file)
 
-    assert linter.bloated_metadata == True
+    assert linter.check_bloated_metadata() == True
     assert len(linter.data["properties"]) > 20
 
-    assert linter.bloated_links == True
+    assert linter.check_bloated_links() == True
     assert len(linter.data["links"]) > 20
 
 def test_small_thumbnail():

@@ -5,7 +5,6 @@ import os
 from dataclasses import dataclass
 import pystac
 import requests
-from urllib.parse import urlparse
 
 @dataclass
 class Linter:
@@ -17,10 +16,9 @@ class Linter:
     def __post_init__(self):
         self.data = self.load_data(self.item)
         self.message = self.validate_file(self.item)
-        self.asset_type = self.check_asset_type()
-        self.version = self.check_version()
+        self.asset_type = self.message["asset_type"] if "asset_type" in self.message else ""
+        self.version = self.message["version"] if "version" in self.message else ""
         self.validator_version = "2.3.0"
-        self.update_msg = self.set_update_message()
         self.valid_stac = self.message["valid_stac"]
         self.error_type = self.check_error_type()
         self.error_msg = self.check_error_message()
@@ -28,19 +26,11 @@ class Linter:
         self.invalid_asset_request = self.check_links_assets(10, "assets", "request") if self.assets else None
         self.invalid_link_format = self.check_links_assets(10, "links", "format") if self.links else None
         self.invalid_link_request = self.check_links_assets(10, "links", "request") if self.links else None
-        self.schema = self.check_schema()
-        self.summaries = self.check_summaries()
-        self.bloated_links = self.get_bloated_links()
-        self.bloated_metadata = self.get_bloated_metadata()
+        self.schema = self.message["schema"] if "schema" in self.message else []
         self.recursive_error_msg = ""
-        self.datetime_null = self.check_datetime()
-        self.unlocated = self.check_unlocated()
-        self.geometry = self.check_geometry()
         self.validate_all = self.recursive_validation(self.load_data(self.item))
-        self.object_id = self.return_id()
-        self.file_name = self.get_file_name()
-        self.searchable_identifiers = self.check_searchable_identifiers()
-        self.percent_encoded = self.check_percent_encoded()
+        self.object_id = self.data["id"] if "id" in self.data else ""
+        self.file_name = os.path.basename(self.item).split('.')[0]
         self.best_practices_msg = self.create_best_practices_msg()
 
     def load_data(self, file):
@@ -66,24 +56,6 @@ class Linter:
             except Exception as e:
                 self.recursive_error_msg = f"Exception {str(e)}"
                 return False
-
-    def check_asset_type(self):
-        if "asset_type" in self.message:
-            return self.message["asset_type"]
-        else:
-            return ""
-
-    def check_schema(self):
-        if "schema" in self.message:
-            return self.message["schema"]
-        else:
-            return []
-
-    def check_version(self):
-        if "version" in self.message:
-            return self.message["version"]
-        else:
-            return ""
 
     def set_update_message(self):
         if self.version != "1.0.0":
@@ -115,23 +87,18 @@ class Linter:
             return ""
 
     def check_summaries(self):
-        return "summaries" in self.data
+        if self.asset_type == "COLLECTION":
+            return "summaries" in self.data
 
-    def get_bloated_links(self):
+    def check_bloated_links(self):
         if "links" in self.data:
             return len(self.data["links"]) > 20
 
-    def get_bloated_metadata(self):
+    def check_bloated_metadata(self):
         if "properties" in self.data:
             return len(self.data["properties"].keys()) > 20
 
-    def return_id(self):
-        if "id" in self.data:
-            return self.data["id"]
-        else:
-            return ""
-
-    def check_datetime(self):
+    def check_datetime_null(self):
         if "properties" in self.data:
             if "datetime" in self.data["properties"]:
                 if self.data["properties"]["datetime"] == None:
@@ -143,12 +110,9 @@ class Linter:
         if "geometry" in self.data:
             return self.data["geometry"] is None and self.data["bbox"] is not None
 
-    def check_geometry(self):
+    def check_geometry_null(self):
         if "geometry" in self.data:
-            return self.data["geometry"] is not None
-
-    def get_file_name(self):
-        return os.path.basename(self.item).split('.')[0]
+            return self.data["geometry"] is None
 
     def check_searchable_identifiers(self):
         if self.asset_type == "ITEM": 
@@ -204,14 +168,14 @@ class Linter:
         best_practices.append(base_string)
 
         # best practices - item ids should only contain searchable identifiers
-        if self.searchable_identifiers == False: 
+        if self.check_searchable_identifiers() == False: 
             string_1 = f"    Item name '{self.object_id}' should only contain Searchable identifiers"
             string_2 = f"    Identifiers should consist of only lowercase characters, numbers, '_', and '-'"
             string_3 = f"    https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#searchable-identifiers"
             best_practices.extend([string_1, string_2, string_3, ""])  
 
         # best practices - item ids should not contain ':' or '/' characters
-        if self.percent_encoded:
+        if self.check_percent_encoded():
             string_1 = f"    Item name '{self.object_id}' should not contain ':' or '/'"
             string_2 = f"    https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#item-ids"
             best_practices.extend([string_1, string_2, ""])
@@ -227,34 +191,34 @@ class Linter:
             best_practices.extend([string_1, ""])
 
         # best practices - collections should contain summaries
-        if self.asset_type == "COLLECTION" and self.summaries == False:
+        if self.check_summaries() == False:
             string_1 = f"    A STAC collection should contain a summaries field"
             string_2 = f"    It is recommended to store information like eo:bands in summaries"
             best_practices.extend([string_1, string_2, ""])
 
         # best practices - datetime files should not be set to null
-        if self.datetime_null:
+        if self.check_datetime_null():
             string_1 = f"    Please avoid setting the datetime field to null, many clients search on this field"
             best_practices.extend([string_1, ""])
 
         # best practices - check unlocated items to make sure bbox field is not set
-        if self.unlocated:
+        if self.check_unlocated():
             string_1 = f"    Unlocated item. Please avoid setting the bbox field when geometry is set to null"
             best_practices.extend([string_1, ""])
 
         # best practices - recommend items have a geometry
-        if not self.geometry and self.asset_type == "ITEM":
+        if self.check_geometry_null():
             string_1 = f"    All items should have a geometry field. STAC is not meant for non-spatial data"
             best_practices.extend([string_1, ""])
 
         # check to see if there are too many links
-        if self.bloated_links:
+        if self.check_bloated_links():
             string_1 = f"    You have {len(self.data['links'])} links. Please consider using sub-collections or sub-catalogs"
             string_2 = f"    https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#catalog--collection-practices"
             best_practices.extend([string_1, string_2, ""])
 
         # best practices - check for bloated metadata in properties
-        if self.bloated_metadata:
+        if self.check_bloated_metadata():
             string_1 = f"    You have {len(self.data['properties'])} properties. Please consider using links to avoid bloated metadata"
             best_practices.extend([string_1, ""])
 
