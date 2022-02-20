@@ -127,17 +127,17 @@ def test_linter_item_id_format_best_practices():
     file = "sample_files/1.0.0/core-item-invalid-id.json"
     linter = Linter(file)
     assert linter.searchable_identifiers == False
-    assert linter.percent_encoded == True
+    assert linter.check_percent_encoded() == True
 
 def test_datetime_set_to_null():
     file = "sample_files/1.0.0/core-item-null-datetime.json"
     linter = Linter(file)
-    assert linter.datetime_null == True
+    assert linter.check_datetime_null()== True
 
 def test_unlocated_item():
     file = "sample_files/1.0.0/core-item-unlocated.json"
     linter = Linter(file)
-    assert linter.unlocated == True
+    assert linter.check_unlocated() == True
     assert linter.geometry == False
 
 def test_bloated_item():

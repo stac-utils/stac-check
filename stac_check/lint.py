@@ -33,14 +33,11 @@ class Linter:
         self.bloated_links = self.get_bloated_links()
         self.bloated_metadata = self.get_bloated_metadata()
         self.recursive_error_msg = ""
-        self.datetime_null = self.check_datetime()
-        self.unlocated = self.check_unlocated()
         self.geometry = self.check_geometry()
         self.validate_all = self.recursive_validation(self.load_data(self.item))
         self.object_id = self.return_id()
         self.file_name = self.get_file_name()
         self.searchable_identifiers = self.check_searchable_identifiers()
-        self.percent_encoded = self.check_percent_encoded()
         self.best_practices_msg = self.create_best_practices_msg()
 
     def load_data(self, file):
@@ -131,7 +128,7 @@ class Linter:
         else:
             return ""
 
-    def check_datetime(self):
+    def check_datetime_null(self):
         if "properties" in self.data:
             if "datetime" in self.data["properties"]:
                 if self.data["properties"]["datetime"] == None:
@@ -211,7 +208,7 @@ class Linter:
             best_practices.extend([string_1, string_2, string_3, ""])  
 
         # best practices - item ids should not contain ':' or '/' characters
-        if self.percent_encoded:
+        if self.check_percent_encoded():
             string_1 = f"    Item name '{self.object_id}' should not contain ':' or '/'"
             string_2 = f"    https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#item-ids"
             best_practices.extend([string_1, string_2, ""])
@@ -233,12 +230,12 @@ class Linter:
             best_practices.extend([string_1, string_2, ""])
 
         # best practices - datetime files should not be set to null
-        if self.datetime_null:
+        if self.check_datetime_null():
             string_1 = f"    Please avoid setting the datetime field to null, many clients search on this field"
             best_practices.extend([string_1, ""])
 
         # best practices - check unlocated items to make sure bbox field is not set
-        if self.unlocated:
+        if self.check_unlocated():
             string_1 = f"    Unlocated item. Please avoid setting the bbox field when geometry is set to null"
             best_practices.extend([string_1, ""])
 
