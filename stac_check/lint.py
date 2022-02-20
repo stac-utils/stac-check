@@ -27,7 +27,6 @@ class Linter:
         self.invalid_link_format = self.check_links_assets(10, "links", "format") if self.links else None
         self.invalid_link_request = self.check_links_assets(10, "links", "request") if self.links else None
         self.schema = self.message["schema"] if "schema" in self.message else []
-        self.bloated_links = self.get_bloated_links()
         self.bloated_metadata = self.get_bloated_metadata()
         self.recursive_error_msg = ""
         self.validate_all = self.recursive_validation(self.load_data(self.item))
@@ -92,7 +91,7 @@ class Linter:
         if self.asset_type == "COLLECTION":
             return "summaries" in self.data
 
-    def get_bloated_links(self):
+    def check_bloated_links(self):
         if "links" in self.data:
             return len(self.data["links"]) > 20
 
@@ -214,7 +213,7 @@ class Linter:
             best_practices.extend([string_1, ""])
 
         # check to see if there are too many links
-        if self.bloated_links:
+        if self.check_bloated_links():
             string_1 = f"    You have {len(self.data['links'])} links. Please consider using sub-collections or sub-catalogs"
             string_2 = f"    https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#catalog--collection-practices"
             best_practices.extend([string_1, string_2, ""])
