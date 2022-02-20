@@ -26,7 +26,7 @@ class Linter:
         self.invalid_asset_request = self.check_links_assets(10, "assets", "request") if self.assets else None
         self.invalid_link_format = self.check_links_assets(10, "links", "format") if self.links else None
         self.invalid_link_request = self.check_links_assets(10, "links", "request") if self.links else None
-        self.schema = self.check_schema()
+        self.schema = self.message["schema"] if "schema" in self.message else []
         self.bloated_links = self.get_bloated_links()
         self.bloated_metadata = self.get_bloated_metadata()
         self.recursive_error_msg = ""
@@ -58,12 +58,6 @@ class Linter:
             except Exception as e:
                 self.recursive_error_msg = f"Exception {str(e)}"
                 return False
-
-    def check_schema(self):
-        if "schema" in self.message:
-            return self.message["schema"]
-        else:
-            return []
 
     def set_update_message(self):
         if self.version != "1.0.0":
