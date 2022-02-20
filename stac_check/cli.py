@@ -24,9 +24,9 @@ def cli_message(linter):
     click.secho()
 
     if linter.version == "1.0.0":
-        click.secho(linter.update_msg, fg='green')
+        click.secho(linter.set_update_message(), fg='green')
     else:
-        click.secho(linter.update_msg, fg='red')
+        click.secho(linter.set_update_message(), fg='red')
 
     click.secho()
 

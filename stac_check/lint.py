@@ -20,7 +20,6 @@ class Linter:
         self.asset_type = self.message["asset_type"] if "asset_type" in self.message else ""
         self.version = self.message["version"] if "version" in self.message else ""
         self.validator_version = "2.3.0"
-        self.update_msg = self.set_update_message()
         self.valid_stac = self.message["valid_stac"]
         self.error_type = self.check_error_type()
         self.error_msg = self.check_error_message()
@@ -63,23 +62,11 @@ class Linter:
                 self.recursive_error_msg = f"Exception {str(e)}"
                 return False
 
-    # def check_asset_type(self):
-    #     if "asset_type" in self.message:
-    #         return self.message["asset_type"]
-    #     else:
-    #         return ""
-
     def check_schema(self):
         if "schema" in self.message:
             return self.message["schema"]
         else:
             return []
-
-    # def check_version(self):
-    #     if "version" in self.message:
-    #         return self.message["version"]
-    #     else:
-    #         return ""
 
     def set_update_message(self):
         if self.version != "1.0.0":
