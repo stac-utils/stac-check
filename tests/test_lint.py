@@ -138,7 +138,7 @@ def test_unlocated_item():
     file = "sample_files/1.0.0/core-item-unlocated.json"
     linter = Linter(file)
     assert linter.check_unlocated() == True
-    assert linter.geometry == False
+    assert linter.check_geometry_null() == True
 
 def test_bloated_item():
     file = "sample_files/1.0.0/core-item-bloated.json"

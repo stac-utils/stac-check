@@ -30,9 +30,8 @@ class Linter:
         self.bloated_links = self.get_bloated_links()
         self.bloated_metadata = self.get_bloated_metadata()
         self.recursive_error_msg = ""
-        self.geometry = self.check_geometry()
         self.validate_all = self.recursive_validation(self.load_data(self.item))
-        self.object_id = self.return_id()
+        self.object_id = self.data["id"] if "id" in self.data else ""
         self.file_name = os.path.basename(self.item).split('.')[0]
         self.best_practices_msg = self.create_best_practices_msg()
 
@@ -105,13 +104,7 @@ class Linter:
 
     def get_bloated_metadata(self):
         if "properties" in self.data:
-            return len(self.data["properties"].keys()) > 20
-
-    def return_id(self):
-        if "id" in self.data:
-            return self.data["id"]
-        else:
-            return ""
+            return len(self.data["properties"].keys()) > 2
 
     def check_datetime_null(self):
         if "properties" in self.data:
@@ -125,9 +118,9 @@ class Linter:
         if "geometry" in self.data:
             return self.data["geometry"] is None and self.data["bbox"] is not None
 
-    def check_geometry(self):
+    def check_geometry_null(self):
         if "geometry" in self.data:
-            return self.data["geometry"] is not None
+            return self.data["geometry"] is None
 
     def check_searchable_identifiers(self):
         if self.asset_type == "ITEM": 
@@ -222,7 +215,7 @@ class Linter:
             best_practices.extend([string_1, ""])
 
         # best practices - recommend items have a geometry
-        if not self.geometry and self.asset_type == "ITEM":
+        if self.check_geometry_null():
             string_1 = f"    All items should have a geometry field. STAC is not meant for non-spatial data"
             best_practices.extend([string_1, ""])
 
