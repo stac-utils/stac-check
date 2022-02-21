@@ -20,7 +20,7 @@ setup(
         "requests>=2.19.1",
         "jsonschema>=3.1.2b0",
         "pytest",
-        "stac-validator==2.3.0"
+        "stac-validator>=2.3.0"
     ],
     entry_points={
         'console_scripts': ['stac_check=stac_check.cli:main']
