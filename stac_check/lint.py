@@ -162,79 +162,87 @@ class Linter:
         else:
             return True
 
+    def create_best_practices_dict(self):
+        best_practices_dict = {}
+
+        # best practices - item ids should only contain searchable identifiers
+        if self.check_searchable_identifiers() == False: 
+            msg_1 = f"Item name '{self.object_id}' should only contain Searchable identifiers"
+            msg_2 = f"Identifiers should consist of only lowercase characters, numbers, '_', and '-'"
+            best_practices_dict["searchable_identifiers"] = [msg_1, msg_2]
+
+        # best practices - item ids should not contain ':' or '/' characters
+        if self.check_percent_encoded():
+            msg_1 = f"Item name '{self.object_id}' should not contain ':' or '/'"
+            msg_2 = f"https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#item-ids"
+            best_practices_dict["percent_encoded"] = [msg_1, msg_2]
+
+        # best practices - item ids should match file names
+        if not self.check_item_id_file_name():
+            msg_1 = f"Item file names should match their ids: '{self.file_name}' not equal to '{self.object_id}"
+            best_practices_dict["check_item_id"] = [msg_1]
+
+        # best practices - collection and catalog file names should be collection.json and catalog.json 
+        if not self.check_catalog_id_file_name():
+            msg_1 = f"Object should be called '{self.asset_type.lower()}.json' not '{self.file_name}.json'"
+            best_practices_dict["check_catalog_id"] = [msg_1]
+
+        # best practices - collections should contain summaries
+        if self.check_summaries() == False:
+            msg_1 = f"A STAC collection should contain a summaries field"
+            msg_2 = f"It is recommended to store information like eo:bands in summaries"
+            best_practices_dict["check_summaries"] = [msg_1, msg_2]
+
+        # best practices - datetime files should not be set to null
+        if self.check_datetime_null():
+            msg_1 = f"Please avoid setting the datetime field to null, many clients search on this field"
+            best_practices_dict["datetime_null"] = [msg_1]
+
+        # best practices - check unlocated items to make sure bbox field is not set
+        if self.check_unlocated():
+            msg_1 = f"Unlocated item. Please avoid setting the bbox field when geometry is set to null"
+            best_practices_dict["check_unlocated"] = [msg_1]
+
+        # best practices - recommend items have a geometry
+        if self.check_geometry_null():
+            msg_1 = f"All items should have a geometry field. STAC is not meant for non-spatial data"
+            best_practices_dict["null_geometry"] = [msg_1]
+
+        # check to see if there are too many links
+        if self.check_bloated_links():
+            msg_1 = f"You have {len(self.data['links'])} links. Please consider using sub-collections or sub-catalogs"
+            best_practices_dict["bloated_links"] = [msg_1]
+
+        # best practices - check for bloated metadata in properties
+        if self.check_bloated_metadata():
+            msg_1 = f"You have {len(self.data['properties'])} properties. Please consider using links to avoid bloated metadata"
+            best_practices_dict["bloated_metadata"] = [msg_1]
+
+        # best practices - ensure thumbnail is a small file size ["png", "jpeg", "jpg", "webp"]
+        if not self.check_thumbnail() and self.asset_type == "ITEM":
+            msg_1 = f"A thumbnail should have a small file size ie. png, jpeg, jpg, webp"
+            best_practices_dict["check_thumbnail"] = [msg_1]
+
+        # best practices - ensure that links in catalogs and collections include a title field
+        if not self.check_links_title_field():
+            msg_1 = f"Links in catalogs and collections should always have a 'title' field"
+            best_practices_dict["check_links_title"] = [msg_1]
+
+        # best practices - ensure that links in catalogs and collections include self link
+        if not self.check_links_self():
+            msg_1 = f"A link to 'self' in links is strongly recommended"
+            best_practices_dict["check_links_self"] = [msg_1]
+
+        return best_practices_dict
+
     def create_best_practices_msg(self):
         best_practices = list()
         base_string = "STAC Best Practices: "
         best_practices.append(base_string)
 
-        # best practices - item ids should only contain searchable identifiers
-        if self.check_searchable_identifiers() == False: 
-            string_1 = f"    Item name '{self.object_id}' should only contain Searchable identifiers"
-            string_2 = f"    Identifiers should consist of only lowercase characters, numbers, '_', and '-'"
-            string_3 = f"    https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#searchable-identifiers"
-            best_practices.extend([string_1, string_2, string_3, ""])  
-
-        # best practices - item ids should not contain ':' or '/' characters
-        if self.check_percent_encoded():
-            string_1 = f"    Item name '{self.object_id}' should not contain ':' or '/'"
-            string_2 = f"    https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#item-ids"
-            best_practices.extend([string_1, string_2, ""])
-
-        # best practices - item ids should match file names
-        if not self.check_item_id_file_name():
-            string_1 = f"    Item file names should match their ids: '{self.file_name}' not equal to '{self.object_id}"
-            best_practices.extend([string_1, ""])
-
-        # best practices - collection and catalog file names should be collection.json and catalog.json 
-        if not self.check_catalog_id_file_name():
-            string_1 = f"    Object should be called '{self.asset_type.lower()}.json' not '{self.file_name}.json'"
-            best_practices.extend([string_1, ""])
-
-        # best practices - collections should contain summaries
-        if self.check_summaries() == False:
-            string_1 = f"    A STAC collection should contain a summaries field"
-            string_2 = f"    It is recommended to store information like eo:bands in summaries"
-            best_practices.extend([string_1, string_2, ""])
-
-        # best practices - datetime files should not be set to null
-        if self.check_datetime_null():
-            string_1 = f"    Please avoid setting the datetime field to null, many clients search on this field"
-            best_practices.extend([string_1, ""])
-
-        # best practices - check unlocated items to make sure bbox field is not set
-        if self.check_unlocated():
-            string_1 = f"    Unlocated item. Please avoid setting the bbox field when geometry is set to null"
-            best_practices.extend([string_1, ""])
-
-        # best practices - recommend items have a geometry
-        if self.check_geometry_null():
-            string_1 = f"    All items should have a geometry field. STAC is not meant for non-spatial data"
-            best_practices.extend([string_1, ""])
-
-        # check to see if there are too many links
-        if self.check_bloated_links():
-            string_1 = f"    You have {len(self.data['links'])} links. Please consider using sub-collections or sub-catalogs"
-            string_2 = f"    https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#catalog--collection-practices"
-            best_practices.extend([string_1, string_2, ""])
-
-        # best practices - check for bloated metadata in properties
-        if self.check_bloated_metadata():
-            string_1 = f"    You have {len(self.data['properties'])} properties. Please consider using links to avoid bloated metadata"
-            best_practices.extend([string_1, ""])
-
-        # best practices - ensure thumbnail is a small file size ["png", "jpeg", "jpg", "webp"]
-        if not self.check_thumbnail() and self.asset_type == "ITEM":
-            string_1 = f"    A thumbnail should have a small file size ie. png, jpeg, jpg, webp"
-            best_practices.extend([string_1, ""])
-
-        # best practices - ensure that links in catalogs and collections include a title field
-        if not self.check_links_title_field():
-            string_1 = f"    Links in catalogs and collections should always have a 'title' field"
-            best_practices.extend([string_1, ""])
-
-        # best practices - ensure that links in catalogs and collections include self link
-        if not self.check_links_self():
-            string_1 = f"    A link to 'self' in links is strongly recommended"
-            best_practices.extend([string_1, ""])
+        for _,v in self.create_best_practices_dict().items():
+            for value in v:
+                best_practices.extend(["    " +value])  
+            best_practices.extend([""])
 
         return best_practices
