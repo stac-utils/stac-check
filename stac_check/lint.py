@@ -142,9 +142,12 @@ class Linter:
         return True
 
     def check_links_self(self):
-        for link in self.data["links"]:
-            if "self" in link["rel"]:
-                return True
+        if self.asset_type == "ITEM":
+            return True
+        if self.asset_type == "COLLECTION" or self.asset_type == "CATALOG":
+            for link in self.data["links"]:
+                if "self" in link["rel"]:
+                    return True
         return False
 
     def check_item_id_file_name(self):
@@ -228,7 +231,7 @@ class Linter:
             best_practices_dict["check_links_title"] = [msg_1]
 
         # best practices - ensure that links in catalogs and collections include self link
-        if not self.check_links_self() and self.asset_type == "COLLECTION" or self.asset_type == "CATALOG":
+        if not self.check_links_self():
             msg_1 = f"A link to 'self' in links is strongly recommended"
             best_practices_dict["check_links_self"] = [msg_1]
 
