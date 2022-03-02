@@ -4,7 +4,10 @@ All notable changes to this project will be documented in this file.
 
 The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [v1.0.3] - 2022-02-21
+## [v1.1.0] - 2022-03-02
+- Make it easier to export linting messages
+
+## [v1.0.3] - 2022-03-02
 - Set stac-validator version to 2.4.0
 
 ## [v1.0.2] - 2022-02-21
