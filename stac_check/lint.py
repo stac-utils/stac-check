@@ -133,6 +133,9 @@ class Linter:
                     if "png" in self.data["assets"]["thumbnail"]["type"] or "jpeg" in self.data["assets"]["thumbnail"]["type"] or \
                         "jpg" in self.data["assets"]["thumbnail"]["type"] or "webp" in self.data["assets"]["thumbnail"]["type"]:
                         return True
+                    else:
+                        return False
+        return True
 
     def check_links_title_field(self):
         if self.asset_type == "COLLECTION" or self.asset_type == "CATALOG":
