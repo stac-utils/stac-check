@@ -142,6 +142,8 @@ class Linter:
         return True
 
     def check_links_self(self):
+        if self.asset_type == "ITEM":
+            return True
         if self.asset_type == "COLLECTION" or self.asset_type == "CATALOG":
             for link in self.data["links"]:
                 if "self" in link["rel"]:
