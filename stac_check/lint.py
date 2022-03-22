@@ -40,7 +40,14 @@ class Linter:
             with open('stac-check.config.yml') as f:
                 config = yaml.load(f, Loader=yaml.FullLoader)
         except Exception:
-            return {'linting': {'searchable_identifiers': True, 'percent_encoded': True}}
+            return {
+                'linting': {
+                    'searchable_identifiers': True, 
+                    'percent_encoded': True,
+                    'item_id_file_name': True,
+                    'catalog_id_file_name': True
+                }
+            }
 
         return config
 
@@ -180,26 +187,27 @@ class Linter:
 
     def create_best_practices_dict(self):
         best_practices_dict = {}
+        config = self.config["linting"]
 
         # best practices - item ids should only contain searchable identifiers
-        if self.check_searchable_identifiers() == False and self.config["linting"]["searchable_identifiers"] == True: 
+        if self.check_searchable_identifiers() == False and config["searchable_identifiers"] == True: 
             msg_1 = f"Item name '{self.object_id}' should only contain Searchable identifiers"
             msg_2 = f"Identifiers should consist of only lowercase characters, numbers, '_', and '-'"
             best_practices_dict["searchable_identifiers"] = [msg_1, msg_2]
 
         # best practices - item ids should not contain ':' or '/' characters
-        if self.check_percent_encoded():
+        if self.check_percent_encoded() and config["percent_encoded"] == True:
             msg_1 = f"Item name '{self.object_id}' should not contain ':' or '/'"
             msg_2 = f"https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#item-ids"
             best_practices_dict["percent_encoded"] = [msg_1, msg_2]
 
         # best practices - item ids should match file names
-        if not self.check_item_id_file_name():
+        if not self.check_item_id_file_name() and config["item_id_file_name"] == True:
             msg_1 = f"Item file names should match their ids: '{self.file_name}' not equal to '{self.object_id}"
             best_practices_dict["check_item_id"] = [msg_1]
 
         # best practices - collection and catalog file names should be collection.json and catalog.json 
-        if not self.check_catalog_id_file_name():
+        if not self.check_catalog_id_file_name() and config["catalog_id_file_name"] == True: 
             msg_1 = f"Object should be called '{self.asset_type.lower()}.json' not '{self.file_name}.json'"
             best_practices_dict["check_catalog_id"] = [msg_1]
 

@@ -3,3 +3,7 @@ linting:
   searchable_identifiers: true
   # Item name '{self.object_id}' should not contain ':' or '/'
   percent_encoded: true
+  # Item file names should match their ids
+  item_id_file_name: true
+  # Collections and catalogs should be named collection.json and catalog.json
+  catalog_id_file_name: true
