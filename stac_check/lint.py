@@ -1,6 +1,7 @@
 from stac_validator.validate import StacValidate
 from stac_validator.utilities import is_valid_url
 import json
+import yaml
 import os
 from dataclasses import dataclass
 import pystac
@@ -16,6 +17,7 @@ class Linter:
     def __post_init__(self):
         self.data = self.load_data(self.item)
         self.message = self.validate_file(self.item)
+        self.config = self.parse_config()
         self.asset_type = self.message["asset_type"] if "asset_type" in self.message else ""
         self.version = self.message["version"] if "version" in self.message else ""
         self.validator_version = "2.3.0"
@@ -32,6 +34,15 @@ class Linter:
         self.object_id = self.data["id"] if "id" in self.data else ""
         self.file_name = os.path.basename(self.item).split('.')[0]
         self.best_practices_msg = self.create_best_practices_msg()
+
+    def parse_config(self):
+        try:
+            with open('stac-check.config.yml') as f:
+                config = yaml.load(f, Loader=yaml.FullLoader)
+        except Exception:
+            return {'linting': {'searchable_identifiers': True, 'percent_encoded': True}}
+
+        return config
 
     def load_data(self, file):
         if is_valid_url(file):
@@ -171,7 +182,7 @@ class Linter:
         best_practices_dict = {}
 
         # best practices - item ids should only contain searchable identifiers
-        if self.check_searchable_identifiers() == False: 
+        if self.check_searchable_identifiers() == False and self.config["linting"]["searchable_identifiers"] == True: 
             msg_1 = f"Item name '{self.object_id}' should only contain Searchable identifiers"
             msg_2 = f"Identifiers should consist of only lowercase characters, numbers, '_', and '-'"
             best_practices_dict["searchable_identifiers"] = [msg_1, msg_2]
