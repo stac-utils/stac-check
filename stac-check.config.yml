@@ -1,0 +1,5 @@
+linting:
+  # Identifiers should consist of only lowercase characters, numbers, '_', and '-'
+  searchable_identifiers: true
+  # Item name '{self.object_id}' should not contain ':' or '/'
+  percent_encoded: true
