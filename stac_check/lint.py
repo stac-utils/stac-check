@@ -45,7 +45,8 @@ class Linter:
                     'searchable_identifiers': True, 
                     'percent_encoded': True,
                     'item_id_file_name': True,
-                    'catalog_id_file_name': True
+                    'catalog_id_file_name': True,
+                    'check_summaries': True
                 }
             }
 

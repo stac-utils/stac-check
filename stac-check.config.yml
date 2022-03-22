@@ -7,3 +7,5 @@ linting:
   item_id_file_name: true
   # Collections and catalogs should be named collection.json and catalog.json
   catalog_id_file_name: true
+  # A STAC collection should contain a summaries field
+  check_summaries: true
