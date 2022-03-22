@@ -20,10 +20,11 @@ setup(
         "requests>=2.19.1",
         "jsonschema>=3.1.2b0",
         "pytest",
-        "stac-validator>=2.4.2"
+        "stac-validator>=2.4.2",
+        "PyYAML"
     ],
     entry_points={
-        'console_scripts': ['stac_check=stac_check.cli:main']
+        'console_scripts': ['stac-check=stac_check.cli:main']
     },
     author="Jonathan Healy",
     author_email="jonathan.d.healy@gmail.com",
