@@ -1,0 +1,11 @@
+linting:
+  # Identifiers should consist of only lowercase characters, numbers, '_', and '-'
+  searchable_identifiers: false
+  # Item name '{self.object_id}' should not contain ':' or '/'
+  percent_encoded: true
+  # Item file names should match their ids
+  item_id_file_name: true
+  # Collections and catalogs should be named collection.json and catalog.json
+  catalog_id_file_name: true
+  # A STAC collection should contain a summaries field
+  check_summaries: true
