@@ -10,7 +10,7 @@ import requests
 @dataclass
 class Linter:
     item: str
-    config_file: str = None
+    config_file: str = ""
     assets: bool = False
     links: bool = False
     recursive: bool = False
@@ -37,7 +37,7 @@ class Linter:
         self.best_practices_msg = self.create_best_practices_msg()
 
     def parse_config(self, config_file):
-        if not config_file:
+        if config_file == "":
             config_file = "stac-check.config.yml"
         try:
             with open(config_file) as f:
