@@ -10,6 +10,7 @@ import requests
 @dataclass
 class Linter:
     item: str
+    config_file: str = None
     assets: bool = False
     links: bool = False
     recursive: bool = False
@@ -17,7 +18,7 @@ class Linter:
     def __post_init__(self):
         self.data = self.load_data(self.item)
         self.message = self.validate_file(self.item)
-        self.config = self.parse_config()
+        self.config = self.parse_config(self.config_file)
         self.asset_type = self.message["asset_type"] if "asset_type" in self.message else ""
         self.version = self.message["version"] if "version" in self.message else ""
         self.validator_version = "2.3.0"
@@ -35,9 +36,11 @@ class Linter:
         self.file_name = os.path.basename(self.item).split('.')[0]
         self.best_practices_msg = self.create_best_practices_msg()
 
-    def parse_config(self):
+    def parse_config(self, config_file):
+        if not config_file:
+            config_file = "stac-check.config.yml"
         try:
-            with open('stac-check.config.yml') as f:
+            with open(config_file) as f:
                 config = yaml.load(f, Loader=yaml.FullLoader)
         except Exception:
             return {
