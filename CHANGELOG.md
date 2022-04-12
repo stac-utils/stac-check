@@ -4,9 +4,9 @@ All notable changes to this project will be documented in this file.
 
 The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [v1.2.0] - 2022-03-22
+## [Unreleased] - 
 ### Added
-- Option to include a configuration file
+- Option to include a configuration file to ignore selected checks
 ### Changed
 - Change name for stac_check to stac-check in setup
 
