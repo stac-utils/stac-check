@@ -15,3 +15,13 @@ linting:
   check_unlocated: true
   # best practices - recommend items have a geometry
   check_geometry: true
+  # check to see if there are too many links
+  bloated_links: true
+  # best practices - check for bloated metadata in properties
+  bloated_metadata: true
+  # best practices - ensure thumbnail is a small file size ["png", "jpeg", "jpg", "webp"]
+  check_thumbnail: true
+  # best practices - ensure that links in catalogs and collections include a title field
+  links_title: true
+  # best practices - ensure that links in catalogs and collections include self link
+  links_self: true

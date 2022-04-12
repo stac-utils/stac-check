@@ -47,6 +47,11 @@ class Linter:
                 'null_datetime': True,
                 'check_unlocated': True,
                 'check_geometry': True,
+                'bloated_links': True,
+                'bloated_metadata': True,
+                'check_thumbnail': True,
+                'links_title': True,
+                'links_self': True,
             }
         }
         if config_file == False:
@@ -233,37 +238,37 @@ class Linter:
             best_practices_dict["datetime_null"] = [msg_1]
 
         # best practices - check unlocated items to make sure bbox field is not set
-        if self.check_unlocated() and config["check_unlocated"]:
+        if self.check_unlocated() and config["check_unlocated"] == True:
             msg_1 = f"Unlocated item. Please avoid setting the bbox field when geometry is set to null"
             best_practices_dict["check_unlocated"] = [msg_1]
 
         # best practices - recommend items have a geometry
-        if self.check_geometry_null() and config["check_geometry"]:
+        if self.check_geometry_null() and config["check_geometry"] == True:
             msg_1 = f"All items should have a geometry field. STAC is not meant for non-spatial data"
             best_practices_dict["null_geometry"] = [msg_1]
 
         # check to see if there are too many links
-        if self.check_bloated_links():
+        if self.check_bloated_links() and config["bloated_links"] == True:
             msg_1 = f"You have {len(self.data['links'])} links. Please consider using sub-collections or sub-catalogs"
             best_practices_dict["bloated_links"] = [msg_1]
 
         # best practices - check for bloated metadata in properties
-        if self.check_bloated_metadata():
+        if self.check_bloated_metadata() and config["bloated_metadata"] == True:
             msg_1 = f"You have {len(self.data['properties'])} properties. Please consider using links to avoid bloated metadata"
             best_practices_dict["bloated_metadata"] = [msg_1]
 
         # best practices - ensure thumbnail is a small file size ["png", "jpeg", "jpg", "webp"]
-        if not self.check_thumbnail() and self.asset_type == "ITEM":
+        if not self.check_thumbnail() and self.asset_type == "ITEM" and config["check_thumbnail"] == True:
             msg_1 = f"A thumbnail should have a small file size ie. png, jpeg, jpg, webp"
             best_practices_dict["check_thumbnail"] = [msg_1]
 
         # best practices - ensure that links in catalogs and collections include a title field
-        if not self.check_links_title_field():
+        if not self.check_links_title_field() and config["links_title"] == True:
             msg_1 = f"Links in catalogs and collections should always have a 'title' field"
             best_practices_dict["check_links_title"] = [msg_1]
 
         # best practices - ensure that links in catalogs and collections include self link
-        if not self.check_links_self():
+        if not self.check_links_self() and config["links_self"] == True:
             msg_1 = f"A link to 'self' in links is strongly recommended"
             best_practices_dict["check_links_self"] = [msg_1]
 
