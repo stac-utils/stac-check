@@ -37,23 +37,29 @@ class Linter:
         self.best_practices_msg = self.create_best_practices_msg()
 
     def parse_config(self, config_file):
-        if config_file == "":
+        default_config = {
+            'linting': {
+                'searchable_identifiers': True, 
+                'percent_encoded': True,
+                'item_id_file_name': True,
+                'catalog_id_file_name': True,
+                'check_summaries': True,
+                'null_datetime': True,
+                'check_unlocated': True,
+                'check_geometry': True,
+            }
+        }
+        if config_file == False:
             config_file = "stac-check.config.yml"
         try:
             with open(config_file) as f:
                 config = yaml.load(f, Loader=yaml.FullLoader)
         except Exception:
-            return {
-                'linting': {
-                    'searchable_identifiers': True, 
-                    'percent_encoded': True,
-                    'item_id_file_name': True,
-                    'catalog_id_file_name': True,
-                    'check_summaries': True
-                }
-            }
+            config = {}
 
-        return config
+        default_config.update(config)
+
+        return default_config
 
     def load_data(self, file):
         if is_valid_url(file):
@@ -216,23 +222,23 @@ class Linter:
             best_practices_dict["check_catalog_id"] = [msg_1]
 
         # best practices - collections should contain summaries
-        if self.check_summaries() == False:
+        if self.check_summaries() == False and config["check_summaries"] == True:
             msg_1 = f"A STAC collection should contain a summaries field"
             msg_2 = f"It is recommended to store information like eo:bands in summaries"
             best_practices_dict["check_summaries"] = [msg_1, msg_2]
 
-        # best practices - datetime files should not be set to null
-        if self.check_datetime_null():
+        # best practices - datetime fields should not be set to null
+        if self.check_datetime_null() and config["null_datetime"] == True:
             msg_1 = f"Please avoid setting the datetime field to null, many clients search on this field"
             best_practices_dict["datetime_null"] = [msg_1]
 
         # best practices - check unlocated items to make sure bbox field is not set
-        if self.check_unlocated():
+        if self.check_unlocated() and config["check_unlocated"]:
             msg_1 = f"Unlocated item. Please avoid setting the bbox field when geometry is set to null"
             best_practices_dict["check_unlocated"] = [msg_1]
 
         # best practices - recommend items have a geometry
-        if self.check_geometry_null():
+        if self.check_geometry_null() and config["check_geometry"]:
             msg_1 = f"All items should have a geometry field. STAC is not meant for non-spatial data"
             best_practices_dict["null_geometry"] = [msg_1]
 
