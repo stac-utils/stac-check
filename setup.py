@@ -21,7 +21,8 @@ setup(
         "jsonschema>=3.1.2b0",
         "pytest",
         "stac-validator>=2.4.2",
-        "PyYAML"
+        "PyYAML",
+        "python-dotenv",
     ],
     entry_points={
         'console_scripts': ['stac-check=stac_check.cli:main']
