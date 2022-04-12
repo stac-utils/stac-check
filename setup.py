@@ -11,7 +11,7 @@ setup(
     name="stac_check",
     version=__version__,
     description="Linting and validation tool for STAC assets",
-    url="https://github.com/jonhealy1/stac-check",
+    url="https://github.com/stac-utils/stac-check",
     packages=find_packages(exclude=("tests",)),
     include_package_data=True,
     install_requires=[
