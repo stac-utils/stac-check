@@ -37,7 +37,8 @@ class Linter:
         self.file_name = os.path.basename(self.item).split('.')[0]
         self.best_practices_msg = self.create_best_practices_msg()
 
-    def parse_config(self, config_file):
+    @staticmethod
+    def parse_config(config_file):
         default_config_file = "stac-check.config.yml"
         with open(default_config_file) as f:
             default_config = yaml.load(f, Loader=yaml.FullLoader)
