@@ -39,9 +39,10 @@ class Linter:
 
     def parse_config(self, config_file):
         default_config_file = "stac-check.config.yml"
+        print("default config")
         with open(default_config_file) as f:
             default_config = yaml.load(f, Loader=yaml.FullLoader)
-        if config_file != None:
+        if config_file:
             with open(config_file) as f:
                 config = yaml.load(f, Loader=yaml.FullLoader)
             default_config.update(config)
