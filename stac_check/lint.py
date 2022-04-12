@@ -7,6 +7,9 @@ from dataclasses import dataclass
 import pystac
 import requests
 from typing import Optional
+from dotenv import load_dotenv
+
+load_dotenv()
 
 @dataclass
 class Linter:
@@ -39,7 +42,7 @@ class Linter:
 
     @staticmethod
     def parse_config(config_file):
-        default_config_file = "stac-check.config.yml"
+        default_config_file = os.getenv("STAC_CHECK_CONFIG", "stac-check.config.yml")
         with open(default_config_file) as f:
             default_config = yaml.load(f, Loader=yaml.FullLoader)
         if config_file:
