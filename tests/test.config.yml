@@ -9,3 +9,9 @@ linting:
   catalog_id_file_name: true
   # A STAC collection should contain a summaries field
   check_summaries: true
+  # Datetime fields should not be set to null
+  null_datetime: true
+  # best practices - check unlocated items to make sure bbox field is not set
+  check_unlocated: true
+  # best practices - recommend items have a geometry
+  check_geometry: true
