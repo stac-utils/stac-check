@@ -8,7 +8,7 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 ### Added
 - Option to include a configuration file to ignore selected checks
 ### Changed
-- Change name for stac_check to stac-check in setup
+- Change name from stac_check to stac-check in setup for cli
 
 ## [v1.1.3] - 2022-03-03
 - Fix thumbnail size check
