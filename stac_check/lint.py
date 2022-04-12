@@ -38,32 +38,13 @@ class Linter:
         self.best_practices_msg = self.create_best_practices_msg()
 
     def parse_config(self, config_file):
-        default_config = {
-            'linting': {
-                'searchable_identifiers': True, 
-                'percent_encoded': True,
-                'item_id_file_name': True,
-                'catalog_id_file_name': True,
-                'check_summaries': True,
-                'null_datetime': True,
-                'check_unlocated': True,
-                'check_geometry': True,
-                'bloated_links': True,
-                'bloated_metadata': True,
-                'check_thumbnail': True,
-                'links_title': True,
-                'links_self': True,
-            }
-        }
-        if config_file == False:
-            config_file = "stac-check.config.yml"
-        try:
+        default_config_file = "stac-check.config.yml"
+        with open(default_config_file) as f:
+            default_config = yaml.load(f, Loader=yaml.FullLoader)
+        if config_file != None:
             with open(config_file) as f:
                 config = yaml.load(f, Loader=yaml.FullLoader)
-        except Exception:
-            config = {}
-
-        default_config.update(config)
+            default_config.update(config)
 
         return default_config
 
