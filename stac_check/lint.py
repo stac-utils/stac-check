@@ -39,14 +39,13 @@ class Linter:
 
     def parse_config(self, config_file):
         default_config_file = "stac-check.config.yml"
-        print("default config")
         with open(default_config_file) as f:
             default_config = yaml.load(f, Loader=yaml.FullLoader)
         if config_file:
             with open(config_file) as f:
                 config = yaml.load(f, Loader=yaml.FullLoader)
             default_config.update(config)
-
+            
         return default_config
 
     def load_data(self, file):
@@ -106,13 +105,13 @@ class Linter:
         if self.asset_type == "COLLECTION":
             return "summaries" in self.data
 
-    def check_bloated_links(self, num_links: Optional[int] = 20):
+    def check_bloated_links(self, max_links: Optional[int] = 20):
         if "links" in self.data:
-            return len(self.data["links"]) > num_links
+            return len(self.data["links"]) > max_links
 
-    def check_bloated_metadata(self, num_properties: Optional[int] = 20):
+    def check_bloated_metadata(self, max_properties: Optional[int] = 20):
         if "properties" in self.data:
-            return len(self.data["properties"].keys()) > num_properties
+            return len(self.data["properties"].keys()) > max_properties
 
     def check_datetime_null(self):
         if "properties" in self.data:
@@ -186,6 +185,8 @@ class Linter:
     def create_best_practices_dict(self):
         best_practices_dict = {}
         config = self.config["linting"]
+        max_links = self.config["settings"]["max_links"]
+        max_properties = self.config["settings"]["max_properties"]
 
         # best practices - item ids should only contain searchable identifiers
         if self.check_searchable_identifiers() == False and config["searchable_identifiers"] == True: 
@@ -231,12 +232,12 @@ class Linter:
             best_practices_dict["null_geometry"] = [msg_1]
 
         # check to see if there are too many links
-        if self.check_bloated_links() and config["bloated_links"] == True:
+        if self.check_bloated_links(max_links=max_links) and config["bloated_links"] == True:
             msg_1 = f"You have {len(self.data['links'])} links. Please consider using sub-collections or sub-catalogs"
             best_practices_dict["bloated_links"] = [msg_1]
 
         # best practices - check for bloated metadata in properties
-        if self.check_bloated_metadata() and config["bloated_metadata"] == True:
+        if self.check_bloated_metadata(max_properties=max_properties) and config["bloated_metadata"] == True:
             msg_1 = f"You have {len(self.data['properties'])} properties. Please consider using links to avoid bloated metadata"
             best_practices_dict["bloated_metadata"] = [msg_1]
 
