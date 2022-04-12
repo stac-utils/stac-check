@@ -25,3 +25,9 @@ linting:
   links_title: true
   # best practices - ensure that links in catalogs and collections include self link
   links_self: true
+
+settings:
+  # number of links before the bloated links warning is shown
+  max_links: 20
+  # number of properties before the bloated metadata warning is shown
+  max_properties: 20
