@@ -10,7 +10,7 @@ import requests
 @dataclass
 class Linter:
     item: str
-    config_file: str = ""
+    config_file: Optional[str] = None
     assets: bool = False
     links: bool = False
     recursive: bool = False
