@@ -17,4 +17,16 @@ def test_linter_config_file():
     assert linter.config["linting"]["searchable_identifiers"] == False
     assert "searchable_identifiers" not in linter.create_best_practices_dict()
 
+def test_linter_max_links():
+    file = "sample_files/1.0.0/core-item-bloated.json"
+    linter = Linter(file)
+
+    assert linter.check_bloated_links() == True
+    assert len(linter.data["links"]) > 20
+
+    # Load config file
+    linter = Linter(file, config_file="tests/test.config.yml")
+    assert "bloated_links" not in linter.create_best_practices_dict()
+
+
     
