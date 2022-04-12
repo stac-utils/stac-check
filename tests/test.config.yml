@@ -15,3 +15,5 @@ linting:
   check_unlocated: true
   # best practices - recommend items have a geometry
   check_geometry: true
+  # check to see if there are too many links
+  bloated_links: true
