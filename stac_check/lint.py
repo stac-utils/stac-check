@@ -6,6 +6,7 @@ import os
 from dataclasses import dataclass
 import pystac
 import requests
+from typing import Optional
 
 @dataclass
 class Linter:
