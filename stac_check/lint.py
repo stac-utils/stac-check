@@ -106,13 +106,13 @@ class Linter:
         if self.asset_type == "COLLECTION":
             return "summaries" in self.data
 
-    def check_bloated_links(self):
+    def check_bloated_links(self, num_links: Optional[int] = 20):
         if "links" in self.data:
-            return len(self.data["links"]) > 20
+            return len(self.data["links"]) > num_links
 
-    def check_bloated_metadata(self):
+    def check_bloated_metadata(self, num_properties: Optional[int] = 20):
         if "properties" in self.data:
-            return len(self.data["properties"].keys()) > 20
+            return len(self.data["properties"].keys()) > num_properties
 
     def check_datetime_null(self):
         if "properties" in self.data:
