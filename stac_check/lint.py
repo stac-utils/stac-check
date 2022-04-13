@@ -1,3 +1,4 @@
+import pkg_resources
 from stac_validator.validate import StacValidate
 from stac_validator.utilities import is_valid_url
 import json
@@ -42,9 +43,13 @@ class Linter:
 
     @staticmethod
     def parse_config(config_file):
-        default_config_file = os.getenv("STAC_CHECK_CONFIG", "stac-check.config.yml")
-        with open(default_config_file) as f:
-            default_config = yaml.load(f, Loader=yaml.FullLoader)
+        default_config_file = os.getenv("STAC_CHECK_CONFIG")
+        if default_config_file:
+            with open(default_config_file) as f:
+                default_config = yaml.load(f, Loader=yaml.FullLoader)
+        else:
+            with pkg_resources.resource_stream(__name__, "stac-check.config.yml") as f:
+                default_config = yaml.load(f, Loader=yaml.FullLoader)
         if config_file:
             with open(config_file) as f:
                 config = yaml.load(f, Loader=yaml.FullLoader)
