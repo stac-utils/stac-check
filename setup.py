@@ -11,7 +11,7 @@ setup(
     name="stac_check",
     version=__version__,
     description="Linting and validation tool for STAC assets",
-    url="https://github.com/jonhealy1/stac-check",
+    url="https://github.com/stac-utils/stac-check",
     packages=find_packages(exclude=("tests",)),
     include_package_data=True,
     install_requires=[
@@ -20,10 +20,12 @@ setup(
         "requests>=2.19.1",
         "jsonschema>=3.1.2b0",
         "pytest",
-        "stac-validator>=2.4.2"
+        "stac-validator>=2.4.2",
+        "PyYAML",
+        "python-dotenv",
     ],
     entry_points={
-        'console_scripts': ['stac_check=stac_check.cli:main']
+        'console_scripts': ['stac-check=stac_check.cli:main']
     },
     author="Jonathan Healy",
     author_email="jonathan.d.healy@gmail.com",

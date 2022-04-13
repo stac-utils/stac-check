@@ -1,0 +1,33 @@
+linting:
+  # Identifiers should consist of only lowercase characters, numbers, '_', and '-'
+  searchable_identifiers: true
+  # Item name '{self.object_id}' should not contain ':' or '/'
+  percent_encoded: true
+  # Item file names should match their ids
+  item_id_file_name: true
+  # Collections and catalogs should be named collection.json and catalog.json
+  catalog_id_file_name: true
+  # A STAC collection should contain a summaries field
+  check_summaries: true
+  # Datetime fields should not be set to null
+  null_datetime: true
+  # best practices - check unlocated items to make sure bbox field is not set
+  check_unlocated: true
+  # best practices - recommend items have a geometry
+  check_geometry: true
+  # check to see if there are too many links
+  bloated_links: true
+  # best practices - check for bloated metadata in properties
+  bloated_metadata: true
+  # best practices - ensure thumbnail is a small file size ["png", "jpeg", "jpg", "webp"]
+  check_thumbnail: true
+  # best practices - ensure that links in catalogs and collections include a title field
+  links_title: true
+  # best practices - ensure that links in catalogs and collections include self link
+  links_self: true
+
+settings:
+  # number of links before the bloated links warning is shown
+  max_links: 20
+  # number of properties before the bloated metadata warning is shown
+  max_properties: 20
