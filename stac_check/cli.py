@@ -1,6 +1,4 @@
 import click
-import json
-import os
 from .lint import Linter
 
 def link_asset_message(link_list:list, type: str, format: str):
@@ -115,7 +113,7 @@ def cli_message(linter):
 )
 @click.command()
 @click.argument('file')
-@click.version_option(version="0.1.4")
+@click.version_option(version="1.2.0")
 def main(file, assets, links, recursive):
     linter = Linter(file, assets, links, recursive)
     cli_message(linter)
