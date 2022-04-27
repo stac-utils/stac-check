@@ -184,9 +184,9 @@ class Linter:
             return True
 
     def check_catalog_id_file_name(self):
-        if self.asset_type == "CATALOG" and self.file_name != 'catalog.json':
+        if self.asset_type == "CATALOG" and self.file_name != 'catalog':
             return False 
-        elif self.asset_type == "COLLECTION" and self.file_name != 'collection.json':
+        elif self.asset_type == "COLLECTION" and self.file_name != 'collection':
             return False
         else:
             return True
