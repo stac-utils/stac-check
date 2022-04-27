@@ -1,14 +1,21 @@
+import pkg_resources
 from stac_validator.validate import StacValidate
 from stac_validator.utilities import is_valid_url
 import json
+import yaml
 import os
 from dataclasses import dataclass
 import pystac
 import requests
+from typing import Optional
+from dotenv import load_dotenv
+
+load_dotenv()
 
 @dataclass
 class Linter:
     item: str
+    config_file: Optional[str] = None
     assets: bool = False
     links: bool = False
     recursive: bool = False
@@ -16,6 +23,7 @@ class Linter:
     def __post_init__(self):
         self.data = self.load_data(self.item)
         self.message = self.validate_file(self.item)
+        self.config = self.parse_config(self.config_file)
         self.asset_type = self.message["asset_type"] if "asset_type" in self.message else ""
         self.version = self.message["version"] if "version" in self.message else ""
         self.validator_version = "2.3.0"
@@ -32,6 +40,22 @@ class Linter:
         self.object_id = self.data["id"] if "id" in self.data else ""
         self.file_name = os.path.basename(self.item).split('.')[0]
         self.best_practices_msg = self.create_best_practices_msg()
+
+    @staticmethod
+    def parse_config(config_file):
+        default_config_file = os.getenv("STAC_CHECK_CONFIG")
+        if default_config_file:
+            with open(default_config_file) as f:
+                default_config = yaml.load(f, Loader=yaml.FullLoader)
+        else:
+            with pkg_resources.resource_stream(__name__, "stac-check.config.yml") as f:
+                default_config = yaml.load(f, Loader=yaml.FullLoader)
+        if config_file:
+            with open(config_file) as f:
+                config = yaml.load(f, Loader=yaml.FullLoader)
+            default_config.update(config)
+            
+        return default_config
 
     def load_data(self, file):
         if is_valid_url(file):
@@ -90,13 +114,13 @@ class Linter:
         if self.asset_type == "COLLECTION":
             return "summaries" in self.data
 
-    def check_bloated_links(self):
+    def check_bloated_links(self, max_links: Optional[int] = 20):
         if "links" in self.data:
-            return len(self.data["links"]) > 20
+            return len(self.data["links"]) > max_links
 
-    def check_bloated_metadata(self):
+    def check_bloated_metadata(self, max_properties: Optional[int] = 20):
         if "properties" in self.data:
-            return len(self.data["properties"].keys()) > 20
+            return len(self.data["properties"].keys()) > max_properties
 
     def check_datetime_null(self):
         if "properties" in self.data:
@@ -169,72 +193,75 @@ class Linter:
 
     def create_best_practices_dict(self):
         best_practices_dict = {}
+        config = self.config["linting"]
+        max_links = self.config["settings"]["max_links"]
+        max_properties = self.config["settings"]["max_properties"]
 
         # best practices - item ids should only contain searchable identifiers
-        if self.check_searchable_identifiers() == False: 
+        if self.check_searchable_identifiers() == False and config["searchable_identifiers"] == True: 
             msg_1 = f"Item name '{self.object_id}' should only contain Searchable identifiers"
             msg_2 = f"Identifiers should consist of only lowercase characters, numbers, '_', and '-'"
             best_practices_dict["searchable_identifiers"] = [msg_1, msg_2]
 
         # best practices - item ids should not contain ':' or '/' characters
-        if self.check_percent_encoded():
+        if self.check_percent_encoded() and config["percent_encoded"] == True:
             msg_1 = f"Item name '{self.object_id}' should not contain ':' or '/'"
             msg_2 = f"https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#item-ids"
             best_practices_dict["percent_encoded"] = [msg_1, msg_2]
 
         # best practices - item ids should match file names
-        if not self.check_item_id_file_name():
+        if not self.check_item_id_file_name() and config["item_id_file_name"] == True:
             msg_1 = f"Item file names should match their ids: '{self.file_name}' not equal to '{self.object_id}"
             best_practices_dict["check_item_id"] = [msg_1]
 
         # best practices - collection and catalog file names should be collection.json and catalog.json 
-        if not self.check_catalog_id_file_name():
+        if not self.check_catalog_id_file_name() and config["catalog_id_file_name"] == True: 
             msg_1 = f"Object should be called '{self.asset_type.lower()}.json' not '{self.file_name}.json'"
             best_practices_dict["check_catalog_id"] = [msg_1]
 
         # best practices - collections should contain summaries
-        if self.check_summaries() == False:
+        if self.check_summaries() == False and config["check_summaries"] == True:
             msg_1 = f"A STAC collection should contain a summaries field"
             msg_2 = f"It is recommended to store information like eo:bands in summaries"
             best_practices_dict["check_summaries"] = [msg_1, msg_2]
 
-        # best practices - datetime files should not be set to null
-        if self.check_datetime_null():
+        # best practices - datetime fields should not be set to null
+        if self.check_datetime_null() and config["null_datetime"] == True:
             msg_1 = f"Please avoid setting the datetime field to null, many clients search on this field"
             best_practices_dict["datetime_null"] = [msg_1]
 
         # best practices - check unlocated items to make sure bbox field is not set
-        if self.check_unlocated():
+        if self.check_unlocated() and config["check_unlocated"] == True:
             msg_1 = f"Unlocated item. Please avoid setting the bbox field when geometry is set to null"
             best_practices_dict["check_unlocated"] = [msg_1]
 
         # best practices - recommend items have a geometry
-        if self.check_geometry_null():
+        if self.check_geometry_null() and config["check_geometry"] == True:
             msg_1 = f"All items should have a geometry field. STAC is not meant for non-spatial data"
             best_practices_dict["null_geometry"] = [msg_1]
 
         # check to see if there are too many links
-        if self.check_bloated_links():
+        if self.check_bloated_links(max_links=max_links) and config["bloated_links"] == True:
             msg_1 = f"You have {len(self.data['links'])} links. Please consider using sub-collections or sub-catalogs"
             best_practices_dict["bloated_links"] = [msg_1]
 
         # best practices - check for bloated metadata in properties
-        if self.check_bloated_metadata():
+        if self.check_bloated_metadata(max_properties=max_properties) and config["bloated_metadata"] == True:
             msg_1 = f"You have {len(self.data['properties'])} properties. Please consider using links to avoid bloated metadata"
             best_practices_dict["bloated_metadata"] = [msg_1]
 
         # best practices - ensure thumbnail is a small file size ["png", "jpeg", "jpg", "webp"]
-        if not self.check_thumbnail() and self.asset_type == "ITEM":
+        if not self.check_thumbnail() and self.asset_type == "ITEM" and config["check_thumbnail"] == True:
             msg_1 = f"A thumbnail should have a small file size ie. png, jpeg, jpg, webp"
             best_practices_dict["check_thumbnail"] = [msg_1]
 
         # best practices - ensure that links in catalogs and collections include a title field
-        if not self.check_links_title_field():
+        if not self.check_links_title_field() and config["links_title"] == True:
             msg_1 = f"Links in catalogs and collections should always have a 'title' field"
             best_practices_dict["check_links_title"] = [msg_1]
 
         # best practices - ensure that links in catalogs and collections include self link
-        if not self.check_links_self():
+        if not self.check_links_self() and config["links_self"] == True:
             msg_1 = f"A link to 'self' in links is strongly recommended"
             best_practices_dict["check_links_self"] = [msg_1]
 
