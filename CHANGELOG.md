@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [Unreleased]
+### Fixed
+- fix catalog file name check https://github.com/stac-utils/stac-check/pull/83
+
 ## [v1.1.3] - 2022-03-03
 - Fix thumbnail size check
 
