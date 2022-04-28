@@ -44,7 +44,7 @@ stac-check: STAC spec validaton and linting tool
 
 Please upgrade from version 0.9.0 to version 1.0.0!
 
-Validator: pystac 1.1.0
+Validator: stac-validator
     Recursive: Validate all assets in a collection or catalog
 
 Valid COLLECTION: True
