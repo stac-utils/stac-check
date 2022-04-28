@@ -73,7 +73,6 @@ class Linter:
         if self.recursive > 0:
             stac = StacValidate(file, recursive=True, max_depth=self.recursive)
             stac.run()
-            print(stac.message)
             return stac.message
 
     def set_update_message(self):
