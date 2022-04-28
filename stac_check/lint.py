@@ -71,10 +71,11 @@ class Linter:
 
     def recursive_validation(self, file):
         if self.recursive > 0:
-            stac = StacValidate(file)
+            stac = StacValidate(file, recursive=True, max_depth=self.recursive)
             stac.run()
+            print(stac.message)
             return stac.message
-            
+
     def set_update_message(self):
         if self.version != "1.0.0":
             return f"Please upgrade from version {self.version} to version 1.0.0!"
