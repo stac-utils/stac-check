@@ -17,11 +17,11 @@ or for local development
 Usage: stac-check [OPTIONS] FILE
 
 Options:
-  --version        Show the version and exit.
-  -l, --links      Validate links for format and response.
-  -a, --assets     Validate assets for format and response.
-  -r, --recursive  Validate all assets in a collection or catalog.
-  --help           Show this message and exit.
+  --version                Show the version and exit.
+  -l, --links              Validate links for format and response.
+  -a, --assets             Validate assets for format and response.
+  -r, --recursive INTEGER  Maximum depth to traverse when using recursion.
+  --help                   Show this message and exit.
 ```
 ---
 ### Docker  
