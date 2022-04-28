@@ -103,12 +103,33 @@ def test_linter_catalog():
     assert linter.asset_type == "CATALOG"
     assert linter.check_bloated_links() == False
 
-def test_linter_collection_recursive_remote():
-    file = "https://raw.githubusercontent.com/stac-utils/pystac/main/tests/data-files/examples/0.9.0/collection-spec/examples/landsat-collection.json"
-    linter = Linter(file, assets=False, links=False, recursive=True)
-    assert linter.version == "0.9.0"
-    assert linter.recursive == True
-    assert linter.recursive_error_msg == "Exception Could not read uri https://landsat-stac.s3.amazonaws.com/landsat-8-l1/paths/catalog.json"
+def test_linter_collection_recursive():
+    file = "sample_files/1.0.0/catalog-with-bad-item.json"
+    linter = Linter(file, assets=False, links=False, recursive=1000)
+    assert linter.version == "1.0.0"
+    assert linter.recursive == 1000
+    assert linter.validate_all == [
+        {
+            "version": "1.0.0",
+            "path": "sample_files/1.0.0/catalog-with-bad-item.json",
+            "schema": [
+                "https://schemas.stacspec.org/v1.0.0/catalog-spec/json-schema/catalog.json"
+            ],
+            "valid_stac": True,
+            "asset_type": "CATALOG",
+            "validation_method": "recursive"
+        },
+        {
+            "version": "1.0.0",
+            "path": "sample_files/1.0.0/./bad-item.json",
+            "schema": [
+                "https://schemas.stacspec.org/v1.0.0/catalog-spec/json-schema/catalog.json"
+            ],
+            "valid_stac": False,
+            "error_type": "FileNotFoundError",
+            "error_message": "[Errno 2] No such file or directory: 'sample_files/1.0.0/./bad-item.json'"
+        }
+    ]
 
 def test_linter_item_id_not_matching_file_name():
     file = "sample_files/1.0.0/core-item.json"
@@ -172,4 +193,3 @@ def test_self_in_links():
     linter = Linter(file)
 
     assert linter.check_links_self() == False
-    
