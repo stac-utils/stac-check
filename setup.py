@@ -15,7 +15,6 @@ setup(
     packages=find_packages(exclude=("tests",)),
     include_package_data=True,
     install_requires=[
-        "pystac[validation]>=1.1.0",
         "click>=7.1.2",
         "requests>=2.19.1",
         "jsonschema>=3.1.2b0",
