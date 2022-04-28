@@ -108,28 +108,16 @@ def test_linter_collection_recursive():
     linter = Linter(file, assets=False, links=False, recursive=1000)
     assert linter.version == "1.0.0"
     assert linter.recursive == 1000
-    assert linter.validate_all == [
-        {
-            "version": "1.0.0",
-            "path": "sample_files/1.0.0/catalog-with-bad-item.json",
-            "schema": [
-                "https://schemas.stacspec.org/v1.0.0/catalog-spec/json-schema/catalog.json"
-            ],
-            "valid_stac": True,
-            "asset_type": "CATALOG",
-            "validation_method": "recursive"
-        },
-        {
-            "version": "1.0.0",
-            "path": "sample_files/1.0.0/./bad-item.json",
-            "schema": [
-                "https://schemas.stacspec.org/v1.0.0/catalog-spec/json-schema/catalog.json"
-            ],
-            "valid_stac": False,
-            "error_type": "FileNotFoundError",
-            "error_message": "[Errno 2] No such file or directory: 'sample_files/1.0.0/./bad-item.json'"
-        }
-    ]
+    assert linter.validate_all[0] == {
+        "version": "1.0.0",
+        "path": "sample_files/1.0.0/catalog-with-bad-item.json",
+        "schema": [
+            "https://schemas.stacspec.org/v1.0.0/catalog-spec/json-schema/catalog.json"
+        ],
+        "valid_stac": True,
+        "asset_type": "CATALOG",
+        "validation_method": "recursive"
+    }
 
 def test_linter_item_id_not_matching_file_name():
     file = "sample_files/1.0.0/core-item.json"
