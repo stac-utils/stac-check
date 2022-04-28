@@ -191,5 +191,12 @@ def test_title_field():
 def test_self_in_links():
     file = "sample_files/1.0.0/collection-no-title.json"
     linter = Linter(file)
-
     assert linter.check_links_self() == False
+    
+def test_catalog_name():
+    file = "sample_files/1.0.0/catalog.json"
+    linter = Linter(file)
+    assert linter.check_catalog_id_file_name()
+    file = "sample_files/1.0.0/collection.json"
+    linter = Linter(file)
+    assert linter.check_catalog_id_file_name()
