@@ -10,26 +10,23 @@ def link_asset_message(link_list:list, type: str, format: str):
         click.secho(f"No {type.upper()} {format} errors!", fg="green")
 
 def recursive_message(linter):
-    click.secho(f"    Recursive: Validate all assets in a collection or catalog")
     click.secho()
-    click.secho(f"Assets Validated: ")
-    click.secho()
-    for msg in linter.validate_all:
-        click.secho(f"Version {msg['version']}")
-        click.secho(f"Path {msg['path']}")
-        click.secho(f"Schemas {msg['schema']}")
-        if "asset_type" in msg:
-            click.secho(f"Type {msg['asset_type']}")
-        if "error_type" in msg:
-            click.secho(f"Error Type {msg['error_type']}")
-        if "error_message" in msg:
-            click.secho(f"Error Type {msg['error_message']}")
-        click.echo("Valid: ")
-        if msg['valid_stac'] == True:
-            click.secho(f"{msg['valid_stac']}", fg='green')
-        else:
-            click.secho(f"{msg['valid_stac']}", fg='red')
+    click.secho(f"Recursive: Validate all assets in a collection or catalog", bold=True)
+    click.secho("-------------------------")
+    for count, msg in enumerate(linter.validate_all):
+        click.secho(f"Asset {count+1} Validated: {msg['path']}", bg="white", fg="black")
         click.secho()
+        if msg['valid_stac'] == True:
+            recursive_linter = Linter(msg["path"], recursive=0)
+            cli_message(recursive_linter)
+        else:
+            click.secho(f"Valid: {msg['valid_stac']}", fg='red')
+            click.secho("Schemas validated: ", fg="blue")
+            for schema in msg["schema"]:
+                click.secho(f"    {schema}")
+            click.secho(f"Error Type: {msg['error_type']}", fg='red')
+            click.secho(f"Error Message: {msg['error_message']}", fg='red')
+        click.secho("-------------------------")
 
 def intro_message(linter):
     click.secho("""
@@ -106,8 +103,6 @@ def cli_message(linter):
     if linter.error_msg != "":
         click.secho(f"Validation error message: ", fg='red')
         click.secho(f"    {linter.error_msg}")
-
-    click.secho()
 
     click.secho(f"This object has {len(linter.data['links'])} links")
 
