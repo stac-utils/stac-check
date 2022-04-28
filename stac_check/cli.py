@@ -38,7 +38,12 @@ def cli_message(linter):
             click.secho(f"Version {msg['version']}")
             click.secho(f"Path {msg['path']}")
             click.secho(f"Schemas {msg['schema']}")
-            click.secho(f"Type {msg['asset_type']}")
+            if "asset_type" in msg:
+                click.secho(f"Type {msg['asset_type']}")
+            if "error_type" in msg:
+                click.secho(f"Error Type {msg['error_type']}")
+            if "error_message" in msg:
+                click.secho(f"Error Type {msg['error_message']}")
             click.secho(f"Valid {msg['valid_stac']}")
             click.secho()
 
