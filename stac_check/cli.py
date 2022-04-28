@@ -32,7 +32,8 @@ def cli_message(linter):
 
     if linter.recursive > 0:
         click.secho(f"    Recursive: Validate all assets in a collection or catalog")
-        click.secho(f"    Assets Validated: ")
+        click.secho()
+        click.secho(f"Assets Validated: ")
         click.secho()
         for msg in linter.validate_all:
             click.secho(f"Version {msg['version']}")
@@ -44,7 +45,11 @@ def cli_message(linter):
                 click.secho(f"Error Type {msg['error_type']}")
             if "error_message" in msg:
                 click.secho(f"Error Type {msg['error_message']}")
-            click.secho(f"Valid {msg['valid_stac']}")
+            click.echo("Valid: ")
+            if msg['valid_stac'] == True:
+                click.secho(f"{msg['valid_stac']}", fg='green')
+            else:
+                click.secho(f"{msg['valid_stac']}", fg='red')
             click.secho()
 
     else:
