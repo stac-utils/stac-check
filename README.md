@@ -17,11 +17,14 @@ or for local development
 Usage: stac-check [OPTIONS] FILE
 
 Options:
-  --version        Show the version and exit.
-  -l, --links      Validate links for format and response.
-  -a, --assets     Validate assets for format and response.
-  -r, --recursive  Validate all assets in a collection or catalog.
-  --help           Show this message and exit.
+  --version                Show the version and exit.
+  -l, --links              Validate links for format and response.
+  -a, --assets             Validate assets for format and response.
+  -m, --max-depth INTEGER  Maximum depth to traverse when recursing. Omit this
+                           argument to get full recursion. Ignored if
+                           `recursive == False`.
+  -r, --recursive          Recursively validate all related stac objects.
+  --help                   Show this message and exit.               Show this message and exit.
 ```
 ---
 ### Docker  
@@ -44,8 +47,13 @@ stac-check: STAC spec validaton and linting tool
 
 Please upgrade from version 0.9.0 to version 1.0.0!
 
-Validator: pystac 1.1.0
-    Recursive: Validate all assets in a collection or catalog
+Validator: stac-validator 3.1.0
+
+
+Recursive: Validate all assets in a collection or catalog
+Max-depth = None
+-------------------------
+Asset 1 Validated: https://raw.githubusercontent.com/stac-utils/pystac/main/tests/data-files/examples/0.9.0/collection-spec/examples/landsat-collection.json
 
 Valid COLLECTION: True
 
@@ -60,12 +68,17 @@ STAC Best Practices:
 
     Links in catalogs and collections should always have a 'title' field
 
-
-Recursive validation has failed!
-Recursive validation error message: 
-    Exception Could not read uri https://landsat-stac.s3.amazonaws.com/landsat-8-l1/paths/catalog.json
-
 This object has 4 links
+
+-------------------------
+Asset 2 Validated: https://landsat-stac.s3.amazonaws.com/landsat-8-l1/paths/catalog.json
+
+Valid: False
+Schemas validated: 
+    https://cdn.staclint.com/v0.9.0/collection.json
+Error Type: JSONDecodeError
+Error Message: Expecting value: line 1 column 1 (char 0)
+-------------------------
 ```
 
 ``` stac-check sample_files/0.9.0/landsat8-sample.json```
