@@ -20,8 +20,11 @@ Options:
   --version                Show the version and exit.
   -l, --links              Validate links for format and response.
   -a, --assets             Validate assets for format and response.
-  -r, --recursive INTEGER  Maximum depth to traverse when using recursion.
-  --help                   Show this message and exit.
+  -m, --max-depth INTEGER  Maximum depth to traverse when recursing. Omit this
+                           argument to get full recursion. Ignored if
+                           `recursive == False`.
+  -r, --recursive          Recursively validate all related stac objects.
+  --help                   Show this message and exit.               Show this message and exit.
 ```
 ---
 ### Docker  
