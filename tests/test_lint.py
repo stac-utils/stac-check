@@ -119,6 +119,20 @@ def test_linter_collection_recursive():
         "validation_method": "recursive"
     }
 
+def test_linter_recursive_max_depth_1():
+    file = "https://radarstac.s3.amazonaws.com/stac/catalog.json"
+    stac = Linter(file, assets=False, links=False, recursive=True, max_depth=1)
+    assert stac.validate_all == [
+        {
+            "version": "0.7.0",
+            "path": "https://radarstac.s3.amazonaws.com/stac/catalog.json",
+            "schema": ["https://cdn.staclint.com/v0.7.0/catalog.json"],
+            "asset_type": "CATALOG",
+            "validation_method": "recursive",
+            "valid_stac": True,
+        }
+    ]
+
 def test_linter_recursive_max_depth_4():
     file = "https://radarstac.s3.amazonaws.com/stac/catalog.json"
     stac = Linter(file, assets=False, links=False, recursive=True, max_depth=4)
