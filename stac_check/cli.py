@@ -13,6 +13,7 @@ def link_asset_message(link_list:list, type: str, format: str):
 def recursive_message(linter):
     click.secho()
     click.secho(f"Recursive: Validate all assets in a collection or catalog", bold=True)
+    click.secho(f"Max-depth = {linter.max_depth}")
     click.secho("-------------------------")
     for count, msg in enumerate(linter.validate_all):
         click.secho(f"Asset {count+1} Validated: {msg['path']}", bg="white", fg="black")
@@ -115,9 +116,14 @@ def cli_message(linter):
 @click.option(
     "--recursive",
     "-r",
+    is_flag=True,
+    help="Recursively validate all related stac objects.",
+)
+@click.option(
+    "--max-depth",
+    "-m",
     type=int,
-    default=0,
-    help="Maximum depth to traverse when using recursion.",
+    help="Maximum depth to traverse when recursing. Omit this argument to get full recursion. Ignored if `recursive == False`.",
 )
 @click.option(
     "-a", "--assets", is_flag=True, help="Validate assets for format and response."
@@ -128,8 +134,8 @@ def cli_message(linter):
 @click.command()
 @click.argument('file')
 @click.version_option(version=pkg_resources.require("stac-check")[0].version)
-def main(file, recursive, assets, links):
-    linter = Linter(file, assets=assets, links=links, recursive=recursive)
+def main(file, recursive, max_depth, assets, links):
+    linter = Linter(file, assets=assets, links=links, recursive=recursive, max_depth=max_depth)
     intro_message(linter)
     if recursive > 0:
         recursive_message(linter)

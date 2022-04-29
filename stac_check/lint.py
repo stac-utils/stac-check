@@ -18,7 +18,8 @@ class Linter:
     config_file: Optional[str] = None
     assets: bool = False
     links: bool = False
-    recursive: int = 0
+    recursive: bool = False
+    max_depth: Optional[int] = None
 
     def __post_init__(self):
         self.data = self.load_data(self.item)
@@ -71,8 +72,8 @@ class Linter:
         return stac.message[0]
 
     def recursive_validation(self, file):
-        if self.recursive > 0:
-            stac = StacValidate(file, recursive=True, max_depth=self.recursive)
+        if self.recursive:
+            stac = StacValidate(file, recursive=True, max_depth=self.max_depth)
             stac.run()
             return stac.message
 
