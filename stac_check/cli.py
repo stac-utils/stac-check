@@ -1,5 +1,6 @@
 import click
 from .lint import Linter
+import pkg_resources
 
 def link_asset_message(link_list:list, type: str, format: str):
     if len(link_list) > 0:
@@ -126,7 +127,7 @@ def cli_message(linter):
 )
 @click.command()
 @click.argument('file')
-@click.version_option(version="1.2.0")
+@click.version_option(version=pkg_resources.require("stac-check")[0].version)
 def main(file, recursive, assets, links):
     linter = Linter(file, assets=assets, links=links, recursive=recursive)
     intro_message(linter)
