@@ -8,6 +8,7 @@ from dataclasses import dataclass
 import requests
 from typing import Optional
 from dotenv import load_dotenv
+import pkg_resources
 
 load_dotenv()
 
@@ -25,7 +26,7 @@ class Linter:
         self.config = self.parse_config(self.config_file)
         self.asset_type = self.message["asset_type"] if "asset_type" in self.message else ""
         self.version = self.message["version"] if "version" in self.message else ""
-        self.validator_version = "3.0.0"
+        self.validator_version = pkg_resources.require("stac-validator")[0].version
         self.validate_all = self.recursive_validation(self.item)
         self.valid_stac = self.message["valid_stac"]
         self.error_type = self.check_error_type()
