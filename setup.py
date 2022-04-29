@@ -22,6 +22,7 @@ setup(
         "stac-validator>=3.0.0",
         "PyYAML",
         "python-dotenv",
+        "types-setuptools",
     ],
     entry_points={
         'console_scripts': ['stac-check=stac_check.cli:main']
