@@ -15,7 +15,7 @@ setup(
     packages=find_packages(exclude=("tests",)),
     include_package_data=True,
     install_requires=[
-        "click>=7.1.2",
+        "click>=8.0.0",
         "requests>=2.19.1",
         "jsonschema>=3.1.2b0",
         "pytest",
