@@ -78,7 +78,7 @@ def cli_message(linter):
     if linter.validate_all == True:
         click.secho()
         click.secho(f"Recursive validation has passed!", fg='blue')
-    elif linter.validate_all == False and linter.recursive > 0:
+    elif linter.validate_all == False and linter.recursive:
         click.secho()
         click.secho(f"Recursive validation has failed!", fg='red')
 
