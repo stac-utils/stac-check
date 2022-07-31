@@ -2,6 +2,7 @@ from re import L
 from stac_check.lint import Linter
 import pytest
 
+@pytest.mark.skip(reason="test is ineffective - bad links are redirecting to a third party site")
 def test_linter_bad_asset_requests():
     file = "sample_files/1.0.0/core-item.json"
     linter = Linter(file, assets=True)
@@ -21,8 +22,7 @@ def test_linter_bad_assets():
         "https:/storage.googleapis.com/open-cogs/stac-examples/20201211_223832_CS2.jpg"
     ]
     asset_request_errors = [
-        "https:/storage.googleapis.com/open-cogs/stac-examples/20201211_223832_CS2.jpg",
-        "http://cool-sat.com/catalog/20201211_223832_CS2/20201211_223832_CS2.EPH"
+        "https:/storage.googleapis.com/open-cogs/stac-examples/20201211_223832_CS2.jpg"
     ]
     assert linter.version == "1.0.0"
     assert linter.valid_stac == True
@@ -54,8 +54,7 @@ def test_linter_bad_links_assets():
         "https:/storage.googleapis.com/open-cogs/stac-examples/20201211_223832_CS2.jpg"
     ]
     asset_request_errors = [
-        "https:/storage.googleapis.com/open-cogs/stac-examples/20201211_223832_CS2.jpg",
-        "http://cool-sat.com/catalog/20201211_223832_CS2/20201211_223832_CS2.EPH"
+        "https:/storage.googleapis.com/open-cogs/stac-examples/20201211_223832_CS2.jpg"
     ]
     link_format_errors = ["http:/remotdata.io/catalog/20201211_223832_CS2/index.html"]
     link_request_errors = [
