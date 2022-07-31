@@ -15,14 +15,14 @@ setup(
     packages=find_packages(exclude=("tests",)),
     include_package_data=True,
     install_requires=[
-        "pystac[validation]>=1.1.0",
-        "click>=7.1.2",
+        "click>=8.0.0",
         "requests>=2.19.1",
         "jsonschema>=3.1.2b0",
         "pytest",
         "stac-validator>=3.0.0",
         "PyYAML",
         "python-dotenv",
+        "types-setuptools",
     ],
     entry_points={
         'console_scripts': ['stac-check=stac_check.cli:main']

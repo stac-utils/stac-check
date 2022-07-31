@@ -6,6 +6,10 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 
 
 ## [Unreleased]
+### Added
+- recursive mode lints assets https://github.com/stac-utils/stac-check/pull/84
+### Changed
+- recursive mode swaps pystac for stac-validator https://github.com/stac-utils/stac-check/pull/84
 ### Fixed
 - fix catalog file name check https://github.com/stac-utils/stac-check/pull/83
 

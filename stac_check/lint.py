@@ -5,10 +5,10 @@ import json
 import yaml
 import os
 from dataclasses import dataclass
-import pystac
 import requests
 from typing import Optional
 from dotenv import load_dotenv
+import pkg_resources
 
 load_dotenv()
 
@@ -19,6 +19,7 @@ class Linter:
     assets: bool = False
     links: bool = False
     recursive: bool = False
+    max_depth: Optional[int] = None
 
     def __post_init__(self):
         self.data = self.load_data(self.item)
@@ -26,7 +27,8 @@ class Linter:
         self.config = self.parse_config(self.config_file)
         self.asset_type = self.message["asset_type"] if "asset_type" in self.message else ""
         self.version = self.message["version"] if "version" in self.message else ""
-        self.validator_version = "2.3.0"
+        self.validator_version = pkg_resources.require("stac-validator")[0].version
+        self.validate_all = self.recursive_validation(self.item)
         self.valid_stac = self.message["valid_stac"]
         self.error_type = self.check_error_type()
         self.error_msg = self.check_error_message()
@@ -35,8 +37,6 @@ class Linter:
         self.invalid_link_format = self.check_links_assets(10, "links", "format") if self.links else None
         self.invalid_link_request = self.check_links_assets(10, "links", "request") if self.links else None
         self.schema = self.message["schema"] if "schema" in self.message else []
-        self.recursive_error_msg = ""
-        self.validate_all = self.recursive_validation(self.load_data(self.item))
         self.object_id = self.data["id"] if "id" in self.data else ""
         self.file_name = os.path.basename(self.item).split('.')[0]
         self.best_practices_msg = self.create_best_practices_msg()
@@ -73,13 +73,9 @@ class Linter:
 
     def recursive_validation(self, file):
         if self.recursive:
-            try:
-                catalog = pystac.read_dict(file)
-                catalog.validate_all()
-                return True
-            except Exception as e:
-                self.recursive_error_msg = f"Exception {str(e)}"
-                return False
+            stac = StacValidate(file, recursive=True, max_depth=self.max_depth)
+            stac.run()
+            return stac.message
 
     def set_update_message(self):
         if self.version != "1.0.0":
