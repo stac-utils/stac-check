@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
 
-## [Unreleased]
+## [v1.3.0] - 2022-09-19
 ### Added
 - recursive mode lints assets https://github.com/stac-utils/stac-check/pull/84
 ### Changed
