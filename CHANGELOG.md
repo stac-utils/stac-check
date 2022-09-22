@@ -4,8 +4,9 @@ All notable changes to this project will be documented in this file.
 
 The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
-
-## [Unreleased]
+## [Unreleased]  
+     
+## [v1.3.0] - 2022-09-20
 ### Added
 - recursive mode lints assets https://github.com/stac-utils/stac-check/pull/84
 ### Changed
@@ -18,27 +19,19 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 - Option to include a configuration file to ignore selected checks
 ### Changed
 - Change name from stac_check to stac-check in setup for cli
-
-## [v1.1.3] - 2022-03-03
+### Fixed
 - Fix thumbnail size check
 
 ## [v1.1.2] - 2022-03-03
+### Changed
+- Make it easier to export linting messages
+- Set stac-validator version to 2.4.0
+### Fixed
 - Fix self-link test 
 
-## [v1.1.1] - 2022-03-02
-- Make it easier to export linting messages
-
-## [v1.0.3] - 2022-03-02
-- Set stac-validator version to 2.4.0
-
-## [v1.0.2] - 2022-02-21
-- Loosen stac-validator version 
-
 ## [v1.0.1] - 2022-02-20
-- Update readme
-
-## [v1.0.0] - 2022-02-20
 ### Changed
+- Update readme
 - Reorganized code for version 1.0.0 release
 
 ## [v0.2.0] - 2022-02-02 - 2022-02-19
@@ -87,4 +80,15 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 - Best practices check for too many links in object
 - Best practices check for summaries in collections
 - Validation from stac-validator 2.3.0  
-- Links and assets validation checks  
+- Links and assets validation checks     
+  
+[Unreleased]: https://github.com/stac-utils/stac-check/compare/v1.3.0...main  
+[v1.3.0]: https://github.com/stac-utils/stac-check/compare/v1.2.0...v1.3.0  
+[v1.2.0]: https://github.com/stac-utils/stac-check/compare/v1.1.2...v1.2.0  
+[v1.1.2]: https://github.com/stac-utils/stac-check/compare/v1.0.1...v1.1.2  
+[v1.0.1]: https://github.com/stac-utils/stac-check/compare/v0.2.0...v1.0.1  
+[v0.2.0]: https://github.com/stac-utils/stac-check/compare/v0.1.3...v0.2.0  
+[v0.1.3]: https://github.com/stac-utils/stac-check/compare/v0.1.2...v0.1.3  
+[v0.1.2]: https://github.com/stac-utils/stac-check/compare/v0.1.1...v0.1.2  
+[v0.1.1]: https://github.com/stac-utils/stac-check/compare/v0.1.0...v0.1.1  
+[v0.1.0]: https://github.com/stac-utils/stac-check/releases/tag/v0.1.0  

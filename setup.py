@@ -2,7 +2,7 @@
 """
 from setuptools import setup, find_packages
 
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -19,7 +19,7 @@ setup(
         "requests>=2.19.1",
         "jsonschema>=3.1.2b0",
         "pytest",
-        "stac-validator>=3.0.0",
+        "stac-validator==3.2.0",
         "PyYAML",
         "python-dotenv",
         "types-setuptools",
