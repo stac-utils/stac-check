@@ -87,4 +87,15 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 - Best practices check for too many links in object
 - Best practices check for summaries in collections
 - Validation from stac-validator 2.3.0  
-- Links and assets validation checks  
+- Links and assets validation checks    
+
+  
+[unreleased]: https://github.com/stac-utils/stac-check/compare/v1.2.0...main
+[1.2.0]: https://github.com/stac-utils/stac-check/compare/v1.1.2...v1.2.0
+[1.1.2]: https://github.com/stac-utils/stac-check/compare/v1.0.1...v1.1.2
+[1.0.1]: https://github.com/stac-utils/stac-check/compare/v0.2.0...v1.0.1
+[0.2.0]: https://github.com/stac-utils/stac-check/compare/v0.1.3...v0.2.0
+[0.1.3]: https://github.com/stac-utils/stac-check/compare/v0.1.2...v0.1.3
+[0.1.2]: https://github.com/stac-utils/stac-check/compare/v0.1.1...v0.1.2
+[0.1.1]: https://github.com/stac-utils/stac-check/compare/v0.1.0...v0.1.1
+[0.1.0]: https://github.com/stac-utils/stac-check/releases/tag/v0.1.0
