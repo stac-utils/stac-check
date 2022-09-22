@@ -89,13 +89,16 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 - Validation from stac-validator 2.3.0  
 - Links and assets validation checks    
 
+-------  
+### Compare Releases  
   
-[unreleased]: https://github.com/stac-utils/stac-check/compare/v1.2.0...main
-[1.2.0]: https://github.com/stac-utils/stac-check/compare/v1.1.2...v1.2.0
-[1.1.2]: https://github.com/stac-utils/stac-check/compare/v1.0.1...v1.1.2
-[1.0.1]: https://github.com/stac-utils/stac-check/compare/v0.2.0...v1.0.1
-[0.2.0]: https://github.com/stac-utils/stac-check/compare/v0.1.3...v0.2.0
-[0.1.3]: https://github.com/stac-utils/stac-check/compare/v0.1.2...v0.1.3
-[0.1.2]: https://github.com/stac-utils/stac-check/compare/v0.1.1...v0.1.2
-[0.1.1]: https://github.com/stac-utils/stac-check/compare/v0.1.0...v0.1.1
-[0.1.0]: https://github.com/stac-utils/stac-check/releases/tag/v0.1.0
+unreleased: https://github.com/stac-utils/stac-check/compare/v1.3.0...main  
+[1.3.0]: https://github.com/stac-utils/stac-check/compare/v1.2.0...v1.3.0  
+[1.2.0]: https://github.com/stac-utils/stac-check/compare/v1.1.2...v1.2.0  
+[1.1.2]: https://github.com/stac-utils/stac-check/compare/v1.0.1...v1.1.2  
+[1.0.1]: https://github.com/stac-utils/stac-check/compare/v0.2.0...v1.0.1  
+[0.2.0]: https://github.com/stac-utils/stac-check/compare/v0.1.3...v0.2.0  
+[0.1.3]: https://github.com/stac-utils/stac-check/compare/v0.1.2...v0.1.3  
+[0.1.2]: https://github.com/stac-utils/stac-check/compare/v0.1.1...v0.1.2  
+[0.1.1]: https://github.com/stac-utils/stac-check/compare/v0.1.0...v0.1.1  
+[0.1.0]: https://github.com/stac-utils/stac-check/releases/tag/v0.1.0  
