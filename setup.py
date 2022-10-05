@@ -19,7 +19,7 @@ setup(
         "requests>=2.19.1",
         "jsonschema>=3.1.2b0",
         "pytest",
-        "stac-validator==3.2.0",
+        "stac-validator>=3.1.0",
         "PyYAML",
         "python-dotenv",
         "types-setuptools",
