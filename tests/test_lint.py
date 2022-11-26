@@ -397,6 +397,7 @@ def test_lint_dict_collection():
     }
     linter = Linter(file)
     assert linter.valid_stac == True
+    assert linter.asset_type == "COLLECTION"
     assert linter.create_best_practices_dict()["check_catalog_id"] == ["Object should be called 'collection.json' not 'simple-collection.json'"]
 
 def test_lint_dict_item():
@@ -527,4 +528,5 @@ def test_lint_dict_item():
     }
     linter = Linter(file)
     assert linter.valid_stac == True
+    assert linter.asset_type == "ITEM"
     assert linter.create_best_practices_dict()["datetime_null"] == ['Please avoid setting the datetime field to null, many clients search on this field']
