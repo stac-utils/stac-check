@@ -34,7 +34,18 @@ $ make build
 $ make shell
 ```
 ---
-### Examples
+### Validate Dictionary
+
+```
+from stac_linter.lint import Linter
+
+linter = Linter(dict)
+
+for k,v in linter.create_best_practices_dict().items():
+    print(k,":",v)
+```
+---
+### CLI Examples
     
 ``` stac-check https://raw.githubusercontent.com/stac-utils/pystac/main/tests/data-files/examples/0.9.0/collection-spec/examples/landsat-collection.json --recursive ```
 ```
