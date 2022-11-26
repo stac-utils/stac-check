@@ -6,7 +6,7 @@ import yaml
 import os
 from dataclasses import dataclass
 import requests
-from typing import Optional
+from typing import Optional, Union
 from dotenv import load_dotenv
 import pkg_resources
 
@@ -14,7 +14,7 @@ load_dotenv()
 
 @dataclass
 class Linter:
-    item: str
+    item: Union[str, dict] # url, file name, or dictionary
     config_file: Optional[str] = None
     assets: bool = False
     links: bool = False
