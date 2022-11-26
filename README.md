@@ -12,7 +12,7 @@ or for local development
 `$ pip install -e .` 
 
 ---
-### Usage
+### CLI Usage
 ```
 Usage: stac-check [OPTIONS] FILE
 
@@ -34,7 +34,7 @@ $ make build
 $ make shell
 ```
 ---
-### Validate Dictionary
+### Lint Dictionary
 
 ```
 from stac_linter.lint import Linter
