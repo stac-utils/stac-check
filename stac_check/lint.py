@@ -14,7 +14,7 @@ load_dotenv()
 
 @dataclass
 class Linter:
-    item: Union[str,dict]
+    item: Union[str, dict] # url, file name, or dictionary
     config_file: Optional[str] = None
     assets: bool = False
     links: bool = False
@@ -39,7 +39,7 @@ class Linter:
         self.invalid_link_request = self.check_links_assets(10, "links", "request") if self.links else None
         self.schema = self.message["schema"] if "schema" in self.message else []
         self.object_id = self.data["id"] if "id" in self.data else ""
-        self.file_name = self.get_asset_name(self.data)
+        self.file_name = self.get_asset_name(self.item)
         self.best_practices_msg = self.create_best_practices_msg()
 
     @staticmethod
@@ -59,11 +59,10 @@ class Linter:
         return default_config
 
     def get_asset_name(self, file):
-        if self.item_collection is False:
-            if isinstance(file, str):
-                return os.path.basename(file).split('.')[0]
-            else:
-                return file["id"]
+        if isinstance(file, str):
+            return os.path.basename(file).split('.')[0]
+        else:
+            return file["id"]
 
     def load_data(self, file):
         if isinstance(file, str):
@@ -88,8 +87,12 @@ class Linter:
 
     def recursive_validation(self, file):
         if self.recursive:
-            stac = StacValidate(file, recursive=True, max_depth=self.max_depth)
-            stac.run()
+            if isinstance(file, str):
+                stac = StacValidate(file, recursive=True, max_depth=self.max_depth)
+                stac.run()
+            else:
+                stac = StacValidate(recursive=True, max_depth=self.max_depth)
+                stac.validate_dict(file)
             return stac.message
 
     def set_update_message(self):
