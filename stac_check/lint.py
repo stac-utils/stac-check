@@ -19,6 +19,7 @@ class Linter:
     assets: bool = False
     links: bool = False
     recursive: bool = False
+    item_collection: bool = False
     max_depth: Optional[int] = None
 
     def __post_init__(self):
@@ -38,7 +39,7 @@ class Linter:
         self.invalid_link_request = self.check_links_assets(10, "links", "request") if self.links else None
         self.schema = self.message["schema"] if "schema" in self.message else []
         self.object_id = self.data["id"] if "id" in self.data else ""
-        self.file_name = os.path.basename(self.item).split('.')[0]
+        self.file_name = self.get_asset_name(self.data)
         self.best_practices_msg = self.create_best_practices_msg()
 
     @staticmethod
@@ -57,14 +58,24 @@ class Linter:
             
         return default_config
 
+    def get_asset_name(self, file):
+        if self.item_collection is False:
+            if isinstance(file, str):
+                return os.path.basename(file).split('.')[0]
+            else:
+                return file["id"]
+
     def load_data(self, file):
-        if is_valid_url(file):
-            resp = requests.get(file)
-            data = resp.json()
+        if isinstance(file, str):
+            if is_valid_url(file):
+                resp = requests.get(file)
+                data = resp.json()
+            else:
+                with open(file) as json_file:
+                    data = json.load(json_file)
+            return data
         else:
-            with open(file) as json_file:
-                data = json.load(json_file)
-        return data
+            return file
 
     def validate_file(self, file):
         stac = StacValidate(file, links=self.links, assets=self.assets)
