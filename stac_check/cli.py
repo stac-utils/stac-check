@@ -15,8 +15,9 @@ def api_collection(linter):
     data = linter.data
     # print(data)
     if data["type"] == "FeatureCollection":
-        for item in data["items"]:
-            print(item)
+        for item in data["features"]:
+            lint = Linter(item=item)
+            print(lint.message)
     else:
         click.secho("The response is not a proper item collection.", fg="red")
 
