@@ -6,7 +6,7 @@ import yaml
 import os
 from dataclasses import dataclass
 import requests
-from typing import Optional
+from typing import Optional, Union
 from dotenv import load_dotenv
 import pkg_resources
 
@@ -14,7 +14,7 @@ load_dotenv()
 
 @dataclass
 class Linter:
-    item: str
+    item: Union[str,dict]
     config_file: Optional[str] = None
     assets: bool = False
     links: bool = False
@@ -78,8 +78,12 @@ class Linter:
             return file
 
     def validate_file(self, file):
-        stac = StacValidate(file, links=self.links, assets=self.assets)
-        stac.run()
+        if isinstance(file, str):
+            stac = StacValidate(file, links=self.links, assets=self.assets)
+            stac.run()
+        else:
+            stac = StacValidate()
+            stac.validate_dict(file)
         return stac.message[0]
 
     def recursive_validation(self, file):
