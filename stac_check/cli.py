@@ -11,15 +11,25 @@ def link_asset_message(link_list:list, type: str, format: str):
         click.secho(f"No {type.upper()} {format} errors!", fg="green")
 
 def api_collection(linter):
-    # print("item collection")
+    counter = 0
     data = linter.data
-    # print(data)
     if data["type"] == "FeatureCollection":
         for item in data["features"]:
             lint = Linter(item=item)
-            print(lint.message)
+            cli_message(lint)
+            if lint.version == "1.0.0":
+                click.secho(lint.set_update_message(), fg='green')
+            else:
+                click.secho(lint.set_update_message(), fg='red')
+            click.secho()
+            counter = counter + 1
+        click.secho("----------------------------------")
+        click.secho(f"item collection: {counter} items analyzed!", fg="blue", bold=True)
+        click.secho("----------------------------------")
     else:
+        click.secho("-------------------------")
         click.secho("The response is not a proper item collection.", fg="red")
+        click.secho("-------------------------")
 
 def recursive_message(linter):
     click.secho()
@@ -41,7 +51,7 @@ def recursive_message(linter):
             click.secho(f"Error Message: {msg['error_message']}", fg='red')
         click.secho("-------------------------")
 
-def intro_message(linter):
+def intro_message(linter, skip_version):
     click.secho("""
  ____  ____  __    ___       ___  _  _  ____  ___  __ _ 
 / ___)(_  _)/ _\  / __)___  / __)/ )( \(  __)/ __)(  / )
@@ -53,10 +63,11 @@ def intro_message(linter):
 
     click.secho()
 
-    if linter.version == "1.0.0":
-        click.secho(linter.set_update_message(), fg='green')
-    else:
-        click.secho(linter.set_update_message(), fg='red')
+    if not skip_version:
+        if linter.version == "1.0.0":
+            click.secho(linter.set_update_message(), fg='green')
+        else:
+            click.secho(linter.set_update_message(), fg='red')
 
     click.secho()
 
@@ -65,6 +76,8 @@ def intro_message(linter):
     click.secho()
 
 def cli_message(linter):
+    click.secho(f"------------ ID: {linter.object_id} ------------", bold=True)
+    click.secho()
     ''' valid stac object message - true or false '''
     if linter.valid_stac == True:
         click.secho(f"Valid {linter.asset_type}: {linter.valid_stac}", fg='green')
@@ -160,7 +173,7 @@ def main(file, recursive, item_collection, max_depth, assets, links):
         item_collection=item_collection,
         max_depth=max_depth
     )
-    intro_message(linter)
+    intro_message(linter, skip_version=item_collection)
     if recursive > 0:
         recursive_message(linter)
     elif item_collection > 0:
