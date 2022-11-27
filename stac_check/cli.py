@@ -10,6 +10,16 @@ def link_asset_message(link_list:list, type: str, format: str):
     else:
         click.secho(f"No {type.upper()} {format} errors!", fg="green")
 
+def api_collection(linter):
+    # print("item collection")
+    data = linter.data
+    # print(data)
+    if data["type"] == "FeatureCollection":
+        for item in data["items"]:
+            print(item)
+    else:
+        click.secho("The response is not a proper item collection.", fg="red")
+
 def recursive_message(linter):
     click.secho()
     click.secho(f"Recursive: Validate all assets in a collection or catalog", bold=True)
@@ -117,7 +127,13 @@ def cli_message(linter):
     "--recursive",
     "-r",
     is_flag=True,
-    help="Recursively validate all related stac objects.",
+    help="Recursively lint and validate all related stac objects.",
+)
+@click.option(
+    "--item_collection",
+    "-i",
+    is_flag=True,
+    help="Lint and validate a stac api item collection response.",
 )
 @click.option(
     "--max-depth",
@@ -134,10 +150,19 @@ def cli_message(linter):
 @click.command()
 @click.argument('file')
 @click.version_option(version=pkg_resources.require("stac-check")[0].version)
-def main(file, recursive, max_depth, assets, links):
-    linter = Linter(file, assets=assets, links=links, recursive=recursive, max_depth=max_depth)
+def main(file, recursive, item_collection, max_depth, assets, links):
+    linter = Linter(
+        item=file,
+        assets=assets,
+        links=links,
+        recursive=recursive,
+        item_collection=item_collection,
+        max_depth=max_depth
+    )
     intro_message(linter)
     if recursive > 0:
         recursive_message(linter)
+    elif item_collection > 0:
+        api_collection(linter)
     else:
         cli_message(linter)
