@@ -197,10 +197,12 @@ class Linter:
             return True
 
     def check_catalog_id_file_name(self):
-        if self.asset_type == "CATALOG" and self.file_name != 'catalog':
-            return False 
-        elif self.asset_type == "COLLECTION" and self.file_name != 'collection':
-            return False
+        if isinstance(self.item, str) and ".json" in self.item:
+            if self.asset_type == "CATALOG" and 'catalog.json' not in self.item:
+                return False 
+            elif self.asset_type == "COLLECTION" and 'collection.json' not in self.item:
+                return False
+            return True
         else:
             return True
 
@@ -228,7 +230,7 @@ class Linter:
             best_practices_dict["check_item_id"] = [msg_1]
 
         # best practices - collection and catalog file names should be collection.json and catalog.json 
-        if not self.check_catalog_id_file_name() and config["catalog_id_file_name"] == True: 
+        if self.check_catalog_id_file_name() == False and config["catalog_id_file_name"] == True: 
             msg_1 = f"Object should be called '{self.asset_type.lower()}.json' not '{self.file_name}.json'"
             best_practices_dict["check_catalog_id"] = [msg_1]
 
