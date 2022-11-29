@@ -6,7 +6,7 @@ import yaml
 import os
 from dataclasses import dataclass
 import requests
-from typing import Optional
+from typing import Optional, Union
 from dotenv import load_dotenv
 import pkg_resources
 
@@ -14,7 +14,7 @@ load_dotenv()
 
 @dataclass
 class Linter:
-    item: str
+    item: Union[str, dict] # url, file name, or dictionary
     config_file: Optional[str] = None
     assets: bool = False
     links: bool = False
@@ -38,7 +38,7 @@ class Linter:
         self.invalid_link_request = self.check_links_assets(10, "links", "request") if self.links else None
         self.schema = self.message["schema"] if "schema" in self.message else []
         self.object_id = self.data["id"] if "id" in self.data else ""
-        self.file_name = os.path.basename(self.item).split('.')[0]
+        self.file_name = self.get_asset_name(self.item)
         self.best_practices_msg = self.create_best_practices_msg()
 
     @staticmethod
@@ -57,24 +57,41 @@ class Linter:
             
         return default_config
 
-    def load_data(self, file):
-        if is_valid_url(file):
-            resp = requests.get(file)
-            data = resp.json()
+    def get_asset_name(self, file):
+        if isinstance(file, str):
+            return os.path.basename(file).split('.')[0]
         else:
-            with open(file) as json_file:
-                data = json.load(json_file)
-        return data
+            return file["id"]
+
+    def load_data(self, file):
+        if isinstance(file, str):
+            if is_valid_url(file):
+                resp = requests.get(file)
+                data = resp.json()
+            else:
+                with open(file) as json_file:
+                    data = json.load(json_file)
+            return data
+        else:
+            return file
 
     def validate_file(self, file):
-        stac = StacValidate(file, links=self.links, assets=self.assets)
-        stac.run()
+        if isinstance(file, str):
+            stac = StacValidate(file, links=self.links, assets=self.assets)
+            stac.run()
+        else:
+            stac = StacValidate()
+            stac.validate_dict(file)
         return stac.message[0]
 
     def recursive_validation(self, file):
         if self.recursive:
-            stac = StacValidate(file, recursive=True, max_depth=self.max_depth)
-            stac.run()
+            if isinstance(file, str):
+                stac = StacValidate(file, recursive=True, max_depth=self.max_depth)
+                stac.run()
+            else:
+                stac = StacValidate(recursive=True, max_depth=self.max_depth)
+                stac.validate_dict(file)
             return stac.message
 
     def set_update_message(self):
@@ -179,11 +196,13 @@ class Linter:
         else:
             return True
 
-    def check_catalog_id_file_name(self):
-        if self.asset_type == "CATALOG" and self.file_name != 'catalog':
-            return False 
-        elif self.asset_type == "COLLECTION" and self.file_name != 'collection':
-            return False
+    def check_catalog_file_name(self):
+        if isinstance(self.item, str) and ".json" in self.item:
+            if self.asset_type == "CATALOG" and 'catalog.json' not in self.item:
+                return False 
+            elif self.asset_type == "COLLECTION" and 'collection.json' not in self.item:
+                return False
+            return True
         else:
             return True
 
@@ -211,7 +230,7 @@ class Linter:
             best_practices_dict["check_item_id"] = [msg_1]
 
         # best practices - collection and catalog file names should be collection.json and catalog.json 
-        if not self.check_catalog_id_file_name() and config["catalog_id_file_name"] == True: 
+        if self.check_catalog_file_name() == False and config["catalog_id_file_name"] == True: 
             msg_1 = f"Object should be called '{self.asset_type.lower()}.json' not '{self.file_name}.json'"
             best_practices_dict["check_catalog_id"] = [msg_1]
 

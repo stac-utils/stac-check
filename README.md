@@ -12,7 +12,7 @@ or for local development
 `$ pip install -e .` 
 
 ---
-### Usage
+### CLI Usage
 ```
 Usage: stac-check [OPTIONS] FILE
 
@@ -34,7 +34,18 @@ $ make build
 $ make shell
 ```
 ---
-### Examples
+### Lint Dictionary
+
+```
+from stac_linter.lint import Linter
+
+linter = Linter(dict)
+
+for k,v in linter.create_best_practices_dict().items():
+    print(k,":",v)
+```
+---
+### CLI Examples
     
 ``` stac-check https://raw.githubusercontent.com/stac-utils/pystac/main/tests/data-files/examples/0.9.0/collection-spec/examples/landsat-collection.json --recursive ```
 ```

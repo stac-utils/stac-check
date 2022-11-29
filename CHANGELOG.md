@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
+## Added
+- Ability to lint dictionaries https://github.com/stac-utils/stac-check/pull/94
+## Fixed
+- Fixed the check_catalog_file_name() method to only work on static catalogs https://github.com/stac-utils/stac-check/pull/94
 
 ## [v1.3.1] - 2022-10-05
 ## Changed
