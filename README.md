@@ -12,7 +12,7 @@ or for local development
 `$ pip install -e .` 
 
 ---
-### Usage
+### CLI Usage
 ```
 Usage: stac-check [OPTIONS] FILE
 
@@ -40,6 +40,17 @@ $ make shell
 
 ```
 $ stac-check https://earth-search.aws.element84.com/v0/collections/sentinel-s2-l2a/items --item_collection
+```
+---
+### Lint Dictionary
+
+```
+from stac_linter.lint import Linter
+
+linter = Linter(dict)
+
+for k,v in linter.create_best_practices_dict().items():
+    print(k,":",v)
 ```
 ---
 ### CLI Example Output
