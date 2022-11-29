@@ -229,7 +229,7 @@ def test_linter_item_id_not_matching_file_name():
 def test_linter_collection_catalog_id():
     file = "sample_files/1.0.0/collection-no-title.json"
     linter = Linter(file)
-    assert linter.check_catalog_id_file_name() == False
+    assert linter.check_catalog_file_name() == False
 
 def test_linter_item_id_format_best_practices():
     file = "sample_files/1.0.0/core-item-invalid-id.json"
@@ -283,11 +283,11 @@ def test_self_in_links():
 def test_catalog_name():
     file = "sample_files/1.0.0/catalog.json"
     linter = Linter(file)
-    assert linter.check_catalog_id_file_name()
+    assert linter.check_catalog_file_name()
     file = "sample_files/1.0.0/collection.json"
     linter = Linter(file)
-    assert linter.check_catalog_id_file_name()
-    
+    assert linter.check_catalog_file_name()
+
 def test_lint_dict_collection():
     file = {
         "id": "simple-collection",
@@ -398,7 +398,7 @@ def test_lint_dict_collection():
     linter = Linter(file)
     assert linter.valid_stac == True
     assert linter.asset_type == "COLLECTION"
-    assert linter.check_catalog_id_file_name() == True
+    assert linter.check_catalog_file_name() == True
 
 def test_lint_dict_item():
     file = {
