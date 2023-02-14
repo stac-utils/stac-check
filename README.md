@@ -42,15 +42,15 @@ $ make shell
 $ stac-check https://earth-search.aws.element84.com/v0/collections/sentinel-s2-l2a/items --item_collection
 ```
 ---
-### Lint Dictionary
+### Lint JSON
 
 ```
-from stac_linter.lint import Linter
+from stac_check.lint import Linter
 
-linter = Linter(dict)
+linter = Linter('<json_path>')
 
-for k,v in linter.create_best_practices_dict().items():
-    print(k,":",v)
+for k, v in linter.create_best_practices_dict().items():
+    print(k, ":", v)
 ```
 ---
 ### CLI Example Output
