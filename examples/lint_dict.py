@@ -127,15 +127,11 @@ file = {
 }
 linter = Linter(file, assets=True)
 
-print(linter.valid_stac)
-
-print(linter.error_type)
-
-print(linter.error_msg)
-
+print(f"valid: {linter.valid_stac}")
+print(f"error_type: {linter.error_type}")
+print(f"error_msg: {linter.error_msg}")
+print(f"schema: {linter.schema}")
+print(f"file_name: {linter.file_name}")
+print("------")
 for k,v in linter.create_best_practices_dict().items():
     print(k,":",v)
-
-print(linter.schema)
-
-print(linter.file_name)
