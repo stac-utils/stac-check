@@ -34,15 +34,15 @@ $ make build
 $ make shell
 ```
 ---
-### Lint Dictionary
+### Lint JSON
 
 ```
-from stac_linter.lint import Linter
+from stac_check.lint import Linter
 
-linter = Linter(dict)
+linter = Linter('<json_path>')
 
-for k,v in linter.create_best_practices_dict().items():
-    print(k,":",v)
+for k, v in linter.create_best_practices_dict().items():
+    print(k, ":", v)
 ```
 ---
 ### CLI Examples
