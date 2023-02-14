@@ -53,6 +53,23 @@ for k, v in linter.create_best_practices_dict().items():
     print(k, ":", v)
 ```
 ---
+### Lint in-memory dictionary
+
+```
+from stac_check.lint import Linter
+
+stac_item = {
+    "stac_version": "1.0.0",
+    "stac_extensions": [],
+    "type": "Feature",
+}
+
+linter = Linter(stac_item, assets=True)
+
+for k, v in linter.create_best_practices_dict().items():
+    print(k, ":", v)
+```
+---
 ### CLI Example Output
     
 ``` $ stac-check https://raw.githubusercontent.com/stac-utils/pystac/main/tests/data-files/examples/0.9.0/collection-spec/examples/landsat-collection.json --recursive ```
