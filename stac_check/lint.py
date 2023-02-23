@@ -43,6 +43,25 @@ class Linter:
 
     @staticmethod
     def parse_config(config_file):
+        """Parse the configuration file for STAC checks.
+
+        The method first looks for a file path specified in the `STAC_CHECK_CONFIG`
+        environment variable. If the variable is defined, the method loads the
+        YAML configuration file located at that path. Otherwise, it loads the default
+        configuration file packaged with the `stac-check` module.
+
+        If `config_file` is specified, the method also loads the YAML configuration
+        file located at that path and merges its contents with the default or
+        environment-based configuration.
+
+        Returns:
+            A dictionary containing the parsed configuration values.
+
+        Raises:
+            IOError: If `config_file` is specified but cannot be read.
+            yaml.YAMLError: If any YAML syntax errors occur while parsing the
+                configuration file(s).
+        """
         default_config_file = os.getenv("STAC_CHECK_CONFIG")
         if default_config_file:
             with open(default_config_file) as f:
