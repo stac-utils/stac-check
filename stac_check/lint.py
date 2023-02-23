@@ -277,13 +277,23 @@ class Linter:
         else:
             return ""
 
-    def check_error_message(self):
+    def check_error_message(self) -> str:
+        """Checks whether the `message` attribute contains an `error_message` field.
+
+        Returns:
+            A string containing the value of the `error_message` field, or an empty string if the field is not present.
+        """
         if "error_message" in self.message:
             return self.message["error_message"]
         else:
             return ""
 
-    def check_summaries(self):
+    def check_summaries(self) -> bool:
+        """Check if a Collection asset has a "summaries" property.
+
+        Returns:
+            A boolean indicating whether the Collection asset has a "summaries" property.
+        """
         if self.asset_type == "COLLECTION":
             return "summaries" in self.data
 
