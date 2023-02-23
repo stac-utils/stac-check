@@ -411,8 +411,7 @@ class Linter:
 
 
     def check_links_self(self) -> bool:
-        """
-        Checks whether the "self" link is present in the STAC collection or catalog or absent in STAC item.
+        """Checks whether the "self" link is present in the STAC collection or catalog or absent in STAC item.
         
         Returns:
             bool: True if the "self" link is present in STAC collection or catalog or absent in STAC item, False otherwise.
