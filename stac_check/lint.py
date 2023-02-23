@@ -264,7 +264,14 @@ class Linter:
                     return links
         return links
 
-    def check_error_type(self):
+    def check_error_type(self) -> str:
+        """Returns the error type of a STAC validation if it exists in the validation message, 
+        and an empty string otherwise.
+
+        Returns:
+            str: A string containing the error type of a STAC validation if it exists in the validation message, and an
+            empty string otherwise.
+        """
         if "error_type" in self.message:
             return self.message["error_type"]
         else:
