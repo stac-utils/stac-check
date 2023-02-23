@@ -42,7 +42,7 @@ class Linter:
         self.best_practices_msg = self.create_best_practices_msg()
 
     @staticmethod
-    def parse_config(config_file):
+    def parse_config(config_file: Optional[str] = None) -> dict:
         """Parse the configuration file for STAC checks.
 
         The method first looks for a file path specified in the `STAC_CHECK_CONFIG`
@@ -53,6 +53,9 @@ class Linter:
         If `config_file` is specified, the method also loads the YAML configuration
         file located at that path and merges its contents with the default or
         environment-based configuration.
+
+        Args:
+            config_file (str): The path to the YAML configuration file.
 
         Returns:
             A dictionary containing the parsed configuration values.

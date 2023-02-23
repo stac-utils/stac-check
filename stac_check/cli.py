@@ -85,7 +85,7 @@ def intro_message(linter: Linter) -> None:
 
     click.secho()
 
-def cli_message(linter):
+def cli_message(linter: Linter) -> None:
     """Prints various messages about the STAC object being validated.
 
     Args:
