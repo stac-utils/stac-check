@@ -12,6 +12,10 @@ or for local development
 `$ pip install -e .` 
 
 ---
+### Docs
+`$ pdoc --html --output-dir docs stac_check`
+
+---
 ### CLI Usage
 ```
 Usage: stac-check [OPTIONS] FILE
