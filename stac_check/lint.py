@@ -6,7 +6,7 @@ import yaml
 import os
 from dataclasses import dataclass
 import requests
-from typing import Optional, Union, Dict, Any
+from typing import Optional, Union, Dict, Any, List
 from dotenv import load_dotenv
 import pkg_resources
 
@@ -243,7 +243,17 @@ class Linter:
         else:
             return "Thanks for using STAC version 1.0.0!"
 
-    def check_links_assets(self, num_links:int, url_type:str, format_type:str):
+    def check_links_assets(self, num_links: int, url_type: str, format_type: str) -> List[str]:
+        """Checks the links and assets in the STAC catalog and returns a list of invalid links of a specified type and format.
+
+        Args:
+            num_links (int): The maximum number of invalid links to return.
+            url_type (str): The type of URL to check, which can be either 'self' or 'external'.
+            format_type (str): The format of the URL to check, which can be either 'html' or 'json'.
+
+        Returns:
+            A list of invalid links of the specified type and format. If there are no invalid links, an empty list is returned.
+        """
         links = []
         if f"{url_type}_validated" in self.message:
             for invalid_request_url in self.message[f"{url_type}_validated"][f"{format_type}_invalid"]:
