@@ -395,13 +395,20 @@ class Linter:
                     else:
                         return False
         return True
+    
+    def check_links_title_field(self) -> bool:
+        """Checks if all links in a STAC collection or catalog have a 'title' field.
+        The 'title' field is not required for the 'self' link.
 
-    def check_links_title_field(self):
+        Returns:
+            bool: True if all links have a 'title' field, False otherwise.
+        """
         if self.asset_type == "COLLECTION" or self.asset_type == "CATALOG":
             for link in self.data["links"]:
                 if "title" not in link and link["rel"] != "self":
                     return False
         return True
+
 
     def check_links_self(self):
         if self.asset_type == "ITEM":
