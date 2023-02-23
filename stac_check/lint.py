@@ -297,13 +297,32 @@ class Linter:
         if self.asset_type == "COLLECTION":
             return "summaries" in self.data
 
-    def check_bloated_links(self, max_links: Optional[int] = 20):
+    def check_bloated_links(self, max_links: Optional[int] = 20) -> bool:
+        """Checks if the number of links in the STAC data exceeds a certain maximum.
+
+        Args:
+            max_links (Optional[int]): The maximum number of links that the STAC data is allowed to have. Default is 20.
+
+        Returns:
+            A boolean indicating if the number of links in the STAC data exceeds the specified maximum.
+        """
         if "links" in self.data:
             return len(self.data["links"]) > max_links
 
-    def check_bloated_metadata(self, max_properties: Optional[int] = 20):
+    def check_bloated_metadata(self, max_properties: Optional[int] = 20) -> bool:
+        """Checks whether a STAC item's metadata contains too many properties.
+
+        Args:
+            max_properties (int, optional): The maximum number of properties that the metadata can contain before it is
+                considered too bloated. Defaults to 20.
+
+        Returns:
+            bool: True if the number of properties in the metadata exceeds the maximum number of properties specified by
+                `max_properties`, False otherwise.
+        """
         if "properties" in self.data:
             return len(self.data["properties"].keys()) > max_properties
+        return False
 
     def check_datetime_null(self):
         if "properties" in self.data:
