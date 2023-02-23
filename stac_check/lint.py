@@ -6,7 +6,7 @@ import yaml
 import os
 from dataclasses import dataclass
 import requests
-from typing import Optional, Union
+from typing import Optional, Union, Dict
 from dotenv import load_dotenv
 import pkg_resources
 
@@ -14,6 +14,67 @@ load_dotenv()
 
 @dataclass
 class Linter:
+    """A class for linting STAC JSON files and generating validation messages.
+
+    Args:
+        item (Union[str, dict]): A URL, file name, or dictionary representing a STAC JSON file.
+        config_file (Optional[str], optional): A path to a YAML configuration file. Defaults to None.
+        assets (bool, optional): A boolean value indicating whether to validate assets. Defaults to False.
+        links (bool, optional): A boolean value indicating whether to validate links. Defaults to False.
+        recursive (bool, optional): A boolean value indicating whether to perform recursive validation. Defaults to False.
+        max_depth (Optional[int], optional): An optional integer indicating the maximum depth to validate recursively. Defaults to None.
+
+    Attributes:
+        data (dict): A dictionary representing the STAC JSON file.
+        message (dict): A dictionary containing the validation message for the STAC JSON file.
+        config (dict): A dictionary containing the configuration settings.
+        asset_type (str): A string representing the asset type, if one is specified.
+        version (str): A string representing the version of the STAC standard used in the STAC JSON file.
+        validator_version (str): A string representing the version of the STAC validator used to validate the STAC JSON file.
+        validate_all (dict): A dictionary containing the validation message for all STAC JSON files found recursively, if recursive validation was performed.
+        valid_stac (bool): A boolean value indicating whether the STAC JSON file is valid.
+        error_type (str): A string representing the type of error in the STAC JSON file, if one exists.
+        error_msg (str): A string representing the error message in the STAC JSON file, if one exists.
+        invalid_asset_format (List[str]): A list of URLs with invalid asset formats, if assets were validated.
+        invalid_asset_request (List[str]): A list of URLs with invalid asset requests, if assets were validated.
+        invalid_link_format (List[str]): A list of URLs with invalid link formats, if links were validated.
+        invalid_link_request (List[str]): A list of URLs with invalid link requests, if links were validated.
+        schema (List[str]): A list of the STAC JSON file's JSON schema files.
+        object_id (str): A string representing the STAC JSON file's ID.
+        file_name (str): A string representing the name of the file containing the STAC JSON data.
+        best_practices_msg (str): A string representing best practices messages for the STAC JSON file.
+
+    Methods:
+        parse_config(config_file: Optional[str]) -> dict:
+            Parses a YAML configuration file and returns a dictionary with the configuration settings.
+
+        get_asset_name(file) -> str:
+            Returns the name of a file.
+
+        load_data(file) -> dict:
+            Loads a STAC JSON file from a URL or file path and returns a dictionary representation.
+
+        validate_file(file) -> dict:
+            Validates a STAC JSON file and returns a dictionary with the validation message.
+
+        recursive_validation(file) -> dict:
+            Validates a STAC JSON file recursively and returns a dictionary with the validation message.
+
+        set_update_message() -> str:
+            Sets a message regarding the recommended version of the STAC JSON file standard.
+
+        check_links_assets(num_links: int, url_type: str, format_type: str) -> List[str]:
+            Checks whether the STAC JSON file has links or assets with invalid formats or requests.
+
+        check_error_type() -> str:                  
+            Checks whether the STAC JSON file has an error type.
+
+        check_error_message() -> str:
+            Checks whether the STAC JSON file has an error message. 
+
+        create_best_practices_msg() -> str:
+            Creates a message with best practices recommendations for the STAC JSON file.
+    """
     item: Union[str, dict] # url, file name, or dictionary
     config_file: Optional[str] = None
     assets: bool = False
@@ -42,7 +103,7 @@ class Linter:
         self.best_practices_msg = self.create_best_practices_msg()
 
     @staticmethod
-    def parse_config(config_file: Optional[str] = None) -> dict:
+    def parse_config(config_file: Optional[str] = None) -> Dict:
         """Parse the configuration file for STAC checks.
 
         The method first looks for a file path specified in the `STAC_CHECK_CONFIG`
@@ -79,13 +140,41 @@ class Linter:
             
         return default_config
 
-    def get_asset_name(self, file):
+    def get_asset_name(self, file: Union[str, dict] = None) -> str:
+        """Extracts the name of an asset from its file path or from a STAC item asset dictionary.
+
+        Args:
+            file (Union[str, dict], optional): A string representing the file path to the asset or a dictionary representing the
+                asset as specified in a STAC item's `assets` property.
+
+        Returns:
+            A string containing the name of the asset.
+
+        Raises:
+            TypeError: If the input `file` is not a string or a dictionary.
+        """
         if isinstance(file, str):
             return os.path.basename(file).split('.')[0]
         else:
             return file["id"]
 
-    def load_data(self, file):
+    def load_data(self, file: Union[str, Dict]) -> Dict:
+        """Loads JSON data from a file or URL.
+
+        Args:
+            file (Union[str, Dict]): A string representing the path to a JSON file or a dictionary containing the JSON data.
+
+        Returns:
+            A dictionary containing the loaded JSON data.
+
+        Raises:
+            TypeError: If the input `file` is not a string or dictionary.
+            ValueError: If `file` is a string that doesn't represent a valid URL or file path.
+            requests.exceptions.RequestException: If there is an error making a request to a URL.
+            JSONDecodeError: If the JSON data cannot be decoded.
+            FileNotFoundError: If the specified file cannot be found.
+        """
+
         if isinstance(file, str):
             if is_valid_url(file):
                 resp = requests.get(file)
