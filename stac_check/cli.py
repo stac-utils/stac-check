@@ -2,7 +2,17 @@ import click
 from .lint import Linter
 import pkg_resources
 
-def link_asset_message(link_list:list, type: str, format: str):
+def link_asset_message(link_list:list, type: str, format: str) -> None:
+    """Prints a list of links or assets and any errors associated with them.
+
+    Args:
+        link_list (list): A list of links or assets.
+        type (str): The type of link or asset being processed.
+        format (str): The format or request being used.
+
+    Returns:
+        None.
+    """
     if len(link_list) > 0:
         click.secho(f"{type.upper()} {format} errors: ", fg="red")
         for asset in link_list:
