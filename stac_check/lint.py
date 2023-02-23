@@ -445,7 +445,15 @@ class Linter:
         else:
             return True
 
-    def create_best_practices_dict(self):
+    def create_best_practices_dict(self) -> Dict:
+        """Creates a dictionary of best practices violations for the current STAC object. The violations are determined
+        by a set of configurable linting rules specified in the config file.
+
+        Returns:
+            A dictionary of best practices violations for the current STAC object. The keys in the dictionary correspond
+            to the linting rules that were violated, and the values are lists of strings containing error messages and
+            recommendations for how to fix the violations.
+        """
         best_practices_dict = {}
         config = self.config["linting"]
         max_links = self.config["settings"]["max_links"]
@@ -521,7 +529,15 @@ class Linter:
 
         return best_practices_dict
 
-    def create_best_practices_msg(self):
+    def create_best_practices_msg(self) -> List[str]:
+        """
+        Generates a list of best practices messages based on the results of the 'create_best_practices_dict' method.
+
+        Returns:
+            A list of strings, where each string contains a best practice message. Each message starts with the 
+            'STAC Best Practices:' base string and is followed by a specific recommendation. Each message is indented 
+            with four spaces, and there is an empty string between each message for readability.
+        """
         best_practices = list()
         base_string = "STAC Best Practices: "
         best_practices.append(base_string)
