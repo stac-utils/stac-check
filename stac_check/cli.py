@@ -89,7 +89,8 @@ def cli_message(linter):
     """Prints various messages about the STAC object being validated.
 
     Args:
-        linter: The `Linter` object containing the STAC object to be validated.
+        linter: The `Linter` object containing information about 
+        the STAC object to be validated.
 
     Returns:
         None
