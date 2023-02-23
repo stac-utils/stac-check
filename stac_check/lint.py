@@ -6,7 +6,7 @@ import yaml
 import os
 from dataclasses import dataclass
 import requests
-from typing import Optional, Union, Dict
+from typing import Optional, Union, Dict, Any
 from dotenv import load_dotenv
 import pkg_resources
 
@@ -140,7 +140,7 @@ class Linter:
             
         return default_config
 
-    def get_asset_name(self, file: Union[str, dict] = None) -> str:
+    def get_asset_name(self, file: Union[str, Dict] = None) -> str:
         """Extracts the name of an asset from its file path or from a STAC item asset dictionary.
 
         Args:
@@ -186,16 +186,43 @@ class Linter:
         else:
             return file
 
-    def validate_file(self, file):
+    def validate_file(self, file: Union[str, dict]) -> Dict[str, Any]:
+        """Validates the given file path or STAC dictionary against the validation schema.
+
+        Args:
+            file (Union[str, dict]): A string representing the file path to the STAC file or a dictionary representing the STAC
+                item.
+
+        Returns:
+            A dictionary containing the results of the validation, including the status of the validation and any errors
+            encountered.
+
+        Raises:
+            ValueError: If `file` is not a valid file path or STAC dictionary.
+        """
         if isinstance(file, str):
             stac = StacValidate(file, links=self.links, assets=self.assets)
             stac.run()
-        else:
+        elif isinstance(file, dict):
             stac = StacValidate()
             stac.validate_dict(file)
+        else:
+            raise ValueError("Input must be a file path or STAC dictionary.")
         return stac.message[0]
 
-    def recursive_validation(self, file):
+    def recursive_validation(self, file: Union[str, Dict[str, Any]]) -> str:
+        """Recursively validate a STAC item or catalog file and its child items.
+
+        Args:
+            file (Union[str, Dict[str, Any]]): A string representing the file path to the STAC item or catalog, or a
+                dictionary representing the STAC item or catalog.
+
+        Returns:
+            A string containing the validation message.
+
+        Raises:
+            TypeError: If the input `file` is not a string or a dictionary.
+        """
         if self.recursive:
             if isinstance(file, str):
                 stac = StacValidate(file, recursive=True, max_depth=self.max_depth)
