@@ -324,13 +324,19 @@ class Linter:
             return len(self.data["properties"].keys()) > max_properties
         return False
 
-    def check_datetime_null(self):
+    def check_datetime_null(self) -> bool:
+        """Checks if the STAC item has a null datetime property.
+
+        Returns:
+            A boolean indicating whether the datetime property is null (True) or not (False).
+        """
         if "properties" in self.data:
             if "datetime" in self.data["properties"]:
                 if self.data["properties"]["datetime"] == None:
                     return True
         else:
             return False
+        return False
 
     def check_unlocated(self):
         if "geometry" in self.data:
