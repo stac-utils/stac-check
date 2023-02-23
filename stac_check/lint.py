@@ -424,13 +424,18 @@ class Linter:
                     return True
         return False
 
-    def check_item_id_file_name(self):
+    def check_item_id_file_name(self) -> bool:
         if self.asset_type == "ITEM" and self.object_id != self.file_name:
             return False
         else:
             return True
 
-    def check_catalog_file_name(self):
+    def check_catalog_file_name(self) -> bool:
+        """Checks whether the filename of a Catalog or Collection conforms to the STAC specification.
+        
+        Returns:
+            bool: True if the filename is valid, False otherwise.
+        """
         if isinstance(self.item, str) and ".json" in self.item:
             if self.asset_type == "CATALOG" and 'catalog.json' not in self.item:
                 return False 
