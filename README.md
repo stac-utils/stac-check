@@ -13,7 +13,7 @@ or for local development
 
 ---
 ### Docs
-`$ pdoc --html --output-dir docs stac_check`
+`$ pdoc --html --output-dir docs stac_check --force`
 
 ---
 ### CLI Usage
