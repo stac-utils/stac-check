@@ -10,11 +10,7 @@ The intent of this project is to provide a validation tool that also follows the
 or for local development   
 
 `$ pip install -e .` 
-
----
-### Docs
-`$ pdoc --html --output-dir docs stac_check --force`
-
+  
 ---
 ### CLI Usage
 ```
@@ -224,3 +220,6 @@ Validation error message:
 
 This object has 5 links
 </pre>
+---
+### Create local docs in the /docs folder
+`$ pdoc --html --output-dir docs stac_check --force`
