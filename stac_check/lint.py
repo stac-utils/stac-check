@@ -304,7 +304,7 @@ class Linter:
             max_links (Optional[int]): The maximum number of links that the STAC data is allowed to have. Default is 20.
 
         Returns:
-            A boolean indicating if the number of links in the STAC data exceeds the specified maximum.
+            bool: A boolean indicating if the number of links in the STAC data exceeds the specified maximum.
         """
         if "links" in self.data:
             return len(self.data["links"]) > max_links
@@ -328,7 +328,7 @@ class Linter:
         """Checks if the STAC item has a null datetime property.
 
         Returns:
-            A boolean indicating whether the datetime property is null (True) or not (False).
+            bool: A boolean indicating whether the datetime property is null (True) or not (False).
         """
         if "properties" in self.data:
             if "datetime" in self.data["properties"]:
@@ -347,11 +347,22 @@ class Linter:
         if "geometry" in self.data:
             return self.data["geometry"] is None and self.data["bbox"] is not None
 
-    def check_geometry_null(self):
+    def check_geometry_null(self) -> bool:
+        """Checks if a STAC item has a null geometry property.
+            
+        Returns:
+            bool: A boolean indicating whether the geometry property is null (True) or not (False).          
+        """
         if "geometry" in self.data:
             return self.data["geometry"] is None
 
-    def check_searchable_identifiers(self):
+    def check_searchable_identifiers(self) -> bool:
+        """Checks if the identifiers of a STAC item are searchable, i.e., 
+        they only contain lowercase letters, numbers, hyphens, and underscores.
+        
+        Returns:
+            bool: True if the identifiers are searchable, False otherwise.        
+        """
         if self.asset_type == "ITEM": 
             for letter in self.object_id:
                 if letter.islower() or letter.isnumeric() or letter == '-' or letter == '_':
@@ -360,10 +371,21 @@ class Linter:
                     return False  
         return True
 
-    def check_percent_encoded(self):
+    def check_percent_encoded(self) -> bool:
+        """Checks if the identifiers of a STAC item are percent-encoded, i.e.,
+        they only contain lowercase letters, numbers, hyphens, and underscores.
+
+        Returns:
+            bool: True if the identifiers are percent-encoded, False otherwise.
+        """
         return self.asset_type == "ITEM" and "/" in self.object_id or ":" in self.object_id
 
-    def check_thumbnail(self):
+    def check_thumbnail(self) -> bool:
+        """Checks if the thumbnail of a STAC item is valid, i.e., it has a valid format.
+        
+        Returns:
+            bool: True if the thumbnail is valid, False otherwise.
+        """
         if "assets" in self.data:
             if "thumbnail" in self.data["assets"]:
                 if "type" in self.data["assets"]["thumbnail"]:
