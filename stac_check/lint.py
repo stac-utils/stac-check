@@ -338,7 +338,12 @@ class Linter:
             return False
         return False
 
-    def check_unlocated(self):
+    def check_unlocated(self) -> bool:
+        """Checks if a STAC item is unlocated, i.e., has no geometry but has a bounding box.
+
+        Returns:
+            bool: True if the STAC item is unlocated, False otherwise.
+        """
         if "geometry" in self.data:
             return self.data["geometry"] is None and self.data["bbox"] is not None
 
