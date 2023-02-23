@@ -410,7 +410,13 @@ class Linter:
         return True
 
 
-    def check_links_self(self):
+    def check_links_self(self) -> bool:
+        """
+        Checks whether the "self" link is present in the STAC collection or catalog or absent in STAC item.
+        
+        Returns:
+            bool: True if the "self" link is present in STAC collection or catalog or absent in STAC item, False otherwise.
+        """
         if self.asset_type == "ITEM":
             return True
         if self.asset_type == "COLLECTION" or self.asset_type == "CATALOG":
