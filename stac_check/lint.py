@@ -45,34 +45,76 @@ class Linter:
         best_practices_msg (str): A string representing best practices messages for the STAC JSON file.
 
     Methods:
-        parse_config(config_file: Optional[str]) -> dict:
+        parse_config(config_file: Optional[str] = None) -> Dict:
             Parses a YAML configuration file and returns a dictionary with the configuration settings.
 
-        get_asset_name(file) -> str:
+        def get_asset_name(self, file: Union[str, Dict] = None) -> str:
             Returns the name of a file.
 
-        load_data(file) -> dict:
+        load_data(self, file: Union[str, Dict]) -> Dict:
             Loads a STAC JSON file from a URL or file path and returns a dictionary representation.
 
-        validate_file(file) -> dict:
+        validate_file(self, file: Union[str, dict]) -> Dict[str, Any]:
             Validates a STAC JSON file and returns a dictionary with the validation message.
 
-        recursive_validation(file) -> dict:
+        recursive_validation(self, file: Union[str, Dict[str, Any]]) -> str:
             Validates a STAC JSON file recursively and returns a dictionary with the validation message.
 
-        set_update_message() -> str:
+        set_update_message(self) -> str:
             Sets a message regarding the recommended version of the STAC JSON file standard.
 
-        check_links_assets(num_links: int, url_type: str, format_type: str) -> List[str]:
+        check_links_assets(self, num_links: int, url_type: str, format_type: str) -> List[str]:
             Checks whether the STAC JSON file has links or assets with invalid formats or requests.
 
-        check_error_type() -> str:                  
+        check_error_type(self) -> str:                  
             Checks whether the STAC JSON file has an error type.
 
-        check_error_message() -> str:
+        check_error_message(self) -> str:
             Checks whether the STAC JSON file has an error message. 
 
-        create_best_practices_msg() -> str:
+        def check_summaries(self) -> bool:
+            Checks whether the STAC JSON file has summaries.
+
+        check_bloated_links(self, max_links: Optional[int] = 20) -> bool:
+            Checks whether the STAC JSON file has bloated links.
+
+        check_bloated_metadata(self, max_properties: Optional[int] = 20) -> bool:
+            Checks whether the STAC JSON file has bloated metadata.
+
+        check_datetime_null(self) -> bool:
+            Checks whether the STAC JSON file has a null datetime.
+
+        check_unlocated(self) -> bool:
+            Checks whether the STAC JSON file has unlocated items.
+
+        check_geometry_null(self) -> bool:
+            Checks whether the STAC JSON file has a null geometry.  
+
+        check_searchable_identifiers(self) -> bool: 
+            Checks whether the STAC JSON file has searchable identifiers.
+
+        check_percent_encoded(self) -> bool:
+            Checks whether the STAC JSON file has percent-encoded characters.
+
+        check_thumbnail(self) -> bool:
+            Checks whether the STAC JSON file has a thumbnail.
+
+        check_links_title_field(self) -> bool:
+            Checks whether the STAC JSON file has a title field in its links.
+
+        check_links_self(self) -> bool:
+            Checks whether the STAC JSON file has a self link.
+
+        check_item_id_file_name(self) -> bool:
+            Checks whether the filename of an Item conforms to the STAC specification.
+
+        check_catalog_file_name(self) -> str:
+            Checks whether the filename of a Catalog or Collection conforms to the STAC specification.
+
+        create_best_practices_dict(self) -> Dict[str, Any]:
+            Creates a dictionary with best practices recommendations for the STAC JSON file.
+
+        create_best_practices_msg(self) -> List[str]:
             Creates a message with best practices recommendations for the STAC JSON file.
     """
     item: Union[str, dict] # url, file name, or dictionary
