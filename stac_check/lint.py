@@ -232,7 +232,12 @@ class Linter:
                 stac.validate_dict(file)
             return stac.message
 
-    def set_update_message(self):
+    def set_update_message(self) -> str:
+        """Returns a message for users to update their STAC version.
+
+        Returns:
+            A string containing a message for users to update their STAC version.
+        """
         if self.version != "1.0.0":
             return f"Please upgrade from version {self.version} to version 1.0.0!"
         else:
