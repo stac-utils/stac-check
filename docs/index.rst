@@ -1,10 +1,7 @@
-.. stac-check documentation master file, created by
-   sphinx-quickstart on Fri Feb 24 08:52:49 2023.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 ``stac-check`` documentation
 ############################
+
+``stac-check`` is a linting and validation tool for STAC assets.
 
 ``stac-check`` is both a CLI tool and Python library. It adds additional linting and validation to the `stac-validator <https://github.com/stac-utils/stac-validator>`_ project.
 
@@ -97,8 +94,10 @@ STAC Versions supported
 ``[0.8.0, 0.8.1, 0.9.0, 1.0.0-beta.1, 1.0.0-beta.2, 1.0.0-rc.1, 1.0.0-rc.2, 1.0.0-rc.3, 1.0.0-rc.4, 1.0.0]``
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :maxdepth: 1
+   
+   api
+   cli
 
 
 
@@ -107,4 +106,3 @@ STAC Versions supported
 
 .. * :ref:`genindex`
 .. * :ref:`modindex`
-.. * :ref:`search`
