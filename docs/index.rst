@@ -7,7 +7,7 @@
 
 The intent of this project is to provide a linting tool that also follows the official `STAC Best Practices document <https://github.com/radiantearth/stac-spec/blob/master/best-practices.md>`_.
 
-This project was originally built with funding from the `Radiant Earth Foundation <https://radiant.earth/>`_ and ongoing support is provided by `Sparkgeo <https://sparkgeo.com/>`_ as well as other contributors.
+This project was originally built with funding from the `Radiant Earth Foundation <https://radiant.earth/>`_ and further support has been provided by `Sparkgeo <https://sparkgeo.com/>`_ as well as other contributors.
 
 Installation
 ------------
