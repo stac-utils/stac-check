@@ -2,7 +2,17 @@ import click
 from .lint import Linter
 import pkg_resources
 
-def link_asset_message(link_list:list, type: str, format: str):
+def link_asset_message(link_list:list, type: str, format: str) -> None:
+    """Prints a list of links or assets and any errors associated with them.
+
+    Args:
+        link_list (list): A list of links or assets.
+        type (str): The type of link or asset being processed.
+        format (str): The format or request being used.
+
+    Returns:
+        None.
+    """
     if len(link_list) > 0:
         click.secho(f"{type.upper()} {format} errors: ", fg="red")
         for asset in link_list:
@@ -10,7 +20,15 @@ def link_asset_message(link_list:list, type: str, format: str):
     else:
         click.secho(f"No {type.upper()} {format} errors!", fg="green")
 
-def recursive_message(linter):
+def recursive_message(linter: Linter) -> None:
+    """Displays messages related to the recursive validation of assets in a collection or catalog.
+
+    Args:
+        linter: An instance of the Linter class.
+
+    Returns:
+        None.
+    """
     click.secho()
     click.secho(f"Recursive: Validate all assets in a collection or catalog", bold=True)
     click.secho(f"Max-depth = {linter.max_depth}")
@@ -30,7 +48,21 @@ def recursive_message(linter):
             click.secho(f"Error Message: {msg['error_message']}", fg='red')
         click.secho("-------------------------")
 
-def intro_message(linter):
+def intro_message(linter: Linter) -> None:
+    """Prints an introduction message for the stac-check tool.
+
+    The message includes the stac-check logo, the name of the tool, the version
+    of the STAC spec being validated, an update message, and the version of the
+    stac-validator being used.
+
+    Args:
+        linter (object): An instance of the Linter class, which is used to
+            obtain the version of the STAC spec being validated, the update
+            message, and the version of the stac-validator being used.
+
+    Returns:
+        None.
+    """
     click.secho("""
  ____  ____  __    ___       ___  _  _  ____  ___  __ _ 
 / ___)(_  _)/ _\  / __)___  / __)/ )( \(  __)/ __)(  / )
@@ -53,8 +85,16 @@ def intro_message(linter):
 
     click.secho()
 
-def cli_message(linter):
-    ''' valid stac object message - true or false '''
+def cli_message(linter: Linter) -> None:
+    """Prints various messages about the STAC object being validated.
+
+    Args:
+        linter: The `Linter` object containing information about 
+        the STAC object to be validated.
+
+    Returns:
+        None
+    """
     if linter.valid_stac == True:
         click.secho(f"Valid {linter.asset_type}: {linter.valid_stac}", fg='green')
     else:
