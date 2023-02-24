@@ -4,6 +4,10 @@
 The intent of this project is to provide a validation tool that also follows the official STAC Best Practices document: https://github.com/radiantearth/stac-spec/blob/master/best-practices.md   
 
 ---
+### Documentation
+[stac-check.readthedocs.io](https://stac-check.readthedocs.io/en/latest/)
+
+---
 ### Install
 `$ pip install stac-check`   
   
