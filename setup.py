@@ -17,7 +17,7 @@ setup(
     install_requires=[
         "click>=8.0.0",
         "requests>=2.19.1",
-        "jsonschema>=3.1.2b0",
+        "jsonschema>=3.1.2",
         "pytest",
         "stac-validator>=3.1.0",
         "PyYAML",
