@@ -94,7 +94,7 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 - Validation from stac-validator 2.3.0  
 - Links and assets validation checks     
   
-[Unreleased]: https://github.com/stac-utils/stac-check/compare/v1.3.0...main  
+[Unreleased]: https://github.com/stac-utils/stac-check/compare/v1.3.2...main  
 [v1.3.2]: https://github.com/stac-utils/stac-check/compare/v1.3.1...v1.3.2 
 [v1.3.1]: https://github.com/stac-utils/stac-check/compare/v1.3.0...v1.3.1 
 [v1.3.0]: https://github.com/stac-utils/stac-check/compare/v1.2.0...v1.3.0  
