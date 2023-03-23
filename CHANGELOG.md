@@ -12,7 +12,7 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 - Docstrings and pdoc api documents
 ## Fixed
 - Fixed the check_catalog_file_name() method to only work on static catalogs https://github.com/stac-utils/stac-check/pull/94
-- Jsonschema version to use a releaased version 
+- Jsonschema version to use a releaased version https://github.com/stac-utils/stac-check/pull/105
 
 ## [v1.3.1] - 2022-10-05
 ## Changed
