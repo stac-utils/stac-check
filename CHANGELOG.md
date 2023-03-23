@@ -5,11 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
+
+## [v1.3.2] - 2023-03-23
 ## Added
 - Ability to lint dictionaries https://github.com/stac-utils/stac-check/pull/94
 - Docstrings and pdoc api documents
 ## Fixed
 - Fixed the check_catalog_file_name() method to only work on static catalogs https://github.com/stac-utils/stac-check/pull/94
+- Jsonschema version to use a releaased version 
 
 ## [v1.3.1] - 2022-10-05
 ## Changed
@@ -92,6 +95,7 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 - Links and assets validation checks     
   
 [Unreleased]: https://github.com/stac-utils/stac-check/compare/v1.3.0...main  
+[v1.3.2]: https://github.com/stac-utils/stac-check/compare/v1.3.1...v1.3.2 
 [v1.3.1]: https://github.com/stac-utils/stac-check/compare/v1.3.0...v1.3.1 
 [v1.3.0]: https://github.com/stac-utils/stac-check/compare/v1.2.0...v1.3.0  
 [v1.2.0]: https://github.com/stac-utils/stac-check/compare/v1.1.2...v1.2.0  
