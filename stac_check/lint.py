@@ -6,7 +6,7 @@ import yaml
 import os
 from dataclasses import dataclass
 import requests
-from typing import Optional, Union
+from typing import Optional, Union, Dict, Any, List
 from dotenv import load_dotenv
 import pkg_resources
 
@@ -14,6 +14,109 @@ load_dotenv()
 
 @dataclass
 class Linter:
+    """A class for linting STAC JSON files and generating validation messages.
+
+    Args:
+        item (Union[str, dict]): A URL, file name, or dictionary representing a STAC JSON file.
+        config_file (Optional[str], optional): A path to a YAML configuration file. Defaults to None.
+        assets (bool, optional): A boolean value indicating whether to validate assets. Defaults to False.
+        links (bool, optional): A boolean value indicating whether to validate links. Defaults to False.
+        recursive (bool, optional): A boolean value indicating whether to perform recursive validation. Defaults to False.
+        max_depth (Optional[int], optional): An optional integer indicating the maximum depth to validate recursively. Defaults to None.
+
+    Attributes:
+        data (dict): A dictionary representing the STAC JSON file.
+        message (dict): A dictionary containing the validation message for the STAC JSON file.
+        config (dict): A dictionary containing the configuration settings.
+        asset_type (str): A string representing the asset type, if one is specified.
+        version (str): A string representing the version of the STAC standard used in the STAC JSON file.
+        validator_version (str): A string representing the version of the STAC validator used to validate the STAC JSON file.
+        validate_all (dict): A dictionary containing the validation message for all STAC JSON files found recursively, if recursive validation was performed.
+        valid_stac (bool): A boolean value indicating whether the STAC JSON file is valid.
+        error_type (str): A string representing the type of error in the STAC JSON file, if one exists.
+        error_msg (str): A string representing the error message in the STAC JSON file, if one exists.
+        invalid_asset_format (List[str]): A list of URLs with invalid asset formats, if assets were validated.
+        invalid_asset_request (List[str]): A list of URLs with invalid asset requests, if assets were validated.
+        invalid_link_format (List[str]): A list of URLs with invalid link formats, if links were validated.
+        invalid_link_request (List[str]): A list of URLs with invalid link requests, if links were validated.
+        schema (List[str]): A list of the STAC JSON file's JSON schema files.
+        object_id (str): A string representing the STAC JSON file's ID.
+        file_name (str): A string representing the name of the file containing the STAC JSON data.
+        best_practices_msg (str): A string representing best practices messages for the STAC JSON file.
+
+    Methods:
+        parse_config(config_file: Optional[str] = None) -> Dict:
+            Parses a YAML configuration file and returns a dictionary with the configuration settings.
+
+        def get_asset_name(self, file: Union[str, Dict] = None) -> str:
+            Returns the name of a file.
+
+        load_data(self, file: Union[str, Dict]) -> Dict:
+            Loads a STAC JSON file from a URL or file path and returns a dictionary representation.
+
+        validate_file(self, file: Union[str, dict]) -> Dict[str, Any]:
+            Validates a STAC JSON file and returns a dictionary with the validation message.
+
+        recursive_validation(self, file: Union[str, Dict[str, Any]]) -> str:
+            Validates a STAC JSON file recursively and returns a dictionary with the validation message.
+
+        set_update_message(self) -> str:
+            Sets a message regarding the recommended version of the STAC JSON file standard.
+
+        check_links_assets(self, num_links: int, url_type: str, format_type: str) -> List[str]:
+            Checks whether the STAC JSON file has links or assets with invalid formats or requests.
+
+        check_error_type(self) -> str:                  
+            Checks whether the STAC JSON file has an error type.
+
+        check_error_message(self) -> str:
+            Checks whether the STAC JSON file has an error message. 
+
+        def check_summaries(self) -> bool:
+            Checks whether the STAC JSON file has summaries.
+
+        check_bloated_links(self, max_links: Optional[int] = 20) -> bool:
+            Checks whether the STAC JSON file has bloated links.
+
+        check_bloated_metadata(self, max_properties: Optional[int] = 20) -> bool:
+            Checks whether the STAC JSON file has bloated metadata.
+
+        check_datetime_null(self) -> bool:
+            Checks whether the STAC JSON file has a null datetime.
+
+        check_unlocated(self) -> bool:
+            Checks whether the STAC JSON file has unlocated items.
+
+        check_geometry_null(self) -> bool:
+            Checks whether the STAC JSON file has a null geometry.  
+
+        check_searchable_identifiers(self) -> bool: 
+            Checks whether the STAC JSON file has searchable identifiers.
+
+        check_percent_encoded(self) -> bool:
+            Checks whether the STAC JSON file has percent-encoded characters.
+
+        check_thumbnail(self) -> bool:
+            Checks whether the STAC JSON file has a thumbnail.
+
+        check_links_title_field(self) -> bool:
+            Checks whether the STAC JSON file has a title field in its links.
+
+        check_links_self(self) -> bool:
+            Checks whether the STAC JSON file has a self link.
+
+        check_item_id_file_name(self) -> bool:
+            Checks whether the filename of an Item conforms to the STAC specification.
+
+        check_catalog_file_name(self) -> str:
+            Checks whether the filename of a Catalog or Collection conforms to the STAC specification.
+
+        create_best_practices_dict(self) -> Dict[str, Any]:
+            Creates a dictionary with best practices recommendations for the STAC JSON file.
+
+        create_best_practices_msg(self) -> List[str]:
+            Creates a message with best practices recommendations for the STAC JSON file.
+    """
     item: Union[str, dict] # url, file name, or dictionary
     config_file: Optional[str] = None
     assets: bool = False
@@ -43,7 +146,29 @@ class Linter:
         self.best_practices_msg = self.create_best_practices_msg()
 
     @staticmethod
-    def parse_config(config_file):
+    def parse_config(config_file: Optional[str] = None) -> Dict:
+        """Parse the configuration file for STAC checks.
+
+        The method first looks for a file path specified in the `STAC_CHECK_CONFIG`
+        environment variable. If the variable is defined, the method loads the
+        YAML configuration file located at that path. Otherwise, it loads the default
+        configuration file packaged with the `stac-check` module.
+
+        If `config_file` is specified, the method also loads the YAML configuration
+        file located at that path and merges its contents with the default or
+        environment-based configuration.
+
+        Args:
+            config_file (str): The path to the YAML configuration file.
+
+        Returns:
+            A dictionary containing the parsed configuration values.
+
+        Raises:
+            IOError: If `config_file` is specified but cannot be read.
+            yaml.YAMLError: If any YAML syntax errors occur while parsing the
+                configuration file(s).
+        """
         default_config_file = os.getenv("STAC_CHECK_CONFIG")
         if default_config_file:
             with open(default_config_file) as f:
@@ -58,13 +183,41 @@ class Linter:
             
         return default_config
 
-    def get_asset_name(self, file):
+    def get_asset_name(self, file: Union[str, Dict] = None) -> str:
+        """Extracts the name of an asset from its file path or from a STAC item asset dictionary.
+
+        Args:
+            file (Union[str, dict], optional): A string representing the file path to the asset or a dictionary representing the
+                asset as specified in a STAC item's `assets` property.
+
+        Returns:
+            A string containing the name of the asset.
+
+        Raises:
+            TypeError: If the input `file` is not a string or a dictionary.
+        """
         if isinstance(file, str):
             return os.path.basename(file).split('.')[0]
         else:
             return file["id"]
 
-    def load_data(self, file):
+    def load_data(self, file: Union[str, Dict]) -> Dict:
+        """Loads JSON data from a file or URL.
+
+        Args:
+            file (Union[str, Dict]): A string representing the path to a JSON file or a dictionary containing the JSON data.
+
+        Returns:
+            A dictionary containing the loaded JSON data.
+
+        Raises:
+            TypeError: If the input `file` is not a string or dictionary.
+            ValueError: If `file` is a string that doesn't represent a valid URL or file path.
+            requests.exceptions.RequestException: If there is an error making a request to a URL.
+            JSONDecodeError: If the JSON data cannot be decoded.
+            FileNotFoundError: If the specified file cannot be found.
+        """
+
         if isinstance(file, str):
             if is_valid_url(file):
                 resp = requests.get(file)
@@ -76,16 +229,43 @@ class Linter:
         else:
             return file
 
-    def validate_file(self, file):
+    def validate_file(self, file: Union[str, dict]) -> Dict[str, Any]:
+        """Validates the given file path or STAC dictionary against the validation schema.
+
+        Args:
+            file (Union[str, dict]): A string representing the file path to the STAC file or a dictionary representing the STAC
+                item.
+
+        Returns:
+            A dictionary containing the results of the validation, including the status of the validation and any errors
+            encountered.
+
+        Raises:
+            ValueError: If `file` is not a valid file path or STAC dictionary.
+        """
         if isinstance(file, str):
             stac = StacValidate(file, links=self.links, assets=self.assets)
             stac.run()
-        else:
+        elif isinstance(file, dict):
             stac = StacValidate()
             stac.validate_dict(file)
+        else:
+            raise ValueError("Input must be a file path or STAC dictionary.")
         return stac.message[0]
 
-    def recursive_validation(self, file):
+    def recursive_validation(self, file: Union[str, Dict[str, Any]]) -> str:
+        """Recursively validate a STAC item or catalog file and its child items.
+
+        Args:
+            file (Union[str, Dict[str, Any]]): A string representing the file path to the STAC item or catalog, or a
+                dictionary representing the STAC item or catalog.
+
+        Returns:
+            A string containing the validation message.
+
+        Raises:
+            TypeError: If the input `file` is not a string or a dictionary.
+        """
         if self.recursive:
             if isinstance(file, str):
                 stac = StacValidate(file, recursive=True, max_depth=self.max_depth)
@@ -95,13 +275,28 @@ class Linter:
                 stac.validate_dict(file)
             return stac.message
 
-    def set_update_message(self):
+    def set_update_message(self) -> str:
+        """Returns a message for users to update their STAC version.
+
+        Returns:
+            A string containing a message for users to update their STAC version.
+        """
         if self.version != "1.0.0":
             return f"Please upgrade from version {self.version} to version 1.0.0!"
         else:
             return "Thanks for using STAC version 1.0.0!"
 
-    def check_links_assets(self, num_links:int, url_type:str, format_type:str):
+    def check_links_assets(self, num_links: int, url_type: str, format_type: str) -> List[str]:
+        """Checks the links and assets in the STAC catalog and returns a list of invalid links of a specified type and format.
+
+        Args:
+            num_links (int): The maximum number of invalid links to return.
+            url_type (str): The type of URL to check, which can be either 'self' or 'external'.
+            format_type (str): The format of the URL to check, which can be either 'html' or 'json'.
+
+        Returns:
+            A list of invalid links of the specified type and format. If there are no invalid links, an empty list is returned.
+        """
         links = []
         if f"{url_type}_validated" in self.message:
             for invalid_request_url in self.message[f"{url_type}_validated"][f"{format_type}_invalid"]:
@@ -112,47 +307,105 @@ class Linter:
                     return links
         return links
 
-    def check_error_type(self):
+    def check_error_type(self) -> str:
+        """Returns the error type of a STAC validation if it exists in the validation message, 
+        and an empty string otherwise.
+
+        Returns:
+            str: A string containing the error type of a STAC validation if it exists in the validation message, and an
+            empty string otherwise.
+        """
         if "error_type" in self.message:
             return self.message["error_type"]
         else:
             return ""
 
-    def check_error_message(self):
+    def check_error_message(self) -> str:
+        """Checks whether the `message` attribute contains an `error_message` field.
+
+        Returns:
+            A string containing the value of the `error_message` field, or an empty string if the field is not present.
+        """
         if "error_message" in self.message:
             return self.message["error_message"]
         else:
             return ""
 
-    def check_summaries(self):
+    def check_summaries(self) -> bool:
+        """Check if a Collection asset has a "summaries" property.
+
+        Returns:
+            A boolean indicating whether the Collection asset has a "summaries" property.
+        """
         if self.asset_type == "COLLECTION":
             return "summaries" in self.data
 
-    def check_bloated_links(self, max_links: Optional[int] = 20):
+    def check_bloated_links(self, max_links: Optional[int] = 20) -> bool:
+        """Checks if the number of links in the STAC data exceeds a certain maximum.
+
+        Args:
+            max_links (Optional[int]): The maximum number of links that the STAC data is allowed to have. Default is 20.
+
+        Returns:
+            bool: A boolean indicating if the number of links in the STAC data exceeds the specified maximum.
+        """
         if "links" in self.data:
             return len(self.data["links"]) > max_links
 
-    def check_bloated_metadata(self, max_properties: Optional[int] = 20):
+    def check_bloated_metadata(self, max_properties: Optional[int] = 20) -> bool:
+        """Checks whether a STAC item's metadata contains too many properties.
+
+        Args:
+            max_properties (int, optional): The maximum number of properties that the metadata can contain before it is
+                considered too bloated. Defaults to 20.
+
+        Returns:
+            bool: True if the number of properties in the metadata exceeds the maximum number of properties specified by
+                `max_properties`, False otherwise.
+        """
         if "properties" in self.data:
             return len(self.data["properties"].keys()) > max_properties
+        return False
 
-    def check_datetime_null(self):
+    def check_datetime_null(self) -> bool:
+        """Checks if the STAC item has a null datetime property.
+
+        Returns:
+            bool: A boolean indicating whether the datetime property is null (True) or not (False).
+        """
         if "properties" in self.data:
             if "datetime" in self.data["properties"]:
                 if self.data["properties"]["datetime"] == None:
                     return True
         else:
             return False
+        return False
 
-    def check_unlocated(self):
+    def check_unlocated(self) -> bool:
+        """Checks if a STAC item is unlocated, i.e., has no geometry but has a bounding box.
+
+        Returns:
+            bool: True if the STAC item is unlocated, False otherwise.
+        """
         if "geometry" in self.data:
             return self.data["geometry"] is None and self.data["bbox"] is not None
 
-    def check_geometry_null(self):
+    def check_geometry_null(self) -> bool:
+        """Checks if a STAC item has a null geometry property.
+            
+        Returns:
+            bool: A boolean indicating whether the geometry property is null (True) or not (False).          
+        """
         if "geometry" in self.data:
             return self.data["geometry"] is None
 
-    def check_searchable_identifiers(self):
+    def check_searchable_identifiers(self) -> bool:
+        """Checks if the identifiers of a STAC item are searchable, i.e., 
+        they only contain lowercase letters, numbers, hyphens, and underscores.
+        
+        Returns:
+            bool: True if the identifiers are searchable, False otherwise.        
+        """
         if self.asset_type == "ITEM": 
             for letter in self.object_id:
                 if letter.islower() or letter.isnumeric() or letter == '-' or letter == '_':
@@ -161,10 +414,21 @@ class Linter:
                     return False  
         return True
 
-    def check_percent_encoded(self):
+    def check_percent_encoded(self) -> bool:
+        """Checks if the identifiers of a STAC item are percent-encoded, i.e.,
+        they only contain lowercase letters, numbers, hyphens, and underscores.
+
+        Returns:
+            bool: True if the identifiers are percent-encoded, False otherwise.
+        """
         return self.asset_type == "ITEM" and "/" in self.object_id or ":" in self.object_id
 
-    def check_thumbnail(self):
+    def check_thumbnail(self) -> bool:
+        """Checks if the thumbnail of a STAC item is valid, i.e., it has a valid format.
+        
+        Returns:
+            bool: True if the thumbnail is valid, False otherwise.
+        """
         if "assets" in self.data:
             if "thumbnail" in self.data["assets"]:
                 if "type" in self.data["assets"]["thumbnail"]:
@@ -174,15 +438,27 @@ class Linter:
                     else:
                         return False
         return True
+    
+    def check_links_title_field(self) -> bool:
+        """Checks if all links in a STAC collection or catalog have a 'title' field.
+        The 'title' field is not required for the 'self' link.
 
-    def check_links_title_field(self):
+        Returns:
+            bool: True if all links have a 'title' field, False otherwise.
+        """
         if self.asset_type == "COLLECTION" or self.asset_type == "CATALOG":
             for link in self.data["links"]:
                 if "title" not in link and link["rel"] != "self":
                     return False
         return True
 
-    def check_links_self(self):
+
+    def check_links_self(self) -> bool:
+        """Checks whether the "self" link is present in the STAC collection or catalog or absent in STAC item.
+        
+        Returns:
+            bool: True if the "self" link is present in STAC collection or catalog or absent in STAC item, False otherwise.
+        """
         if self.asset_type == "ITEM":
             return True
         if self.asset_type == "COLLECTION" or self.asset_type == "CATALOG":
@@ -191,13 +467,18 @@ class Linter:
                     return True
         return False
 
-    def check_item_id_file_name(self):
+    def check_item_id_file_name(self) -> bool:
         if self.asset_type == "ITEM" and self.object_id != self.file_name:
             return False
         else:
             return True
 
-    def check_catalog_file_name(self):
+    def check_catalog_file_name(self) -> bool:
+        """Checks whether the filename of a Catalog or Collection conforms to the STAC specification.
+        
+        Returns:
+            bool: True if the filename is valid, False otherwise.
+        """
         if isinstance(self.item, str) and ".json" in self.item:
             if self.asset_type == "CATALOG" and 'catalog.json' not in self.item:
                 return False 
@@ -207,7 +488,15 @@ class Linter:
         else:
             return True
 
-    def create_best_practices_dict(self):
+    def create_best_practices_dict(self) -> Dict:
+        """Creates a dictionary of best practices violations for the current STAC object. The violations are determined
+        by a set of configurable linting rules specified in the config file.
+
+        Returns:
+            A dictionary of best practices violations for the current STAC object. The keys in the dictionary correspond
+            to the linting rules that were violated, and the values are lists of strings containing error messages and
+            recommendations for how to fix the violations.
+        """
         best_practices_dict = {}
         config = self.config["linting"]
         max_links = self.config["settings"]["max_links"]
@@ -283,7 +572,15 @@ class Linter:
 
         return best_practices_dict
 
-    def create_best_practices_msg(self):
+    def create_best_practices_msg(self) -> List[str]:
+        """
+        Generates a list of best practices messages based on the results of the 'create_best_practices_dict' method.
+
+        Returns:
+            A list of strings, where each string contains a best practice message. Each message starts with the 
+            'STAC Best Practices:' base string and is followed by a specific recommendation. Each message is indented 
+            with four spaces, and there is an empty string between each message for readability.
+        """
         best_practices = list()
         base_string = "STAC Best Practices: "
         best_practices.append(base_string)
