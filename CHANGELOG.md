@@ -6,18 +6,23 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 
 ## Unreleased
 
+### Changed
+
+- Development dependencies removed from runtime dependency list
+  ([#109](https://github.com/stac-utils/stac-check/pull/109))
+
 ## [v1.3.2] - 2023-03-23
-## Added
+### Added
 - Ability to lint dictionaries https://github.com/stac-utils/stac-check/pull/94
 - Docstrings and pdoc api documents
-## Fixed
+### Fixed
 - Fixed the check_catalog_file_name() method to only work on static catalogs https://github.com/stac-utils/stac-check/pull/94
 - Jsonschema version to use a released version https://github.com/stac-utils/stac-check/pull/105
 
 ## [v1.3.1] - 2022-10-05
-## Changed
-- Changed pin on stac-validator to >=3.1.0 from ==3.2.0 
-     
+### Changed
+- Changed pin on stac-validator to >=3.1.0 from ==3.2.0
+
 ## [v1.3.0] - 2022-09-20
 ### Added
 - recursive mode lints assets https://github.com/stac-utils/stac-check/pull/84
@@ -39,7 +44,7 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 - Make it easier to export linting messages
 - Set stac-validator version to 2.4.0
 ### Fixed
-- Fix self-link test 
+- Fix self-link test
 
 ## [v1.0.1] - 2022-02-20
 ### Changed
@@ -61,7 +66,7 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 - Check for bloated metadata, too many fields in properties
 - Check for geometry field, recommend that STAC not be used for non-spatial data
 
-### Changed  
+### Changed
 - Changed bloated links check to a boolean to mirror bloated metadata
 
 ## [v0.1.2] - 2022-01-17 - 2022-01-22
@@ -70,19 +75,19 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 - Check for unlocated items, bbox should be set to null if geometry is
 
 ## [v0.1.1] - 2021-11-26 - 2021-12-12
-### Added  
+### Added
 - Added github actions to test and push to pypi
-- Added makefile, dockerfile  
+- Added makefile, dockerfile
 
-### Changed  
-- Removed pipenv  
+### Changed
+- Removed pipenv
 
 ## [v0.1.0] - 2021-11-26 - 2021-12-05
 ### Added
 - Best practices - searchable identifiers - lowercase, numbers, '_' or '-'
   for id names
   https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#searchable-identifiers
-- Best practices ensure item ids don't contain ':' or '/' characters  
+- Best practices ensure item ids don't contain ':' or '/' characters
   https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#item-ids
 - Best practices check for item ids to see if they match file names
 - Add url support, check for valid urls, validate urls
@@ -91,18 +96,18 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 - Move stac-validator 2.3.0 into repository
 - Best practices check for too many links in object
 - Best practices check for summaries in collections
-- Validation from stac-validator 2.3.0  
-- Links and assets validation checks     
-  
-[Unreleased]: https://github.com/stac-utils/stac-check/compare/v1.3.2...main  
-[v1.3.2]: https://github.com/stac-utils/stac-check/compare/v1.3.1...v1.3.2 
-[v1.3.1]: https://github.com/stac-utils/stac-check/compare/v1.3.0...v1.3.1 
-[v1.3.0]: https://github.com/stac-utils/stac-check/compare/v1.2.0...v1.3.0  
-[v1.2.0]: https://github.com/stac-utils/stac-check/compare/v1.1.2...v1.2.0  
-[v1.1.2]: https://github.com/stac-utils/stac-check/compare/v1.0.1...v1.1.2  
-[v1.0.1]: https://github.com/stac-utils/stac-check/compare/v0.2.0...v1.0.1  
-[v0.2.0]: https://github.com/stac-utils/stac-check/compare/v0.1.3...v0.2.0  
-[v0.1.3]: https://github.com/stac-utils/stac-check/compare/v0.1.2...v0.1.3  
-[v0.1.2]: https://github.com/stac-utils/stac-check/compare/v0.1.1...v0.1.2  
-[v0.1.1]: https://github.com/stac-utils/stac-check/compare/v0.1.0...v0.1.1  
-[v0.1.0]: https://github.com/stac-utils/stac-check/releases/tag/v0.1.0  
+- Validation from stac-validator 2.3.0
+- Links and assets validation checks
+
+[Unreleased]: https://github.com/stac-utils/stac-check/compare/v1.3.2...main
+[v1.3.2]: https://github.com/stac-utils/stac-check/compare/v1.3.1...v1.3.2
+[v1.3.1]: https://github.com/stac-utils/stac-check/compare/v1.3.0...v1.3.1
+[v1.3.0]: https://github.com/stac-utils/stac-check/compare/v1.2.0...v1.3.0
+[v1.2.0]: https://github.com/stac-utils/stac-check/compare/v1.1.2...v1.2.0
+[v1.1.2]: https://github.com/stac-utils/stac-check/compare/v1.0.1...v1.1.2
+[v1.0.1]: https://github.com/stac-utils/stac-check/compare/v0.2.0...v1.0.1
+[v0.2.0]: https://github.com/stac-utils/stac-check/compare/v0.1.3...v0.2.0
+[v0.1.3]: https://github.com/stac-utils/stac-check/compare/v0.1.2...v0.1.3
+[v0.1.2]: https://github.com/stac-utils/stac-check/compare/v0.1.1...v0.1.2
+[v0.1.1]: https://github.com/stac-utils/stac-check/compare/v0.1.0...v0.1.1
+[v0.1.0]: https://github.com/stac-utils/stac-check/releases/tag/v0.1.0
