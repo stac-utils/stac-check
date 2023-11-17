@@ -22,7 +22,9 @@ def test_linter_bad_assets():
         "https:/storage.googleapis.com/open-cogs/stac-examples/20201211_223832_CS2.jpg"
     ]
     asset_request_errors = [
-        "https:/storage.googleapis.com/open-cogs/stac-examples/20201211_223832_CS2.jpg"
+        "https:/storage.googleapis.com/open-cogs/stac-examples/20201211_223832_CS2.jpg",
+        "http://remotedata.io/catalog/20201211_223832_CS2/extended-metadata.json",
+        "http://cool-sat.com/catalog/20201211_223832_CS2/20201211_223832_CS2.EPH"
     ]
     assert linter.version == "1.0.0"
     assert linter.valid_stac == True
@@ -54,9 +56,13 @@ def test_linter_bad_links_assets():
         "https:/storage.googleapis.com/open-cogs/stac-examples/20201211_223832_CS2.jpg"
     ]
     asset_request_errors = [
-        "https:/storage.googleapis.com/open-cogs/stac-examples/20201211_223832_CS2.jpg"
+        "https:/storage.googleapis.com/open-cogs/stac-examples/20201211_223832_CS2.jpg",
+        "http://remotedata.io/catalog/20201211_223832_CS2/extended-metadata.json",
+        "http://cool-sat.com/catalog/20201211_223832_CS2/20201211_223832_CS2.EPH"
     ]
-    link_format_errors = ["http:/remotdata.io/catalog/20201211_223832_CS2/index.html"]
+    link_format_errors = [
+        "http:/remotdata.io/catalog/20201211_223832_CS2/index.html",
+    ]
     link_request_errors = [
         "http://catalog/collection.json", 
         "http:/remotdata.io/catalog/20201211_223832_CS2/index.html"
