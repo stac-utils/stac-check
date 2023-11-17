@@ -18,12 +18,16 @@ setup(
         "click>=8.0.0",
         "requests>=2.19.1",
         "jsonschema>=3.1.2",
-        "pytest",
         "stac-validator>=3.1.0",
         "PyYAML",
         "python-dotenv",
-        "types-setuptools",
     ],
+    extras_require={
+        "dev": [
+            "pytest",
+            "types-setuptools",
+        ],
+    },
     entry_points={
         'console_scripts': ['stac-check=stac_check.cli:main']
     },
@@ -32,6 +36,6 @@ setup(
     license="MIT",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    python_requires=">=3.7",
+    python_requires=">=3.8",
     tests_require=["pytest"]
 )
