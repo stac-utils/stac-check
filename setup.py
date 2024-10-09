@@ -22,7 +22,7 @@ setup(
         "stac-validator>=3.4.0",
         "PyYAML",
         "python-dotenv",
-        "setuptools"
+        "setuptools",
     ],
     extras_require={
         "dev": [
