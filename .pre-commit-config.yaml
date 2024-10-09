@@ -3,6 +3,8 @@ repos:
     rev: 7.0.0
     hooks:
       - id: flake8
+        args:
+          - --ignore=E501,E712,W605,W503
   - repo: https://github.com/timothycrosley/isort
     rev: 5.13.2
     hooks:
@@ -26,4 +28,5 @@ repos:
             --implicit-reexport,
             --explicit-package-bases,
           ]
-        additional_dependencies: ["types-attrs", "types-requests"]
+        additional_dependencies:
+          ["types-attrs", "types-requests", "types-setuptools", "types-PyYAML"]

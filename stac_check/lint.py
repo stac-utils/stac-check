@@ -285,6 +285,8 @@ class Linter:
                 stac = StacValidate(recursive=True, max_depth=self.max_depth)
                 stac.validate_dict(file)
             return stac.message
+        else:
+            return "Recursive validation is disabled."
 
     def set_update_message(self) -> str:
         """Returns a message for users to update their STAC version.
@@ -394,7 +396,7 @@ class Linter:
         """
         if "properties" in self.data:
             if "datetime" in self.data["properties"]:
-                if self.data["properties"]["datetime"] == None:
+                if self.data["properties"]["datetime"] is None:
                     return True
         else:
             return False
@@ -408,6 +410,8 @@ class Linter:
         """
         if "geometry" in self.data:
             return self.data["geometry"] is None and self.data["bbox"] is not None
+        else:
+            return False
 
     def check_geometry_null(self) -> bool:
         """Checks if a STAC item has a null geometry property.
@@ -539,13 +543,13 @@ class Linter:
             and config["searchable_identifiers"] == True
         ):
             msg_1 = f"Item name '{self.object_id}' should only contain Searchable identifiers"
-            msg_2 = f"Identifiers should consist of only lowercase characters, numbers, '_', and '-'"
+            msg_2 = "Identifiers should consist of only lowercase characters, numbers, '_', and '-'"
             best_practices_dict["searchable_identifiers"] = [msg_1, msg_2]
 
         # best practices - item ids should not contain ':' or '/' characters
         if self.check_percent_encoded() and config["percent_encoded"] == True:
             msg_1 = f"Item name '{self.object_id}' should not contain ':' or '/'"
-            msg_2 = f"https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#item-ids"
+            msg_2 = "https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#item-ids"
             best_practices_dict["percent_encoded"] = [msg_1, msg_2]
 
         # best practices - item ids should match file names
@@ -563,23 +567,23 @@ class Linter:
 
         # best practices - collections should contain summaries
         if self.check_summaries() == False and config["check_summaries"] == True:
-            msg_1 = f"A STAC collection should contain a summaries field"
-            msg_2 = f"It is recommended to store information like eo:bands in summaries"
+            msg_1 = "A STAC collection should contain a summaries field"
+            msg_2 = "It is recommended to store information like eo:bands in summaries"
             best_practices_dict["check_summaries"] = [msg_1, msg_2]
 
         # best practices - datetime fields should not be set to null
         if self.check_datetime_null() and config["null_datetime"] == True:
-            msg_1 = f"Please avoid setting the datetime field to null, many clients search on this field"
+            msg_1 = "Please avoid setting the datetime field to null, many clients search on this field"
             best_practices_dict["datetime_null"] = [msg_1]
 
         # best practices - check unlocated items to make sure bbox field is not set
         if self.check_unlocated() and config["check_unlocated"] == True:
-            msg_1 = f"Unlocated item. Please avoid setting the bbox field when geometry is set to null"
+            msg_1 = "Unlocated item. Please avoid setting the bbox field when geometry is set to null"
             best_practices_dict["check_unlocated"] = [msg_1]
 
         # best practices - recommend items have a geometry
         if self.check_geometry_null() and config["check_geometry"] == True:
-            msg_1 = f"All items should have a geometry field. STAC is not meant for non-spatial data"
+            msg_1 = "All items should have a geometry field. STAC is not meant for non-spatial data"
             best_practices_dict["null_geometry"] = [msg_1]
 
         # check to see if there are too many links
@@ -604,21 +608,19 @@ class Linter:
             and self.asset_type == "ITEM"
             and config["check_thumbnail"] == True
         ):
-            msg_1 = (
-                f"A thumbnail should have a small file size ie. png, jpeg, jpg, webp"
-            )
+            msg_1 = "A thumbnail should have a small file size ie. png, jpeg, jpg, webp"
             best_practices_dict["check_thumbnail"] = [msg_1]
 
         # best practices - ensure that links in catalogs and collections include a title field
         if not self.check_links_title_field() and config["links_title"] == True:
             msg_1 = (
-                f"Links in catalogs and collections should always have a 'title' field"
+                "Links in catalogs and collections should always have a 'title' field"
             )
             best_practices_dict["check_links_title"] = [msg_1]
 
         # best practices - ensure that links in catalogs and collections include self link
         if not self.check_links_self() and config["links_self"] == True:
-            msg_1 = f"A link to 'self' in links is strongly recommended"
+            msg_1 = "A link to 'self' in links is strongly recommended"
             best_practices_dict["check_links_self"] = [msg_1]
 
         return best_practices_dict

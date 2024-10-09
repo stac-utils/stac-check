@@ -19,7 +19,7 @@ setup(
         "click>=8.0.0",
         "requests>=2.19.1",
         "jsonschema>=3.1.2",
-        "stac-validator==3.4.0",
+        "stac-validator>=3.4.0",
         "PyYAML",
         "python-dotenv",
     ],

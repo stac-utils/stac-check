@@ -2,6 +2,7 @@ import click
 import pkg_resources
 
 from .lint import Linter
+from .logo import logo
 
 
 def link_asset_message(link_list: list, type: str, format: str) -> None:
@@ -33,14 +34,14 @@ def recursive_message(linter: Linter) -> None:
         None.
     """
     click.secho()
-    click.secho(f"Recursive: Validate all assets in a collection or catalog", bold=True)
+    click.secho("Recursive: Validate all assets in a collection or catalog", bold=True)
     click.secho(f"Max-depth = {linter.max_depth}")
     click.secho("-------------------------")
     for count, msg in enumerate(linter.validate_all):
         click.secho(f"Asset {count+1} Validated: {msg['path']}", bg="white", fg="black")
         click.secho()
         if msg["valid_stac"] == True:
-            recursive_linter = Linter(msg["path"], recursive=0)
+            recursive_linter = Linter(msg["path"], recursive=True)
             cli_message(recursive_linter)
         else:
             click.secho(f"Valid: {msg['valid_stac']}", fg="red")
@@ -67,14 +68,7 @@ def intro_message(linter: Linter) -> None:
     Returns:
         None.
     """
-    click.secho(
-        """
- ____  ____  __    ___       ___  _  _  ____  ___  __ _ 
-/ ___)(_  _)/ _\  / __)___  / __)/ )( \(  __)/ __)(  / )
-\___ \  )( /    \( (__(___)( (__ ) __ ( ) _)( (__  )  ( 
-(____/ (__)\_/\_/ \___)     \___)\_)(_/(____)\___)(__\_)
-    """
-    )
+    click.secho(logo)
 
     click.secho("stac-check: STAC spec validaton and linting tool", bold=True)
 
@@ -126,10 +120,10 @@ def cli_message(linter: Linter) -> None:
 
     if linter.validate_all == True:
         click.secho()
-        click.secho(f"Recursive validation has passed!", fg="blue")
+        click.secho("Recursive validation has passed!", fg="blue")
     elif linter.validate_all == False and linter.recursive:
         click.secho()
-        click.secho(f"Recursive validation has failed!", fg="red")
+        click.secho("Recursive validation has failed!", fg="red")
 
     if linter.invalid_asset_format is not None:
         click.secho()
@@ -148,18 +142,18 @@ def cli_message(linter: Linter) -> None:
         link_asset_message(linter.invalid_link_request, "link", "request")
 
     if linter.error_type != "":
-        click.secho(f"Validation error type: ", fg="red")
+        click.secho("Validation error type: ", fg="red")
         click.secho(f"    {linter.error_type}")
 
     if linter.error_msg != "":
-        click.secho(f"Validation error message: ", fg="red")
+        click.secho("Validation error message: ", fg="red")
         click.secho(f"    {linter.error_msg}")
 
     click.secho(f"This object has {len(linter.data['links'])} links")
 
     click.secho()
 
-    ### Stac validator response for reference
+    # Stac validator response for reference
     # click.secho(json.dumps(linter.message, indent=4))
 
 
