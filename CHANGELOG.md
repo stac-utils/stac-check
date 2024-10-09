@@ -11,7 +11,7 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 ### Added
 
 - Added pre-commit config ([#111](https://github.com/stac-utils/stac-check/pull/111))
-- Added publish.yml to automatically publish new releases ([#111](https://github.com/stac-utils/stac-check/pull/111))
+- Added publish.yml to automatically publish new releases to PyPI ([#111](https://github.com/stac-utils/stac-check/pull/111))
 
 ### Changed
 
