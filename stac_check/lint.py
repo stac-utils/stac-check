@@ -1,16 +1,17 @@
-import pkg_resources
-from stac_validator.validate import StacValidate
-from stac_validator.utilities import is_valid_url
 import json
-import yaml
 import os
 from dataclasses import dataclass
-import requests
-from typing import Optional, Union, Dict, Any, List
-from dotenv import load_dotenv
+from typing import Any, Dict, List, Optional, Union
+
 import pkg_resources
+import requests
+import yaml
+from dotenv import load_dotenv
+from stac_validator.utilities import is_valid_url
+from stac_validator.validate import StacValidate
 
 load_dotenv()
+
 
 @dataclass
 class Linter:
@@ -66,11 +67,11 @@ class Linter:
         check_links_assets(self, num_links: int, url_type: str, format_type: str) -> List[str]:
             Checks whether the STAC JSON file has links or assets with invalid formats or requests.
 
-        check_error_type(self) -> str:                  
+        check_error_type(self) -> str:
             Checks whether the STAC JSON file has an error type.
 
         check_error_message(self) -> str:
-            Checks whether the STAC JSON file has an error message. 
+            Checks whether the STAC JSON file has an error message.
 
         def check_summaries(self) -> bool:
             Checks whether the STAC JSON file has summaries.
@@ -88,9 +89,9 @@ class Linter:
             Checks whether the STAC JSON file has unlocated items.
 
         check_geometry_null(self) -> bool:
-            Checks whether the STAC JSON file has a null geometry.  
+            Checks whether the STAC JSON file has a null geometry.
 
-        check_searchable_identifiers(self) -> bool: 
+        check_searchable_identifiers(self) -> bool:
             Checks whether the STAC JSON file has searchable identifiers.
 
         check_percent_encoded(self) -> bool:
@@ -117,7 +118,8 @@ class Linter:
         create_best_practices_msg(self) -> List[str]:
             Creates a message with best practices recommendations for the STAC JSON file.
     """
-    item: Union[str, dict] # url, file name, or dictionary
+
+    item: Union[str, dict]  # url, file name, or dictionary
     config_file: Optional[str] = None
     assets: bool = False
     links: bool = False
@@ -128,17 +130,27 @@ class Linter:
         self.data = self.load_data(self.item)
         self.message = self.validate_file(self.item)
         self.config = self.parse_config(self.config_file)
-        self.asset_type = self.message["asset_type"] if "asset_type" in self.message else ""
+        self.asset_type = (
+            self.message["asset_type"] if "asset_type" in self.message else ""
+        )
         self.version = self.message["version"] if "version" in self.message else ""
         self.validator_version = pkg_resources.require("stac-validator")[0].version
         self.validate_all = self.recursive_validation(self.item)
         self.valid_stac = self.message["valid_stac"]
         self.error_type = self.check_error_type()
         self.error_msg = self.check_error_message()
-        self.invalid_asset_format = self.check_links_assets(10, "assets", "format") if self.assets else None
-        self.invalid_asset_request = self.check_links_assets(10, "assets", "request") if self.assets else None
-        self.invalid_link_format = self.check_links_assets(10, "links", "format") if self.links else None
-        self.invalid_link_request = self.check_links_assets(10, "links", "request") if self.links else None
+        self.invalid_asset_format = (
+            self.check_links_assets(10, "assets", "format") if self.assets else None
+        )
+        self.invalid_asset_request = (
+            self.check_links_assets(10, "assets", "request") if self.assets else None
+        )
+        self.invalid_link_format = (
+            self.check_links_assets(10, "links", "format") if self.links else None
+        )
+        self.invalid_link_request = (
+            self.check_links_assets(10, "links", "request") if self.links else None
+        )
         self.schema = self.message["schema"] if "schema" in self.message else []
         self.object_id = self.data["id"] if "id" in self.data else ""
         self.file_name = self.get_asset_name(self.item)
@@ -179,7 +191,7 @@ class Linter:
             with open(config_file) as f:
                 config = yaml.load(f, Loader=yaml.FullLoader)
             default_config.update(config)
-            
+
         return default_config
 
     def get_asset_name(self, file: Union[str, Dict] = None) -> str:
@@ -196,7 +208,7 @@ class Linter:
             TypeError: If the input `file` is not a string or a dictionary.
         """
         if isinstance(file, str):
-            return os.path.basename(file).split('.')[0]
+            return os.path.basename(file).split(".")[0]
         else:
             return file["id"]
 
@@ -285,7 +297,9 @@ class Linter:
         else:
             return "Thanks for using STAC version 1.0.0!"
 
-    def check_links_assets(self, num_links: int, url_type: str, format_type: str) -> List[str]:
+    def check_links_assets(
+        self, num_links: int, url_type: str, format_type: str
+    ) -> List[str]:
         """Checks the links and assets in the STAC catalog and returns a list of invalid links of a specified type and format.
 
         Args:
@@ -298,8 +312,10 @@ class Linter:
         """
         links = []
         if f"{url_type}_validated" in self.message:
-            for invalid_request_url in self.message[f"{url_type}_validated"][f"{format_type}_invalid"]:
-                if invalid_request_url not in links and 'http' in invalid_request_url:
+            for invalid_request_url in self.message[f"{url_type}_validated"][
+                f"{format_type}_invalid"
+            ]:
+                if invalid_request_url not in links and "http" in invalid_request_url:
                     links.append(invalid_request_url)
                 num_links = num_links - 1
                 if num_links == 0:
@@ -307,7 +323,7 @@ class Linter:
         return links
 
     def check_error_type(self) -> str:
-        """Returns the error type of a STAC validation if it exists in the validation message, 
+        """Returns the error type of a STAC validation if it exists in the validation message,
         and an empty string otherwise.
 
         Returns:
@@ -338,6 +354,8 @@ class Linter:
         """
         if self.asset_type == "COLLECTION":
             return "summaries" in self.data
+        else:
+            return False
 
     def check_bloated_links(self, max_links: Optional[int] = 20) -> bool:
         """Checks if the number of links in the STAC data exceeds a certain maximum.
@@ -350,6 +368,8 @@ class Linter:
         """
         if "links" in self.data:
             return len(self.data["links"]) > max_links
+        else:
+            return False
 
     def check_bloated_metadata(self, max_properties: Optional[int] = 20) -> bool:
         """Checks whether a STAC item's metadata contains too many properties.
@@ -391,26 +411,33 @@ class Linter:
 
     def check_geometry_null(self) -> bool:
         """Checks if a STAC item has a null geometry property.
-            
+
         Returns:
-            bool: A boolean indicating whether the geometry property is null (True) or not (False).          
+            bool: A boolean indicating whether the geometry property is null (True) or not (False).
         """
         if "geometry" in self.data:
             return self.data["geometry"] is None
+        else:
+            return False
 
     def check_searchable_identifiers(self) -> bool:
-        """Checks if the identifiers of a STAC item are searchable, i.e., 
+        """Checks if the identifiers of a STAC item are searchable, i.e.,
         they only contain lowercase letters, numbers, hyphens, and underscores.
-        
+
         Returns:
-            bool: True if the identifiers are searchable, False otherwise.        
+            bool: True if the identifiers are searchable, False otherwise.
         """
-        if self.asset_type == "ITEM": 
+        if self.asset_type == "ITEM":
             for letter in self.object_id:
-                if letter.islower() or letter.isnumeric() or letter == '-' or letter == '_':
+                if (
+                    letter.islower()
+                    or letter.isnumeric()
+                    or letter == "-"
+                    or letter == "_"
+                ):
                     pass
                 else:
-                    return False  
+                    return False
         return True
 
     def check_percent_encoded(self) -> bool:
@@ -420,24 +447,30 @@ class Linter:
         Returns:
             bool: True if the identifiers are percent-encoded, False otherwise.
         """
-        return self.asset_type == "ITEM" and "/" in self.object_id or ":" in self.object_id
+        return (
+            self.asset_type == "ITEM" and "/" in self.object_id or ":" in self.object_id
+        )
 
     def check_thumbnail(self) -> bool:
         """Checks if the thumbnail of a STAC item is valid, i.e., it has a valid format.
-        
+
         Returns:
             bool: True if the thumbnail is valid, False otherwise.
         """
         if "assets" in self.data:
             if "thumbnail" in self.data["assets"]:
                 if "type" in self.data["assets"]["thumbnail"]:
-                    if "png" in self.data["assets"]["thumbnail"]["type"] or "jpeg" in self.data["assets"]["thumbnail"]["type"] or \
-                        "jpg" in self.data["assets"]["thumbnail"]["type"] or "webp" in self.data["assets"]["thumbnail"]["type"]:
+                    if (
+                        "png" in self.data["assets"]["thumbnail"]["type"]
+                        or "jpeg" in self.data["assets"]["thumbnail"]["type"]
+                        or "jpg" in self.data["assets"]["thumbnail"]["type"]
+                        or "webp" in self.data["assets"]["thumbnail"]["type"]
+                    ):
                         return True
                     else:
                         return False
         return True
-    
+
     def check_links_title_field(self) -> bool:
         """Checks if all links in a STAC collection or catalog have a 'title' field.
         The 'title' field is not required for the 'self' link.
@@ -451,10 +484,9 @@ class Linter:
                     return False
         return True
 
-
     def check_links_self(self) -> bool:
         """Checks whether the "self" link is present in the STAC collection or catalog or absent in STAC item.
-        
+
         Returns:
             bool: True if the "self" link is present in STAC collection or catalog or absent in STAC item, False otherwise.
         """
@@ -474,14 +506,14 @@ class Linter:
 
     def check_catalog_file_name(self) -> bool:
         """Checks whether the filename of a Catalog or Collection conforms to the STAC specification.
-        
+
         Returns:
             bool: True if the filename is valid, False otherwise.
         """
         if isinstance(self.item, str) and ".json" in self.item:
-            if self.asset_type == "CATALOG" and 'catalog.json' not in self.item:
-                return False 
-            elif self.asset_type == "COLLECTION" and 'collection.json' not in self.item:
+            if self.asset_type == "CATALOG" and "catalog.json" not in self.item:
+                return False
+            elif self.asset_type == "COLLECTION" and "collection.json" not in self.item:
                 return False
             return True
         else:
@@ -502,7 +534,10 @@ class Linter:
         max_properties = self.config["settings"]["max_properties"]
 
         # best practices - item ids should only contain searchable identifiers
-        if self.check_searchable_identifiers() == False and config["searchable_identifiers"] == True: 
+        if (
+            self.check_searchable_identifiers() == False
+            and config["searchable_identifiers"] == True
+        ):
             msg_1 = f"Item name '{self.object_id}' should only contain Searchable identifiers"
             msg_2 = f"Identifiers should consist of only lowercase characters, numbers, '_', and '-'"
             best_practices_dict["searchable_identifiers"] = [msg_1, msg_2]
@@ -518,8 +553,11 @@ class Linter:
             msg_1 = f"Item file names should match their ids: '{self.file_name}' not equal to '{self.object_id}"
             best_practices_dict["check_item_id"] = [msg_1]
 
-        # best practices - collection and catalog file names should be collection.json and catalog.json 
-        if self.check_catalog_file_name() == False and config["catalog_id_file_name"] == True: 
+        # best practices - collection and catalog file names should be collection.json and catalog.json
+        if (
+            self.check_catalog_file_name() == False
+            and config["catalog_id_file_name"] == True
+        ):
             msg_1 = f"Object should be called '{self.asset_type.lower()}.json' not '{self.file_name}.json'"
             best_practices_dict["check_catalog_id"] = [msg_1]
 
@@ -545,23 +583,37 @@ class Linter:
             best_practices_dict["null_geometry"] = [msg_1]
 
         # check to see if there are too many links
-        if self.check_bloated_links(max_links=max_links) and config["bloated_links"] == True:
+        if (
+            self.check_bloated_links(max_links=max_links)
+            and config["bloated_links"] == True
+        ):
             msg_1 = f"You have {len(self.data['links'])} links. Please consider using sub-collections or sub-catalogs"
             best_practices_dict["bloated_links"] = [msg_1]
 
         # best practices - check for bloated metadata in properties
-        if self.check_bloated_metadata(max_properties=max_properties) and config["bloated_metadata"] == True:
+        if (
+            self.check_bloated_metadata(max_properties=max_properties)
+            and config["bloated_metadata"] == True
+        ):
             msg_1 = f"You have {len(self.data['properties'])} properties. Please consider using links to avoid bloated metadata"
             best_practices_dict["bloated_metadata"] = [msg_1]
 
         # best practices - ensure thumbnail is a small file size ["png", "jpeg", "jpg", "webp"]
-        if not self.check_thumbnail() and self.asset_type == "ITEM" and config["check_thumbnail"] == True:
-            msg_1 = f"A thumbnail should have a small file size ie. png, jpeg, jpg, webp"
+        if (
+            not self.check_thumbnail()
+            and self.asset_type == "ITEM"
+            and config["check_thumbnail"] == True
+        ):
+            msg_1 = (
+                f"A thumbnail should have a small file size ie. png, jpeg, jpg, webp"
+            )
             best_practices_dict["check_thumbnail"] = [msg_1]
 
         # best practices - ensure that links in catalogs and collections include a title field
         if not self.check_links_title_field() and config["links_title"] == True:
-            msg_1 = f"Links in catalogs and collections should always have a 'title' field"
+            msg_1 = (
+                f"Links in catalogs and collections should always have a 'title' field"
+            )
             best_practices_dict["check_links_title"] = [msg_1]
 
         # best practices - ensure that links in catalogs and collections include self link
@@ -576,17 +628,17 @@ class Linter:
         Generates a list of best practices messages based on the results of the 'create_best_practices_dict' method.
 
         Returns:
-            A list of strings, where each string contains a best practice message. Each message starts with the 
-            'STAC Best Practices:' base string and is followed by a specific recommendation. Each message is indented 
+            A list of strings, where each string contains a best practice message. Each message starts with the
+            'STAC Best Practices:' base string and is followed by a specific recommendation. Each message is indented
             with four spaces, and there is an empty string between each message for readability.
         """
         best_practices = list()
         base_string = "STAC Best Practices: "
         best_practices.append(base_string)
 
-        for _,v in self.create_best_practices_dict().items():
+        for _, v in self.create_best_practices_dict().items():
             for value in v:
-                best_practices.extend(["    " +value])  
+                best_practices.extend(["    " + value])
             best_practices.extend([""])
 
         return best_practices
