@@ -1,8 +1,9 @@
 """stac-check setup.py
 """
-from setuptools import setup, find_packages
 
-__version__ = "1.3.3"
+from setuptools import find_packages, setup
+
+__version__ = "1.4.0"
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -18,9 +19,10 @@ setup(
         "click>=8.0.0",
         "requests>=2.19.1",
         "jsonschema>=3.1.2",
-        "stac-validator>=3.1.0",
+        "stac-validator>=3.4.0",
         "PyYAML",
         "python-dotenv",
+        "setuptools",
     ],
     extras_require={
         "dev": [
@@ -28,14 +30,12 @@ setup(
             "types-setuptools",
         ],
     },
-    entry_points={
-        'console_scripts': ['stac-check=stac_check.cli:main']
-    },
+    entry_points={"console_scripts": ["stac-check=stac_check.cli:main"]},
     author="Jonathan Healy",
     author_email="jonathan.d.healy@gmail.com",
     license="MIT",
     long_description=long_description,
     long_description_content_type="text/markdown",
     python_requires=">=3.8",
-    tests_require=["pytest"]
+    tests_require=["pytest"],
 )
