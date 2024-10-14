@@ -15,6 +15,7 @@ setup(
     url="https://github.com/stac-utils/stac-check",
     packages=find_packages(exclude=("tests",)),
     include_package_data=True,
+    setup_requires=["setuptools"],
     install_requires=[
         "click>=8.0.0",
         "requests>=2.19.1",
@@ -22,7 +23,6 @@ setup(
         "stac-validator>=3.4.0",
         "PyYAML",
         "python-dotenv",
-        "setuptools",
     ],
     extras_require={
         "dev": [
