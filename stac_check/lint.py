@@ -1,10 +1,10 @@
+import importlib.metadata
+import importlib.resources
 import json
 import os
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Union
 
-import importlib.metadata
-import importlib.resources
 import requests
 import yaml
 from dotenv import load_dotenv
@@ -135,7 +135,9 @@ class Linter:
             self.message["asset_type"] if "asset_type" in self.message else ""
         )
         self.version = self.message["version"] if "version" in self.message else ""
-        self.validator_version = importlib.metadata.distribution("stac-validator").version
+        self.validator_version = importlib.metadata.distribution(
+            "stac-validator"
+        ).version
         self.validate_all = self.recursive_validation(self.item)
         self.valid_stac = self.message["valid_stac"]
         self.error_type = self.check_error_type()
