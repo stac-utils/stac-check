@@ -32,7 +32,7 @@ CLI Reference
     </summary>
     <pre><code class="python">import click
     from .lint import Linter
-    import pkg_resources
+    import importlib.matadata
 
     def link_asset_message(link_list:list, type: str, format: str) -&gt; None:
         &#34;&#34;&#34;Prints a list of links or assets and any errors associated with them.
@@ -205,7 +205,7 @@ CLI Reference
     )
     @click.command()
     @click.argument(&#39;file&#39;)
-    @click.version_option(version=pkg_resources.require(&#34;stac-check&#34;)[0].version)
+    @click.version_option(version=importlib.metadata.distribution(&#34;stac-check&#34;).version)
     def main(file, recursive, max_depth, assets, links):
         linter = Linter(file, assets=assets, links=links, recursive=recursive, max_depth=max_depth)
         intro_message(linter)

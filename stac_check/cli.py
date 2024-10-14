@@ -1,5 +1,5 @@
 import click
-import pkg_resources
+import importlib.metadata
 
 from .lint import Linter
 from .logo import logo
@@ -177,7 +177,7 @@ def cli_message(linter: Linter) -> None:
 )
 @click.command()
 @click.argument("file")
-@click.version_option(version=pkg_resources.require("stac-check")[0].version)
+@click.version_option(version=importlib.metadata.distribution("stac-check").version)
 def main(file, recursive, max_depth, assets, links):
     linter = Linter(
         file, assets=assets, links=links, recursive=recursive, max_depth=max_depth

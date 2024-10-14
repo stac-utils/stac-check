@@ -30,7 +30,7 @@ API Reference
         <summary>
         <span>Expand source code</span>
         </summary>
-        <pre><code class="python">import pkg_resources
+        <pre><code class="python">
         from stac_validator.validate import StacValidate
         from stac_validator.utilities import is_valid_url
         import json
@@ -40,7 +40,8 @@ API Reference
         import requests
         from typing import Optional, Union, Dict, Any, List
         from dotenv import load_dotenv
-        import pkg_resources
+        import importlib.metadata
+	import importlib.resources
 
         load_dotenv()
 
@@ -162,7 +163,7 @@ API Reference
                 self.config = self.parse_config(self.config_file)
                 self.asset_type = self.message[&#34;asset_type&#34;] if &#34;asset_type&#34; in self.message else &#34;&#34;
                 self.version = self.message[&#34;version&#34;] if &#34;version&#34; in self.message else &#34;&#34;
-                self.validator_version = pkg_resources.require(&#34;stac-validator&#34;)[0].version
+                self.validator_version = importlib.metadata.distribution(&#34;stac-validator&#34;).version
                 self.validate_all = self.recursive_validation(self.item)
                 self.valid_stac = self.message[&#34;valid_stac&#34;]
                 self.error_type = self.check_error_type()
@@ -205,7 +206,7 @@ API Reference
                     with open(default_config_file) as f:
                         default_config = yaml.load(f, Loader=yaml.FullLoader)
                 else:
-                    with pkg_resources.resource_stream(__name__, &#34;stac-check.config.yml&#34;) as f:
+                    with importlib.resources.open_text(__name__, &#34;stac-check.config.yml&#34;) as f:
                         default_config = yaml.load(f, Loader=yaml.FullLoader)
                 if config_file:
                     with open(config_file) as f:
@@ -866,7 +867,7 @@ API Reference
                 self.config = self.parse_config(self.config_file)
                 self.asset_type = self.message[&#34;asset_type&#34;] if &#34;asset_type&#34; in self.message else &#34;&#34;
                 self.version = self.message[&#34;version&#34;] if &#34;version&#34; in self.message else &#34;&#34;
-                self.validator_version = pkg_resources.require(&#34;stac-validator&#34;)[0].version
+                self.validator_version = importlib.metadata.distribution(&#34;stac-validator&#34;)[0].version
                 self.validate_all = self.recursive_validation(self.item)
                 self.valid_stac = self.message[&#34;valid_stac&#34;]
                 self.error_type = self.check_error_type()
@@ -909,7 +910,7 @@ API Reference
                     with open(default_config_file) as f:
                         default_config = yaml.load(f, Loader=yaml.FullLoader)
                 else:
-                    with pkg_resources.resource_stream(__name__, &#34;stac-check.config.yml&#34;) as f:
+                    with importlib.resources.open_text(__name__, &#34;stac-check.config.yml&#34;) as f:
                         default_config = yaml.load(f, Loader=yaml.FullLoader)
                 if config_file:
                     with open(config_file) as f:
@@ -1416,7 +1417,7 @@ API Reference
                 with open(default_config_file) as f:
                     default_config = yaml.load(f, Loader=yaml.FullLoader)
             else:
-                with pkg_resources.resource_stream(__name__, &#34;stac-check.config.yml&#34;) as f:
+                with importlib.resources.open_text(__name__, &#34;stac-check.config.yml&#34;) as f:
                     default_config = yaml.load(f, Loader=yaml.FullLoader)
             if config_file:
                 with open(config_file) as f:
