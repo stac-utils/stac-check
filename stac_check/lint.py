@@ -188,7 +188,9 @@ class Linter:
             with open(default_config_file) as f:
                 default_config = yaml.load(f, Loader=yaml.FullLoader)
         else:
-            with importlib.resources.open_text(__name__, "stac-check.config.yml") as f:
+            with importlib.resources.open_text(
+                "stac_check", "stac-check.config.yml"
+            ) as f:
                 default_config = yaml.load(f, Loader=yaml.FullLoader)
         if config_file:
             with open(config_file) as f:
