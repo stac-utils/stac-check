@@ -6,6 +6,12 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 
 ## Unreleased
 
+### Changed
+
+- No longer use the deprecated pkg-resources package.
+  It has been replaced with importlib from the Python standard library
+  ([#112](https://github.com/stac-utils/stac-check/pull/112))
+
 ## [v1.4.0] - 2024-10-09
 
 ### Added
