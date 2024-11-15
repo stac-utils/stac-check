@@ -867,7 +867,7 @@ API Reference
                 self.config = self.parse_config(self.config_file)
                 self.asset_type = self.message[&#34;asset_type&#34;] if &#34;asset_type&#34; in self.message else &#34;&#34;
                 self.version = self.message[&#34;version&#34;] if &#34;version&#34; in self.message else &#34;&#34;
-                self.validator_version = importlib.metadata.distribution(&#34;stac-validator&#34;)[0].version
+                self.validator_version = importlib.metadata.distribution(&#34;stac-validator&#34;).version
                 self.validate_all = self.recursive_validation(self.item)
                 self.valid_stac = self.message[&#34;valid_stac&#34;]
                 self.error_type = self.check_error_type()
