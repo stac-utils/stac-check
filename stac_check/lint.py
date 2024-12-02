@@ -2,7 +2,7 @@ import importlib.metadata
 import importlib.resources
 import json
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Union
 
 import requests
@@ -25,6 +25,8 @@ class Linter:
         links (bool, optional): A boolean value indicating whether to validate links. Defaults to False.
         recursive (bool, optional): A boolean value indicating whether to perform recursive validation. Defaults to False.
         max_depth (Optional[int], optional): An optional integer indicating the maximum depth to validate recursively. Defaults to None.
+        assets_open_urls (bool): Whether to open assets URLs when validating assets. Defaults to True.
+        headers (dict): HTTP headers to include in the requests.
 
     Attributes:
         data (dict): A dictionary representing the STAC JSON file.
@@ -126,6 +128,8 @@ class Linter:
     links: bool = False
     recursive: bool = False
     max_depth: Optional[int] = None
+    assets_open_urls: bool = True
+    headers: dict = field(default_factory=dict)
 
     def __post_init__(self):
         self.data = self.load_data(self.item)
@@ -236,7 +240,7 @@ class Linter:
 
         if isinstance(file, str):
             if is_valid_url(file):
-                resp = requests.get(file)
+                resp = requests.get(file, headers=self.headers)
                 data = resp.json()
             else:
                 with open(file) as json_file:
@@ -260,10 +264,18 @@ class Linter:
             ValueError: If `file` is not a valid file path or STAC dictionary.
         """
         if isinstance(file, str):
-            stac = StacValidate(file, links=self.links, assets=self.assets)
+            stac = StacValidate(
+                file,
+                links=self.links,
+                assets=self.assets,
+                assets_open_urls=self.assets_open_urls,
+                headers=self.headers,
+            )
             stac.run()
         elif isinstance(file, dict):
-            stac = StacValidate()
+            stac = StacValidate(
+                assets_open_urls=self.assets_open_urls, headers=self.headers
+            )
             stac.validate_dict(file)
         else:
             raise ValueError("Input must be a file path or STAC dictionary.")
@@ -284,10 +296,21 @@ class Linter:
         """
         if self.recursive:
             if isinstance(file, str):
-                stac = StacValidate(file, recursive=True, max_depth=self.max_depth)
+                stac = StacValidate(
+                    file,
+                    recursive=True,
+                    max_depth=self.max_depth,
+                    assets_open_urls=self.assets_open_urls,
+                    headers=self.headers,
+                )
                 stac.run()
             else:
-                stac = StacValidate(recursive=True, max_depth=self.max_depth)
+                stac = StacValidate(
+                    recursive=True,
+                    max_depth=self.max_depth,
+                    assets_open_urls=self.assets_open_urls,
+                    headers=self.headers,
+                )
                 stac.validate_dict(file)
             return stac.message
         else:

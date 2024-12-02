@@ -178,12 +178,29 @@ def cli_message(linter: Linter) -> None:
 @click.option(
     "-l", "--links", is_flag=True, help="Validate links for format and response."
 )
+@click.option(
+    "--no-assets-urls",
+    is_flag=True,
+    help="Disables the opening of href links when validating assets (enabled by default).",
+)
+@click.option(
+    "--header",
+    type=(str, str),
+    multiple=True,
+    help="HTTP header to include in the requests. Can be used multiple times.",
+)
 @click.command()
 @click.argument("file")
 @click.version_option(version=importlib.metadata.distribution("stac-check").version)
-def main(file, recursive, max_depth, assets, links):
+def main(file, recursive, max_depth, assets, links, no_assets_urls, header):
     linter = Linter(
-        file, assets=assets, links=links, recursive=recursive, max_depth=max_depth
+        file,
+        assets=assets,
+        links=links,
+        recursive=recursive,
+        max_depth=max_depth,
+        assets_open_urls=not no_assets_urls,
+        headers=dict(header),
     )
     intro_message(linter)
     if recursive > 0:
