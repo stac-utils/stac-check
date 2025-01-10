@@ -58,7 +58,7 @@ for k, v in linter.create_best_practices_dict().items():
 \___ \  )( /    \( (__(___)( (__ ) __ ( ) _)( (__  )  (
 (____/ (__)\_/\_/ \___)     \___)\_)(_/(____)\___)(__\_)
 
-stac-check: STAC spec validaton and linting tool
+stac-check: STAC spec validation and linting tool
 
 Please upgrade from version 0.9.0 to version 1.0.0!
 
@@ -98,7 +98,7 @@ Error Message: Expecting value: line 1 column 1 (char 0)
 
 ``` stac-check sample_files/0.9.0/landsat8-sample.json```
 
-<pre><b>stac-check: STAC spec validaton and linting tool</b>
+<pre><b>stac-check: STAC spec validation and linting tool</b>
 
 Please upgrade from version 0.9.0 to version 1.0.0!
 
@@ -126,7 +126,7 @@ This object has 4 links
 
 ``` stac-check sample_files/1.0.0/core-item.json --assets```
 <pre>
-<b>stac-check: STAC spec validaton and linting tool</b>
+<b>stac-check: STAC spec validation and linting tool</b>
 
 Thanks for using STAC version 1.0.0!
 
@@ -161,7 +161,7 @@ This object has 4 links
 
 ``` stac-check sample_files/1.0.0/core-item-bad-links.json --links --assets```
 <pre>
-<b>stac-check: STAC spec validaton and linting tool</b>
+<b>stac-check: STAC spec validation and linting tool</b>
 
 Thanks for using STAC version 1.0.0!
 
@@ -203,7 +203,7 @@ This object has 4 links
 
 ``` stac-check sample_files/0.9.0/bad-item.json```
 <pre>
-<b>stac-check: STAC spec validaton and linting tool</b>
+<b>stac-check: STAC spec validation and linting tool</b>
 
 Please upgrade from version 0.9.0 to version 1.0.0!
 

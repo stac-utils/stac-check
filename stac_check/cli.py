@@ -73,7 +73,7 @@ def intro_message(linter: Linter) -> None:
     """
     click.secho(logo)
 
-    click.secho("stac-check: STAC spec validaton and linting tool", bold=True)
+    click.secho("stac-check: STAC spec validation and linting tool", bold=True)
 
     click.secho()
 
