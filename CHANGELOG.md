@@ -12,6 +12,10 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
   It has been replaced with importlib from the Python standard library
   ([#112](https://github.com/stac-utils/stac-check/pull/112))
 
+### Updated
+
+- Updated stac-validator to v3.5.0 and other dependecies as well ([#116](https://github.com/stac-utils/stac-check/pull/116))
+
 ## [v1.4.0] - 2024-10-09
 
 ### Added
