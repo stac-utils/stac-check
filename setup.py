@@ -27,6 +27,7 @@ setup(
     extras_require={
         "dev": [
             "pytest",
+            "requests-mock",
             "types-setuptools",
         ],
     },
