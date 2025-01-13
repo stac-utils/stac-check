@@ -6,13 +6,16 @@ from .lint import Linter
 from .logo import logo
 
 
-def link_asset_message(link_list: list, type: str, format: str) -> None:
+def link_asset_message(
+    link_list: list, type: str, format: str, healthy_msg: bool
+) -> None:
     """Prints a list of links or assets and any errors associated with them.
 
     Args:
         link_list (list): A list of links or assets.
         type (str): The type of link or asset being processed.
         format (str): The format or request being used.
+        healthy_msg (bool): Whether to display "No TYPE errors!" or not
 
     Returns:
         None.
@@ -21,7 +24,7 @@ def link_asset_message(link_list: list, type: str, format: str) -> None:
         click.secho(f"{type.upper()} {format} errors: ", fg="red")
         for asset in link_list:
             click.secho(f"    {asset}")
-    else:
+    elif healthy_msg:
         click.secho(f"No {type.upper()} {format} errors!", fg="green")
 
 
@@ -130,19 +133,21 @@ def cli_message(linter: Linter) -> None:
 
     if linter.invalid_asset_format is not None:
         click.secho()
-        link_asset_message(linter.invalid_asset_format, "asset", "format")
+        link_asset_message(linter.invalid_asset_format, "asset", "format", True)
 
     if linter.invalid_asset_request is not None:
         click.secho()
-        link_asset_message(linter.invalid_asset_request, "asset", "request")
+        link_asset_message(
+            linter.invalid_asset_request, "asset", "request", linter.assets_open_urls
+        )
 
     if linter.invalid_link_format is not None:
         click.secho()
-        link_asset_message(linter.invalid_link_format, "link", "format")
+        link_asset_message(linter.invalid_link_format, "link", "format", True)
 
     if linter.invalid_link_request is not None:
         click.secho()
-        link_asset_message(linter.invalid_link_request, "link", "request")
+        link_asset_message(linter.invalid_link_request, "link", "request", True)
 
     if linter.error_type != "":
         click.secho("Validation error type: ", fg="red")

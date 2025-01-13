@@ -250,7 +250,6 @@ STAC Best Practices:
 
 No ASSET format errors!
 
-No ASSET request errors!
 This object has 4 links
 </pre>
 ---
