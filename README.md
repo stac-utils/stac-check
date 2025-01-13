@@ -254,4 +254,4 @@ This object has 4 links
 </pre>
 ---
 ### Create local docs in the /docs folder
-`$ pdoc --html --output-dir pdoc stac_check --force`
+`$ pdoc --output-dir pdoc ./stac_check`
