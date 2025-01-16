@@ -1,4 +1,7 @@
+import json
+
 import pytest
+import requests_mock
 
 from stac_check.lint import Linter
 
@@ -498,3 +501,65 @@ def test_lint_dict_item():
     assert linter.create_best_practices_dict()["datetime_null"] == [
         "Please avoid setting the datetime field to null, many clients search on this field"
     ]
+
+
+def test_lint_header():
+    file = "sample_files/1.0.0/core-item.json"
+    url = "https://localhost/" + file
+
+    no_headers = {}
+    valid_headers = {"x-api-key": "a-valid-api-key"}
+
+    with requests_mock.Mocker(real_http=True) as mock, open(file) as json_data:
+        mock.get(url, request_headers=no_headers, status_code=403, json={})
+        mock.get(url, request_headers=valid_headers, json=json.load(json_data))
+
+        linter = Linter(url, assets=False, headers=valid_headers)
+        assert linter.message == {
+            "version": "1.0.0",
+            "path": "https://localhost/sample_files/1.0.0/core-item.json",
+            "schema": [
+                "https://schemas.stacspec.org/v1.0.0/item-spec/json-schema/item.json"
+            ],
+            "valid_stac": True,
+            "asset_type": "ITEM",
+            "validation_method": "default",
+        }
+
+        linter = Linter(url, assets=False, headers=no_headers)
+        assert linter.message == {
+            "version": "",
+            "path": "https://localhost/sample_files/1.0.0/core-item.json",
+            "schema": [""],
+            "valid_stac": False,
+            "error_type": "HTTPError",
+            "error_message": "403 Client Error: None for url: https://localhost/sample_files/1.0.0/core-item.json",
+        }
+
+
+def test_lint_assets_no_links():
+    file = "sample_files/1.0.0/core-item.json"
+    linter = Linter(file, assets=True, assets_open_urls=False)
+    assert linter.message == {
+        "version": "1.0.0",
+        "path": file,
+        "schema": [
+            "https://schemas.stacspec.org/v1.0.0/item-spec/json-schema/item.json"
+        ],
+        "valid_stac": True,
+        "asset_type": "ITEM",
+        "validation_method": "default",
+        "assets_validated": {
+            "format_valid": [
+                "https://storage.googleapis.com/open-cogs/stac-examples/20201211_223832_CS2_analytic.tif",
+                "https://storage.googleapis.com/open-cogs/stac-examples/20201211_223832_CS2.jpg",
+                "https://storage.googleapis.com/open-cogs/stac-examples/20201211_223832_CS2.tif",
+                "https://storage.googleapis.com/open-cogs/stac-examples/20201211_223832_CS2_analytic_udm.tif",
+                "http://remotedata.io/catalog/20201211_223832_CS2/extended-metadata.json",
+                "http://cool-sat.com/catalog/20201211_223832_CS2/20201211_223832_CS2.EPH",
+            ],
+            "format_invalid": [],
+            "request_valid": [],
+            "request_invalid": [],
+        },
+    }
