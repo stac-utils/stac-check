@@ -6,6 +6,10 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 
 ## Unreleased
 
+### Changed
+
+## [v1.5.0] - 2025-01-17
+
 ### Added
 
 - Allow to provide HTTP headers ([#114](https://github.com/stac-utils/stac-check/pull/114))
@@ -163,7 +167,8 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 - Validation from stac-validator 2.3.0
 - Links and assets validation checks
 
-[Unreleased]: https://github.com/stac-utils/stac-check/compare/v1.4.0...main
+[Unreleased]: https://github.com/stac-utils/stac-check/compare/v1.5.0...main
+[v1.5.0]: https://github.com/stac-utils/stac-check/compare/v1.4.0...v1.5.0
 [v1.4.0]: https://github.com/stac-utils/stac-check/compare/v1.3.3...v1.4.0
 [v1.3.3]: https://github.com/stac-utils/stac-check/compare/v1.3.2...v1.3.3
 [v1.3.2]: https://github.com/stac-utils/stac-check/compare/v1.3.1...v1.3.2

@@ -1,14 +1,19 @@
 # stac-check
+
 ## A linting and validation tool for STAC assets
 
 The intent of this project is to provide a validation tool that also follows the official [STAC Best Practices document](https://github.com/radiantearth/stac-spec/blob/master/best-practices.md)
 
 ---
+
 ### Documentation
+
 [stac-check.readthedocs.io](https://stac-check.readthedocs.io/en/latest/)
 
 ---
+
 ### Install
+
 `$ pip install stac-check`
 
 or for local development
@@ -16,7 +21,9 @@ or for local development
 `$ pip install -e '.[dev]'`
 
 ---
+
 ### CLI Usage
+
 ```
 Usage: stac-check [OPTIONS] FILE
 
@@ -34,14 +41,18 @@ Options:
                            multiple times.
   --help                   Show this message and exit.               Show this message and exit.
 ```
+
 ---
+
 ### Docker
 
 ```
 $ make build
 $ make shell
 ```
+
 ---
+
 ### Lint JSON
 
 ```
@@ -52,10 +63,13 @@ linter = Linter('<json_path>')
 for k, v in linter.create_best_practices_dict().items():
     print(k, ":", v)
 ```
+
 ---
+
 ### CLI Examples
 
-``` stac-check https://raw.githubusercontent.com/stac-utils/pystac/main/tests/data-files/examples/0.9.0/collection-spec/examples/landsat-collection.json --recursive ```
+`stac-check https://raw.githubusercontent.com/stac-utils/pystac/main/tests/data-files/examples/0.9.0/collection-spec/examples/landsat-collection.json --recursive`
+
 ```
  ____  ____  __    ___       ___  _  _  ____  ___  __ _
 / ___)(_  _)/ _\  / __)___  / __)/ )( \(  __)/ __)(  / )
@@ -64,7 +78,7 @@ for k, v in linter.create_best_practices_dict().items():
 
 stac-check: STAC spec validation and linting tool
 
-Please upgrade from version 0.9.0 to version 1.0.0!
+Please upgrade from version 0.9.0 to version 1.1.0!
 
 Validator: stac-validator 3.5.0
 
@@ -100,11 +114,11 @@ Error Message: Expecting value: line 1 column 1 (char 0)
 -------------------------
 ```
 
-``` stac-check sample_files/0.9.0/landsat8-sample.json```
+` stac-check sample_files/0.9.0/landsat8-sample.json`
 
 <pre><b>stac-check: STAC spec validation and linting tool</b>
 
-Please upgrade from version 0.9.0 to version 1.0.0!
+Please upgrade from version 0.9.0 to version 1.1.0!
 
 Validator: stac-validator 3.5.0
 
@@ -128,11 +142,12 @@ STAC Best Practices:
 This object has 4 links
 </pre>
 
-``` stac-check sample_files/1.0.0/core-item.json --assets```
+` stac-check sample_files/1.0.0/core-item.json --assets`
+
 <pre>
 <b>stac-check: STAC spec validation and linting tool</b>
 
-Thanks for using STAC version 1.0.0!
+Please upgrade from version 1.0.0 to version 1.1.0!
 
 Validator: stac-validator 3.5.0
 
@@ -161,13 +176,12 @@ ASSET request errors:
 This object has 4 links
 </pre>
 
+` stac-check sample_files/1.0.0/core-item-bad-links.json --links --assets`
 
-
-``` stac-check sample_files/1.0.0/core-item-bad-links.json --links --assets```
 <pre>
 <b>stac-check: STAC spec validation and linting tool</b>
 
-Thanks for using STAC version 1.0.0!
+Please upgrade from version 1.0.0 to version 1.1.0!
 
 Validator: stac-validator 3.5.0
 
@@ -205,11 +219,12 @@ LINK request errors:
 This object has 4 links
 </pre>
 
-``` stac-check sample_files/0.9.0/bad-item.json```
+` stac-check sample_files/0.9.0/bad-item.json`
+
 <pre>
 <b>stac-check: STAC spec validation and linting tool</b>
 
-Please upgrade from version 0.9.0 to version 1.0.0!
+Please upgrade from version 0.9.0 to version 1.1.0!
 
 Validator: stac-validator 3.5.0
 
@@ -229,11 +244,12 @@ Validation error message:
 This object has 5 links
 </pre>
 
-``` stac-check https://stac-catalog.eu/collections/sentinel-s2-l2a/items/item1 --assets --no-assets-urls --header x-api-key $MY_API_KEY --header foo bar```
+` stac-check https://stac-catalog.eu/collections/sentinel-s2-l2a/items/item1 --assets --no-assets-urls --header x-api-key $MY_API_KEY --header foo bar`
+
 <pre>
 <b>stac-check: STAC spec validation and linting tool</b>
 
-Thanks for using STAC version 1.0.0!
+Please upgrade from version 1.0.0 to version 1.1.0!
 
 Validator: stac-validator 3.5.0
 
@@ -252,6 +268,9 @@ No ASSET format errors!
 
 This object has 4 links
 </pre>
+
 ---
+
 ### Create local docs in the /docs folder
+
 `$ pdoc --output-dir pdoc ./stac_check`

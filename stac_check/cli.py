@@ -80,7 +80,7 @@ def intro_message(linter: Linter) -> None:
 
     click.secho()
 
-    if linter.version == "1.0.0":
+    if linter.version == "1.1.0":
         click.secho(linter.set_update_message(), fg="green")
     else:
         click.secho(linter.set_update_message(), fg="red")

@@ -322,10 +322,10 @@ class Linter:
         Returns:
             A string containing a message for users to update their STAC version.
         """
-        if self.version != "1.0.0":
-            return f"Please upgrade from version {self.version} to version 1.0.0!"
+        if self.version != "1.1.0":
+            return f"Please upgrade from version {self.version} to version 1.1.0!"
         else:
-            return "Thanks for using STAC version 1.0.0!"
+            return "Thanks for using STAC version 1.1.0!"
 
     def check_links_assets(
         self, num_links: int, url_type: str, format_type: str
