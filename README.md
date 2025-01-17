@@ -28,6 +28,10 @@ Options:
                            argument to get full recursion. Ignored if
                            `recursive == False`.
   -r, --recursive          Recursively validate all related stac objects.
+  --no-assets-urls         Disables the opening of href links when validating assets
+                           (enabled by default).
+  --header KEY VALUE       HTTP header to include in the requests. Can be used
+                           multiple times.
   --help                   Show this message and exit.               Show this message and exit.
 ```
 ---
@@ -58,11 +62,11 @@ for k, v in linter.create_best_practices_dict().items():
 \___ \  )( /    \( (__(___)( (__ ) __ ( ) _)( (__  )  (
 (____/ (__)\_/\_/ \___)     \___)\_)(_/(____)\___)(__\_)
 
-stac-check: STAC spec validaton and linting tool
+stac-check: STAC spec validation and linting tool
 
 Please upgrade from version 0.9.0 to version 1.0.0!
 
-Validator: stac-validator 3.1.0
+Validator: stac-validator 3.5.0
 
 
 Recursive: Validate all assets in a collection or catalog
@@ -98,11 +102,11 @@ Error Message: Expecting value: line 1 column 1 (char 0)
 
 ``` stac-check sample_files/0.9.0/landsat8-sample.json```
 
-<pre><b>stac-check: STAC spec validaton and linting tool</b>
+<pre><b>stac-check: STAC spec validation and linting tool</b>
 
 Please upgrade from version 0.9.0 to version 1.0.0!
 
-Validator: stac-validator 2.3.0
+Validator: stac-validator 3.5.0
 
 Valid ITEM: True
 
@@ -126,11 +130,11 @@ This object has 4 links
 
 ``` stac-check sample_files/1.0.0/core-item.json --assets```
 <pre>
-<b>stac-check: STAC spec validaton and linting tool</b>
+<b>stac-check: STAC spec validation and linting tool</b>
 
 Thanks for using STAC version 1.0.0!
 
-Validator: stac-validator 2.3.0
+Validator: stac-validator 3.5.0
 
 Valid ITEM: True
 
@@ -161,11 +165,11 @@ This object has 4 links
 
 ``` stac-check sample_files/1.0.0/core-item-bad-links.json --links --assets```
 <pre>
-<b>stac-check: STAC spec validaton and linting tool</b>
+<b>stac-check: STAC spec validation and linting tool</b>
 
 Thanks for using STAC version 1.0.0!
 
-Validator: stac-validator 2.3.0
+Validator: stac-validator 3.5.0
 
 Valid ITEM: True
 
@@ -203,11 +207,11 @@ This object has 4 links
 
 ``` stac-check sample_files/0.9.0/bad-item.json```
 <pre>
-<b>stac-check: STAC spec validaton and linting tool</b>
+<b>stac-check: STAC spec validation and linting tool</b>
 
 Please upgrade from version 0.9.0 to version 1.0.0!
 
-Validator: stac-validator 2.3.0
+Validator: stac-validator 3.5.0
 
 Valid : False
 
@@ -224,6 +228,30 @@ Validation error message:
 
 This object has 5 links
 </pre>
+
+``` stac-check https://stac-catalog.eu/collections/sentinel-s2-l2a/items/item1 --assets --no-assets-urls --header x-api-key $MY_API_KEY --header foo bar```
+<pre>
+<b>stac-check: STAC spec validation and linting tool</b>
+
+Thanks for using STAC version 1.0.0!
+
+Validator: stac-validator 3.5.0
+
+Valid ITEM: True
+
+Schemas validated: 
+    https://stac-extensions.github.io/timestamps/v1.1.0/schema.json
+    https://schemas.stacspec.org/v1.0.0/item-spec/json-schema/item.json
+
+STAC Best Practices: 
+    A STAC collection should contain a summaries field
+    It is recommended to store information like eo:bands in summaries
+
+
+No ASSET format errors!
+
+This object has 4 links
+</pre>
 ---
 ### Create local docs in the /docs folder
-`$ pdoc --html --output-dir pdoc stac_check --force`
+`$ pdoc --output-dir pdoc ./stac_check`

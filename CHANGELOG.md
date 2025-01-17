@@ -6,6 +6,11 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 
 ## Unreleased
 
+### Added
+
+- Allow to provide HTTP headers ([#114](https://github.com/stac-utils/stac-check/pull/114))
+- Configure whether to open URLs when validating assets ([#114](https://github.com/stac-utils/stac-check/pull/114))
+
 ### Changed
 
 ## [v1.5.0] - 2025-01-17

@@ -102,7 +102,7 @@ CLI Reference
     (____/ (__)\_/\_/ \___)     \___)\_)(_/(____)\___)(__\_)
         &#34;&#34;&#34;)
 
-        click.secho(&#34;stac-check: STAC spec validaton and linting tool&#34;, bold=True)
+        click.secho(&#34;stac-check: STAC spec validation and linting tool&#34;, bold=True)
 
         click.secho()
 
@@ -351,7 +351,7 @@ CLI Reference
     (____/ (__)\_/\_/ \___)     \___)\_)(_/(____)\___)(__\_)
         &#34;&#34;&#34;)
 
-        click.secho(&#34;stac-check: STAC spec validaton and linting tool&#34;, bold=True)
+        click.secho(&#34;stac-check: STAC spec validation and linting tool&#34;, bold=True)
 
         click.secho()
 
