@@ -10,7 +10,7 @@ from typing import List
 
 project = "stac-check"
 author = "Jonathan Healy"
-release = "1.3.1"
+release = "1.5.0"
 
 
 # -- General configuration ---------------------------------------------------

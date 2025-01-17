@@ -41,10 +41,14 @@ CLI Usage
       -l, --links              Validate links for format and response.
       -a, --assets             Validate assets for format and response.
       -m, --max-depth INTEGER  Maximum depth to traverse when recursing. Omit this
-                               argument to get full recursion. Ignored if
-                              `recursive == False`.
+                                 argument to get full recursion. Ignored if
+                                 `recursive == False`.
       -r, --recursive          Recursively validate all related stac objects.
-      --help                   Show this message and exit.
+      --no-assets-urls         Disables the opening of href links when validating assets
+                                 (enabled by default).
+      --header KEY VALUE       HTTP header to include in the requests. Can be used
+                                 multiple times.
+      --help                   Show this message and exit.               Show this message and exit.
 
 Examples
 ~~~~~~~~
@@ -91,7 +95,7 @@ STAC Versions supported
 
 ``stac-check`` supports the following STAC versions:
 
-``[0.8.0, 0.8.1, 0.9.0, 1.0.0-beta.1, 1.0.0-beta.2, 1.0.0-rc.1, 1.0.0-rc.2, 1.0.0-rc.3, 1.0.0-rc.4, 1.0.0]``
+``[0.8.0, 0.8.1, 0.9.0, 1.0.0-beta.1, 1.0.0-beta.2, 1.0.0-rc.1, 1.0.0-rc.2, 1.0.0-rc.3, 1.0.0-rc.4, 1.0.0, 1.1.0]``
 
 .. toctree::
    :maxdepth: 1
