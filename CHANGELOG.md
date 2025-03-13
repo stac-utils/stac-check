@@ -12,6 +12,10 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 
 ### Changed
 
+### Fixed
+
+- Prevented `KeyError` in `check_unlocated()` when `bbox` is unset ([#104](https://github.com/stac-utils/stac-check/pull/119))
+
 ### Updated
 
 - Updated stac-validator to v3.6.0 ([#120](https://github.com/stac-utils/stac-check/pull/120))

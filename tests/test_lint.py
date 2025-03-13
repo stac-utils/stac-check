@@ -272,6 +272,11 @@ def test_unlocated_item():
     assert linter.check_unlocated() == True
     assert linter.check_geometry_null() == True
 
+    file = "sample_files/1.0.0/core-item-unlocated-null-bbox.json"
+    linter = Linter(file)
+    assert linter.check_unlocated() == False
+    assert linter.check_geometry_null() == True
+
 
 def test_bloated_item():
     file = "sample_files/1.0.0/core-item-bloated.json"

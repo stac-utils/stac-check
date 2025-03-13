@@ -437,7 +437,9 @@ class Linter:
             bool: True if the STAC item is unlocated, False otherwise.
         """
         if "geometry" in self.data:
-            return self.data["geometry"] is None and self.data["bbox"] is not None
+            return (
+                self.data.get("geometry") is None and self.data.get("bbox") is not None
+            )
         else:
             return False
 
