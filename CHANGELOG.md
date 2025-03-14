@@ -8,6 +8,10 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 
 ### Changed
 
+### Updated
+
+- Updated stac-validator to v3.6.0 ([#120](https://github.com/stac-utils/stac-check/pull/120))
+
 ## [v1.5.0] - 2025-01-17
 
 ### Added
