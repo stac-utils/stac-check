@@ -126,13 +126,13 @@ def test_linter_collection_recursive():
     assert linter.recursive == True
     assert linter.validate_all[0] == {
         "version": "1.0.0",
-        "path": "sample_files/1.0.0/catalog-with-bad-item.json",
+        "path": "sample_files/1.0.0/./bad-item.json",
         "schema": [
-            "https://schemas.stacspec.org/v1.0.0/catalog-spec/json-schema/catalog.json"
+            "https://schemas.stacspec.org/v1.0.0/item-spec/json-schema/item.json"
         ],
-        "valid_stac": True,
-        "asset_type": "CATALOG",
-        "validation_method": "recursive",
+        "valid_stac": False,
+        "error_message": "'id' is a required property",
+        "error_type": "JSONSchemaValidationError",
     }
 
 

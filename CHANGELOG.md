@@ -6,7 +6,15 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 
 ## Unreleased
 
+### Added
+
+- Test for Python 3.13 in workflow ([#120](https://github.com/stac-utils/stac-check/pull/120))
+
 ### Changed
+
+### Updated
+
+- Updated stac-validator to v3.6.0 ([#120](https://github.com/stac-utils/stac-check/pull/120))
 
 ## [v1.5.0] - 2025-01-17
 
