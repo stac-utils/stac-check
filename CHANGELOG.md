@@ -6,6 +6,10 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 
 ## Unreleased
 
+### Added
+
+- Test for Python 3.13 in workflow ([#120](https://github.com/stac-utils/stac-check/pull/120))
+
 ### Changed
 
 ### Updated
