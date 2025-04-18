@@ -97,6 +97,9 @@ class Linter:
         check_searchable_identifiers(self) -> bool:
             Checks whether the STAC JSON file has searchable identifiers.
 
+        check_bbox_antimeridian(self) -> bool:
+            Checks if a bbox that crosses the antimeridian is correctly formatted.
+
         check_percent_encoded(self) -> bool:
             Checks whether the STAC JSON file has percent-encoded characters.
 
@@ -653,7 +656,52 @@ class Linter:
             msg_1 = "A link to 'self' in links is strongly recommended"
             best_practices_dict["check_links_self"] = [msg_1]
 
+        # Check if a bbox that crosses the antimeridian is correctly formatted
+        if not self.check_bbox_antimeridian() and config.get(
+            "check_bbox_antimeridian", True
+        ):
+            msg_1 = "BBox crossing the antimeridian should have west longitude > east longitude"
+            msg_2 = "Current bbox format appears to be belting the globe instead of properly crossing the antimeridian"
+            best_practices_dict["check_bbox_antimeridian"] = [msg_1, msg_2]
+
         return best_practices_dict
+
+    def check_bbox_antimeridian(self) -> bool:
+        """
+        Checks if a bbox that crosses the antimeridian is correctly formatted.
+
+        According to the GeoJSON spec, when a bbox crosses the antimeridian (180°/-180° longitude),
+        the minimum longitude (bbox[0]) should be greater than the maximum longitude (bbox[2]).
+        This method checks if this convention is followed correctly.
+
+        Returns:
+            bool: True if the bbox is valid (either doesn't cross antimeridian or crosses it correctly),
+                  False if it incorrectly crosses the antimeridian.
+        """
+        if "bbox" not in self.data:
+            return True
+
+        bbox = self.data["bbox"]
+
+        # Extract the 2D part of the bbox (ignoring elevation if present)
+        if len(bbox) == 4:  # 2D bbox [west, south, east, north]
+            west, south, east, north = bbox
+        elif len(bbox) == 6:  # 3D bbox [west, south, min_elev, east, north, max_elev]
+            west, south, _, east, north, _ = bbox
+        else:
+            # Invalid bbox format, can't check
+            return True
+
+        # Check if the bbox appears to cross the antimeridian
+        # This is the case when west > east in a valid bbox that crosses the antimeridian
+        # For example: [170, -10, -170, 10] crosses the antimeridian correctly
+        # But [-170, -10, 170, 10] is incorrectly belting the globe
+
+        # Invalid if bbox "belts the globe" (too wide)
+        if west < east and (east - west) > 180:
+            return False
+        # Otherwise, valid (normal or valid antimeridian crossing)
+        return True
 
     def create_best_practices_msg(self) -> List[str]:
         """
