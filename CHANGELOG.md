@@ -8,6 +8,12 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 
 ### Added
 
+### Updated
+
+- Improved README with table of contents, better formatting, stac-check logo, and enhanced documentation ([#122](https://github.com/stac-utils/stac-check/pull/122))
+- Added Sponsors and Supporters section with logos ([#122](https://github.com/stac-utils/stac-check/pull/122))
+- Enhanced Contributing guidelines with step-by-step instructions ([#122](https://github.com/stac-utils/stac-check/pull/122))
+
 ## [v1.6.0] - 2025-03-14
 
 ### Added
