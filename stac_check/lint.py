@@ -660,8 +660,19 @@ class Linter:
         if not self.check_bbox_antimeridian() and config.get(
             "check_bbox_antimeridian", True
         ):
-            msg_1 = "BBox crossing the antimeridian should have west longitude > east longitude"
+            # Get the bbox values to include in the error message
+            bbox = self.data.get("bbox", [])
+
+            if len(bbox) == 4:  # 2D bbox [west, south, east, north]
+                west, _, east, _ = bbox
+            elif (
+                len(bbox) == 6
+            ):  # 3D bbox [west, south, min_elev, east, north, max_elev]
+                west, _, _, east, _, _ = bbox
+
+            msg_1 = f"BBox crossing the antimeridian should have west longitude > east longitude (found west={west}, east={east})"
             msg_2 = "Current bbox format appears to be belting the globe instead of properly crossing the antimeridian"
+
             best_practices_dict["check_bbox_antimeridian"] = [msg_1, msg_2]
 
         return best_practices_dict

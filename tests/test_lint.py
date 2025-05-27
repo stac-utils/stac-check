@@ -640,8 +640,12 @@ def test_bbox_antimeridian():
     best_practices = linter.create_best_practices_dict()
     assert "check_bbox_antimeridian" in best_practices
     assert len(best_practices["check_bbox_antimeridian"]) == 2
+
+    # Check that the error messages include the west and east longitude values
+    west_val = incorrect_item["bbox"][0]
+    east_val = incorrect_item["bbox"][2]
     assert (
-        "BBox crossing the antimeridian should have west longitude > east longitude"
+        f"(found west={west_val}, east={east_val})"
         in best_practices["check_bbox_antimeridian"][0]
     )
 
