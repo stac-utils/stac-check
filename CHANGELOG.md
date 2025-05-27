@@ -8,6 +8,11 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 
 ### Added
 
+- Added validation for bounding boxes that cross the antimeridian (180°/-180° longitude) ([#121](https://github.com/stac-utils/stac-check/pull/121))
+  - Checks that bbox coordinates follow the GeoJSON specification for antimeridian crossing
+  - Detects and reports cases where a bbox incorrectly "belts the globe" instead of properly crossing the antimeridian
+  - Provides clear error messages to help users fix incorrectly formatted bboxes
+
 ## [v1.6.0] - 2025-03-14
 
 ### Added
