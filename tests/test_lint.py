@@ -639,23 +639,51 @@ def test_geometry_coordinates_order():
         "properties": {"datetime": "2023-01-01T00:00:00Z"},
     }
 
+    # Create a test item with coordinates that may be reversed based on heuristic
+    # (first value > 90, second value < 90, first value > second value*2)
+    heuristic_incorrect_item = {
+        "stac_version": "1.0.0",
+        "stac_extensions": [],
+        "type": "Feature",
+        "id": "test-coordinates-heuristic-incorrect",
+        "bbox": [10.0, -10.0, 20.0, 10.0],
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+                [
+                    [120.0, 40.0],  # First value > 90, second < 90, first > second*2
+                    [120.0, 40.0],
+                    [120.0, 40.0],
+                    [120.0, 40.0],
+                    [120.0, 40.0],
+                ]
+            ],
+        },
+        "properties": {"datetime": "2023-01-01T00:00:00Z"},
+    }
+
     # Test with correct coordinates - this should pass
     linter = Linter(correct_item)
     assert linter.check_geometry_coordinates_order() == True
 
-    # Test with incorrect coordinates - this should fail
+    # Test with incorrect coordinates that are within valid ranges
+    # This will now fail with our enhanced heuristic
     linter = Linter(incorrect_item)
     assert (
         linter.check_geometry_coordinates_order() == True
-    )  # This will still pass because values are within valid ranges
+    )  # Still passes as values are within valid ranges
 
     # Test with clearly incorrect coordinates - this should fail
     linter = Linter(clearly_incorrect_item)
+    assert linter.check_geometry_coordinates_order() == False
+
+    # Test with coordinates that trigger the heuristic - this should fail
+    linter = Linter(heuristic_incorrect_item)
     assert linter.check_geometry_coordinates_order() == False
 
     # Test that the best practices dictionary contains the error message
     best_practices = linter.create_best_practices_dict()
     assert "geometry_coordinates_order" in best_practices
     assert best_practices["geometry_coordinates_order"] == [
-        "Geometry coordinates should be in the correct order (longitude, latitude)"
+        "Geometry coordinates may be reversed or contain errors (expected order: longitude, latitude)"
     ]

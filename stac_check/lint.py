@@ -554,15 +554,22 @@ class Linter:
             return True
 
     def check_geometry_coordinates_order(self) -> bool:
-        """Checks if the coordinates in a geometry are in the correct order (longitude, latitude).
+        """Checks if the coordinates in a geometry may be in the incorrect order.
 
-        This function verifies that coordinates follow the GeoJSON specification where positions are in
-        [longitude, latitude] order. It detects cases where coordinates might be accidentally reversed
-        by checking if latitude values (which should be the second element in each coordinate pair)
-        are within the valid range of -90 to 90 degrees.
+        This function attempts to detect cases where coordinates might not follow the GeoJSON
+        specification where positions should be in [longitude, latitude] order. It uses several
+        heuristics to identify potentially problematic coordinates:
+
+        1. Checks if latitude values (second element) exceed ±90 degrees
+        2. Checks if longitude values (first element) exceed ±180 degrees
+        3. Uses a heuristic to detect when coordinates are likely reversed
+           (when first value > 90, second value < 90, and first value > second value*2)
+
+        Note that this check can never definitively determine if coordinates are reversed
+        or simply contain errors, it can only flag suspicious patterns.
 
         Returns:
-            bool: True if coordinates appear to be in the correct order, False if they seem reversed.
+            bool: True if coordinates appear to be in the expected order, False if they may be reversed.
         """
         if "geometry" not in self.data or self.data["geometry"] is None:
             return True
@@ -577,13 +584,17 @@ class Linter:
             lon, lat = coord[0], coord[1]
 
             # Check if latitude (second value) is outside the valid range
-            # This could indicate reversed coordinates
             if abs(lat) > 90:
                 return False
 
             # Check if longitude (first value) is outside the valid range
-            # This is another indicator of possible coordinate reversal
             if abs(lon) > 180:
+                return False
+
+            # Additional heuristic for likely reversed coordinates
+            # If the first value (supposed longitude) is > 90, second value (supposed latitude) is < 90,
+            # and first value is significantly larger than second value, they may be reversed
+            if abs(lon) > 90 and abs(lat) < 90 and abs(lon) > abs(lat) * 2:
                 return False
 
             return True
@@ -706,7 +717,7 @@ class Linter:
             not self.check_geometry_coordinates_order()
             and config["geometry_coordinates_order"] == True
         ):
-            msg_1 = "Geometry coordinates should be in the correct order (longitude, latitude)"
+            msg_1 = "Geometry coordinates may be reversed or contain errors (expected order: longitude, latitude)"
             best_practices_dict["geometry_coordinates_order"] = [msg_1]
 
         return best_practices_dict
