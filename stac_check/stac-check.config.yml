@@ -25,6 +25,8 @@ linting:
   links_title: true
   # best practices - ensure that links in catalogs and collections include self link
   links_self: true
+  # check if geometry coordinates are in the correct order (longitude, latitude)
+  geometry_coordinates_order: true
 
 settings:
   # number of links before the bloated links warning is shown

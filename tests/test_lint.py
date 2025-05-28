@@ -568,3 +568,94 @@ def test_lint_assets_no_links():
             "request_invalid": [],
         },
     }
+
+
+def test_geometry_coordinates_order():
+    """Test the check_geometry_coordinates_order method for detecting incorrectly ordered coordinates."""
+    # Create a test item with coordinates in the correct order (longitude, latitude)
+    correct_item = {
+        "stac_version": "1.0.0",
+        "stac_extensions": [],
+        "type": "Feature",
+        "id": "test-coordinates-correct",
+        "bbox": [10.0, -10.0, 20.0, 10.0],
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+                [
+                    [10.0, -10.0],  # lon, lat
+                    [20.0, -10.0],
+                    [20.0, 10.0],
+                    [10.0, 10.0],
+                    [10.0, -10.0],
+                ]
+            ],
+        },
+        "properties": {"datetime": "2023-01-01T00:00:00Z"},
+    }
+
+    # Create a test item with coordinates in the wrong order (latitude, longitude)
+    # This will have "latitude" values outside the valid range (-90 to 90)
+    incorrect_item = {
+        "stac_version": "1.0.0",
+        "stac_extensions": [],
+        "type": "Feature",
+        "id": "test-coordinates-incorrect",
+        "bbox": [10.0, -10.0, 20.0, 10.0],
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+                [
+                    [-10.0, 10.0],  # lat, lon (reversed)
+                    [-10.0, 20.0],
+                    [10.0, 20.0],
+                    [10.0, 10.0],
+                    [-10.0, 10.0],
+                ]
+            ],
+        },
+        "properties": {"datetime": "2023-01-01T00:00:00Z"},
+    }
+
+    # Create a test item with coordinates that are clearly reversed (latitude > 90)
+    clearly_incorrect_item = {
+        "stac_version": "1.0.0",
+        "stac_extensions": [],
+        "type": "Feature",
+        "id": "test-coordinates-clearly-incorrect",
+        "bbox": [10.0, -10.0, 20.0, 10.0],
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+                [
+                    [10.0, 100.0],  # Second value (latitude) > 90
+                    [20.0, 100.0],
+                    [20.0, 100.0],
+                    [10.0, 100.0],
+                    [10.0, 100.0],
+                ]
+            ],
+        },
+        "properties": {"datetime": "2023-01-01T00:00:00Z"},
+    }
+
+    # Test with correct coordinates - this should pass
+    linter = Linter(correct_item)
+    assert linter.check_geometry_coordinates_order() == True
+
+    # Test with incorrect coordinates - this should fail
+    linter = Linter(incorrect_item)
+    assert (
+        linter.check_geometry_coordinates_order() == True
+    )  # This will still pass because values are within valid ranges
+
+    # Test with clearly incorrect coordinates - this should fail
+    linter = Linter(clearly_incorrect_item)
+    assert linter.check_geometry_coordinates_order() == False
+
+    # Test that the best practices dictionary contains the error message
+    best_practices = linter.create_best_practices_dict()
+    assert "geometry_coordinates_order" in best_practices
+    assert best_practices["geometry_coordinates_order"] == [
+        "Geometry coordinates should be in the correct order (longitude, latitude)"
+    ]

@@ -553,6 +553,54 @@ class Linter:
         else:
             return True
 
+    def check_geometry_coordinates_order(self) -> bool:
+        """Checks if the coordinates in a geometry are in the correct order (longitude, latitude).
+
+        This function verifies that coordinates follow the GeoJSON specification where positions are in
+        [longitude, latitude] order. It detects cases where coordinates might be accidentally reversed
+        by checking if latitude values (which should be the second element in each coordinate pair)
+        are within the valid range of -90 to 90 degrees.
+
+        Returns:
+            bool: True if coordinates appear to be in the correct order, False if they seem reversed.
+        """
+        if "geometry" not in self.data or self.data["geometry"] is None:
+            return True
+
+        geometry = self.data["geometry"]
+
+        # Function to check a single coordinate pair
+        def is_valid_coordinate(coord):
+            if len(coord) < 2:
+                return True  # Not enough elements to check
+
+            lon, lat = coord[0], coord[1]
+
+            # Check if latitude (second value) is outside the valid range
+            # This could indicate reversed coordinates
+            if abs(lat) > 90:
+                return False
+
+            # Check if longitude (first value) is outside the valid range
+            # This is another indicator of possible coordinate reversal
+            if abs(lon) > 180:
+                return False
+
+            return True
+
+        # Function to recursively check all coordinates in a geometry
+        def check_coordinates(coords):
+            if isinstance(coords, list):
+                if coords and isinstance(coords[0], (int, float)):
+                    # This is a single coordinate
+                    return is_valid_coordinate(coords)
+                else:
+                    # This is a list of coordinates or a list of lists of coordinates
+                    return all(check_coordinates(coord) for coord in coords)
+            return True
+
+        return check_coordinates(geometry.get("coordinates", []))
+
     def create_best_practices_dict(self) -> Dict:
         """Creates a dictionary of best practices violations for the current STAC object. The violations are determined
         by a set of configurable linting rules specified in the config file.
@@ -652,6 +700,14 @@ class Linter:
         if not self.check_links_self() and config["links_self"] == True:
             msg_1 = "A link to 'self' in links is strongly recommended"
             best_practices_dict["check_links_self"] = [msg_1]
+
+        # best practices - ensure that geometry coordinates are in the correct order
+        if (
+            not self.check_geometry_coordinates_order()
+            and config["geometry_coordinates_order"] == True
+        ):
+            msg_1 = "Geometry coordinates should be in the correct order (longitude, latitude)"
+            best_practices_dict["geometry_coordinates_order"] = [msg_1]
 
         return best_practices_dict
 

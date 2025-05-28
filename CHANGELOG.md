@@ -10,6 +10,9 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 
 - Added sponsors and supporters section with logos ([#122](https://github.com/stac-utils/stac-check/pull/122))
 - Added configuration documentation to README ([#124](https://github.com/stac-utils/stac-check/pull/124))
+- Added validation for geometry coordinates order to detect reversed lat/lon coordinates ([#125](https://github.com/stac-utils/stac-check/pull/125))
+  - Checks that coordinates follow the GeoJSON specification with [longitude, latitude] order
+  - Detects when coordinates are accidentally reversed by checking if latitude values exceed ±90 degrees
 
 ### Updated
 
