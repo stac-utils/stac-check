@@ -25,6 +25,7 @@ The intent of this project is to provide a validation tool that also follows the
   - [Docker](#docker)
 - [Usage](#usage)
   - [CLI Usage](#cli-usage)
+  - [Configuration](#configuration)
   - [Python API Usage](#python-api-usage)
 - [Examples](#examples)
   - [Basic Validation](#basic-validation)
@@ -86,6 +87,60 @@ Options:
   --header KEY VALUE       HTTP header to include in the requests. Can be used
                            multiple times.
   --help                   Show this message and exit.
+```
+
+### Configuration
+
+stac-check uses a configuration file to control which validation checks are performed. By default, it uses the built-in configuration at `stac_check/stac-check.config.yml`. You can customize the validation behavior by creating your own configuration file.
+
+The configuration file has two main sections:
+
+1. **linting**: Controls which best practices checks are enabled
+2. **settings**: Configures thresholds for certain checks
+
+Here's an example of the configuration options:
+
+```yaml
+linting:
+  # Identifiers should consist of only lowercase characters, numbers, '_', and '-'
+  searchable_identifiers: true
+  # Item name should not contain ':' or '/'
+  percent_encoded: true
+  # Item file names should match their ids
+  item_id_file_name: true
+  # Collections and catalogs should be named collection.json and catalog.json
+  catalog_id_file_name: true
+  # A STAC collection should contain a summaries field
+  check_summaries: true
+  # Datetime fields should not be set to null
+  null_datetime: true
+  # Check unlocated items to make sure bbox field is not set
+  check_unlocated: true
+  # Check if bbox matches the bounds of the geometry
+  check_bbox_geometry_match: true
+  # Check to see if there are too many links
+  bloated_links: true
+  # Check for bloated metadata in properties
+  bloated_metadata: true
+  # Ensure thumbnail is a small file size ["png", "jpeg", "jpg", "webp"]
+  check_thumbnail: true
+  # Ensure that links in catalogs and collections include a title field
+  links_title: true
+  # Ensure that links in catalogs and collections include self link
+  links_self: true
+
+settings:
+  # Number of links before the bloated links warning is shown
+  max_links: 20
+  # Number of properties before the bloated metadata warning is shown
+  max_properties: 20
+```
+
+To use a custom configuration file, set the `STAC_CHECK_CONFIG` environment variable to the path of your configuration file:
+
+```bash
+export STAC_CHECK_CONFIG=/path/to/your/config.yml
+stac-check sample_files/1.0.0/core-item.json
 ```
 
 ### Python API Usage
