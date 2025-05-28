@@ -9,7 +9,7 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 ### Added
 
 - Added sponsors and supporters section with logos ([#122](https://github.com/stac-utils/stac-check/pull/122))
-- Added check to verify that bbox matches item's polygon geometry
+- Added check to verify that bbox matches item's polygon geometry ([#123](https://github.com/stac-utils/stac-check/pull/123))
 
 ### Updated
 
