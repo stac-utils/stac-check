@@ -198,11 +198,10 @@ class Linter:
             config_file_path = importlib.resources.files("stac_check").joinpath(
                 "stac-check.config.yml"
             )
-            # Using type: ignore because importlib.resources.files() returns a Traversable object
-            # which works with open() at runtime but mypy doesn't recognize the compatibility.
-            # The alternative using as_file() context manager caused test failures.
-            with open(config_file_path) as f:  # type: ignore
-                default_config = yaml.load(f, Loader=yaml.FullLoader)
+            with importlib.resources.as_file(config_file_path) as path:
+                with open(path) as f:
+                    default_config = yaml.load(f, Loader=yaml.FullLoader)
+
         if config_file:
             with open(config_file) as f:
                 config = yaml.load(f, Loader=yaml.FullLoader)
