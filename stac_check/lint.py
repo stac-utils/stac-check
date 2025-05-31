@@ -3,7 +3,7 @@ import importlib.resources
 import json
 import os
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import requests
 import yaml
@@ -463,7 +463,9 @@ class Linter:
         else:
             return False
 
-    def check_bbox_matches_geometry(self) -> bool:
+    def check_bbox_matches_geometry(
+        self,
+    ) -> Union[bool, Tuple[bool, List[float], List[float], List[float]]]:
         """Checks if the bbox of a STAC item matches its geometry.
 
         This function verifies that the bounding box (bbox) accurately represents
@@ -471,8 +473,10 @@ class Linter:
         items with non-null geometry of type Polygon or MultiPolygon.
 
         Returns:
-            bool: True if the bbox matches the geometry or if the check is not applicable
-                 (e.g., null geometry or non-polygon type). False if there's a mismatch.
+            Union[bool, Tuple[bool, List[float], List[float], List[float]]]:
+                - True if the bbox matches the geometry or if the check is not applicable
+                  (e.g., null geometry or non-polygon type).
+                - When there's a mismatch: a tuple containing (False, calculated_bbox, actual_bbox, differences)
         """
         # Skip check if geometry is null or bbox is not present
         if (
@@ -513,11 +517,14 @@ class Linter:
 
         calc_bbox = [min(lons), min(lats), max(lons), max(lats)]
 
-        # Allow for small floating point differences (epsilon)
-        epsilon = 1e-8
-        for i in range(4):
-            if abs(bbox[i] - calc_bbox[i]) > epsilon:
-                return False
+        # Allow for differences that would be invisible when rounded to 6 decimal places
+        # 1e-6 would be exactly at the 6th decimal place, so use 5e-7 to be just under that threshold
+        epsilon = 5e-7
+        differences = [abs(bbox[i] - calc_bbox[i]) for i in range(4)]
+
+        if any(diff > epsilon for diff in differences):
+            # Return False along with the calculated bbox, actual bbox, and the differences
+            return (False, calc_bbox, bbox, differences)
 
         return True
 
@@ -684,12 +691,60 @@ class Linter:
             best_practices_dict["null_geometry"] = [msg_1]
 
         # best practices - check if bbox matches geometry
-        if (
-            not self.check_bbox_matches_geometry()
-            and config.get("check_bbox_geometry_match", True) == True
-        ):
-            msg_1 = "The bbox field does not match the bounds of the geometry. The bbox should be the minimum bounding rectangle of the geometry."
-            best_practices_dict["bbox_geometry_mismatch"] = [msg_1]
+        bbox_check_result = self.check_bbox_matches_geometry()
+        bbox_mismatch = False
+
+        if isinstance(bbox_check_result, tuple):
+            bbox_mismatch = not bbox_check_result[0]
+        else:
+            bbox_mismatch = not bbox_check_result
+
+        if bbox_mismatch and config.get("check_bbox_geometry_match", True) == True:
+            if isinstance(bbox_check_result, tuple):
+                # Unpack the result
+                _, calc_bbox, actual_bbox, differences = bbox_check_result
+
+                # Format the bbox values for display
+                calc_bbox_str = ", ".join([f"{v:.6f}" for v in calc_bbox])
+                actual_bbox_str = ", ".join([f"{v:.6f}" for v in actual_bbox])
+
+                # Create a more detailed message about which coordinates differ
+                coordinate_labels = [
+                    "min longitude",
+                    "min latitude",
+                    "max longitude",
+                    "max latitude",
+                ]
+                mismatch_details = []
+
+                # Use the same epsilon threshold as in check_bbox_matches_geometry
+                epsilon = 5e-7
+
+                for i, (diff, label) in enumerate(zip(differences, coordinate_labels)):
+                    if diff > epsilon:
+                        mismatch_details.append(
+                            f"{label}: calculated={calc_bbox[i]:.6f}, actual={actual_bbox[i]:.6f}, diff={diff:.7f}"
+                        )
+
+                msg_1 = "The bbox field does not match the bounds of the geometry. The bbox should be the minimum bounding rectangle of the geometry."
+                msg_2 = f"Calculated bbox from geometry: [{calc_bbox_str}]"
+                msg_3 = f"Actual bbox in metadata: [{actual_bbox_str}]"
+
+                messages = [msg_1, msg_2, msg_3]
+                if mismatch_details:
+                    messages.append("Mismatched coordinates:")
+                    messages.extend(mismatch_details)
+                else:
+                    # If we got here but there are no visible differences at 6 decimal places,
+                    # add a note explaining that the differences are too small to matter
+                    messages.append(
+                        "Note: The differences are too small to be visible at 6 decimal places and can be ignored."
+                    )
+
+                best_practices_dict["bbox_geometry_mismatch"] = messages
+            else:
+                msg_1 = "The bbox field does not match the bounds of the geometry. The bbox should be the minimum bounding rectangle of the geometry."
+                best_practices_dict["bbox_geometry_mismatch"] = [msg_1]
 
         # check to see if there are too many links
         if (
