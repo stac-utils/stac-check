@@ -660,7 +660,7 @@ def test_lint_assets_no_links():
         },
     }
 
-    
+
 def test_bbox_antimeridian():
     """Test the check_bbox_antimeridian method for detecting incorrectly formatted bboxes that cross the antimeridian."""
     # Create a test item with an incorrectly formatted bbox that belts the globe
@@ -768,6 +768,7 @@ def test_bbox_antimeridian():
     linter = Linter(normal_item)
     assert linter.check_bbox_antimeridian() == True
 
+
 def test_lint_pydantic_validation_valid():
     """Test pydantic validation with a valid STAC item."""
     file = "sample_files/1.0.0/core-item.json"
@@ -799,4 +800,3 @@ def test_lint_pydantic_validation_recursive():
     assert linter.asset_type == "COLLECTION"
     assert "stac-pydantic Collection model" in linter.message["schema"]
     assert linter.message["validation_method"] == "pydantic"
-   
