@@ -278,6 +278,71 @@ def test_unlocated_item():
     assert linter.check_geometry_null() == True
 
 
+def test_bbox_matches_geometry():
+    # Test with matching bbox and geometry
+    file = "sample_files/1.0.0/core-item.json"
+    linter = Linter(file)
+    assert linter.check_bbox_matches_geometry() == True
+
+    # Test with mismatched bbox and geometry
+    mismatched_item = {
+        "stac_version": "1.0.0",
+        "stac_extensions": [],
+        "type": "Feature",
+        "id": "test-item",
+        "bbox": [100.0, 0.0, 105.0, 1.0],  # Deliberately wrong bbox
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+                [
+                    [172.91173669923782, 1.3438851951615003],
+                    [172.95469614953714, 1.3438851951615003],
+                    [172.95469614953714, 1.3690476620161975],
+                    [172.91173669923782, 1.3690476620161975],
+                    [172.91173669923782, 1.3438851951615003],
+                ]
+            ],
+        },
+        "properties": {"datetime": "2020-12-11T22:38:32.125Z"},
+    }
+    linter = Linter(mismatched_item)
+    assert linter.check_bbox_matches_geometry() == False
+
+    # Test with null geometry (should return True as check is not applicable)
+    null_geom_item = {
+        "stac_version": "1.0.0",
+        "type": "Feature",
+        "id": "test-item-null-geom",
+        "bbox": [100.0, 0.0, 105.0, 1.0],
+        "geometry": None,
+        "properties": {"datetime": "2020-12-11T22:38:32.125Z"},
+    }
+    linter = Linter(null_geom_item)
+    assert linter.check_bbox_matches_geometry() == True
+
+    # Test with missing bbox (should return True as check is not applicable)
+    no_bbox_item = {
+        "stac_version": "1.0.0",
+        "type": "Feature",
+        "id": "test-item-no-bbox",
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+                [
+                    [172.91173669923782, 1.3438851951615003],
+                    [172.95469614953714, 1.3438851951615003],
+                    [172.95469614953714, 1.3690476620161975],
+                    [172.91173669923782, 1.3690476620161975],
+                    [172.91173669923782, 1.3438851951615003],
+                ]
+            ],
+        },
+        "properties": {"datetime": "2020-12-11T22:38:32.125Z"},
+    }
+    linter = Linter(no_bbox_item)
+    assert linter.check_bbox_matches_geometry() == True
+
+
 def test_bloated_item():
     file = "sample_files/1.0.0/core-item-bloated.json"
     linter = Linter(file)

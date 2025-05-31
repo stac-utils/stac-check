@@ -450,9 +450,67 @@ class Linter:
             bool: A boolean indicating whether the geometry property is null (True) or not (False).
         """
         if "geometry" in self.data:
-            return self.data["geometry"] is None
+            return self.data.get("geometry") is None
         else:
             return False
+
+    def check_bbox_matches_geometry(self) -> bool:
+        """Checks if the bbox of a STAC item matches its geometry.
+
+        This function verifies that the bounding box (bbox) accurately represents
+        the minimum bounding rectangle of the item's geometry. It only applies to
+        items with non-null geometry of type Polygon or MultiPolygon.
+
+        Returns:
+            bool: True if the bbox matches the geometry or if the check is not applicable
+                 (e.g., null geometry or non-polygon type). False if there's a mismatch.
+        """
+        # Skip check if geometry is null or bbox is not present
+        if (
+            "geometry" not in self.data
+            or self.data.get("geometry") is None
+            or "bbox" not in self.data
+            or self.data.get("bbox") is None
+        ):
+            return True
+
+        geometry = self.data.get("geometry")
+        bbox = self.data.get("bbox")
+
+        # Only process Polygon and MultiPolygon geometries
+        geom_type = geometry.get("type")
+        if geom_type not in ["Polygon", "MultiPolygon"]:
+            return True
+
+        # Extract coordinates based on geometry type
+        coordinates = []
+        if geom_type == "Polygon":
+            # For Polygon, use the exterior ring (first element)
+            if len(geometry.get("coordinates", [])) > 0:
+                coordinates = geometry.get("coordinates")[0]
+        elif geom_type == "MultiPolygon":
+            # For MultiPolygon, collect all coordinates from all polygons
+            for polygon in geometry.get("coordinates", []):
+                if len(polygon) > 0:
+                    coordinates.extend(polygon[0])
+
+        # If no valid coordinates, skip check
+        if not coordinates:
+            return True
+
+        # Calculate min/max from coordinates
+        lons = [coord[0] for coord in coordinates]
+        lats = [coord[1] for coord in coordinates]
+
+        calc_bbox = [min(lons), min(lats), max(lons), max(lats)]
+
+        # Allow for small floating point differences (epsilon)
+        epsilon = 1e-8
+        for i in range(4):
+            if abs(bbox[i] - calc_bbox[i]) > epsilon:
+                return False
+
+        return True
 
     def check_searchable_identifiers(self) -> bool:
         """Checks if the identifiers of a STAC item are searchable, i.e.,
@@ -615,6 +673,14 @@ class Linter:
         if self.check_geometry_null() and config["check_geometry"] == True:
             msg_1 = "All items should have a geometry field. STAC is not meant for non-spatial data"
             best_practices_dict["null_geometry"] = [msg_1]
+
+        # best practices - check if bbox matches geometry
+        if (
+            not self.check_bbox_matches_geometry()
+            and config.get("check_bbox_geometry_match", True) == True
+        ):
+            msg_1 = "The bbox field does not match the bounds of the geometry. The bbox should be the minimum bounding rectangle of the geometry."
+            best_practices_dict["bbox_geometry_mismatch"] = [msg_1]
 
         # check to see if there are too many links
         if (
