@@ -779,7 +779,6 @@ def test_geometry_coordinates_order():
         "Geometry coordinates may be reversed or contain errors (expected order: longitude, latitude)"
     ]
 
-    
 
 def test_bbox_antimeridian():
     """Test the check_bbox_antimeridian method for detecting incorrectly formatted bboxes that cross the antimeridian."""

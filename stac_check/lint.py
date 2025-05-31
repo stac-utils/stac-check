@@ -859,7 +859,7 @@ class Linter:
         ):
             msg_1 = "Geometry coordinates may be reversed or contain errors (expected order: longitude, latitude)"
             best_practices_dict["geometry_coordinates_order"] = [msg_1]
-          
+
         # Check if a bbox that crosses the antimeridian is correctly formatted
         if not self.check_bbox_antimeridian() and config.get(
             "check_bbox_antimeridian", True
