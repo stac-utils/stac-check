@@ -676,7 +676,11 @@ class Linter:
             best_practices_dict["check_catalog_id"] = [msg_1]
 
         # best practices - collections should contain summaries
-        if self.check_summaries() == False and config["check_summaries"] == True:
+        if (
+            self.asset_type == "COLLECTION"
+            and self.check_summaries() == False
+            and config["check_summaries"] == True
+        ):
             msg_1 = "A STAC collection should contain a summaries field"
             msg_2 = "It is recommended to store information like eo:bands in summaries"
             best_practices_dict["check_summaries"] = [msg_1, msg_2]
@@ -804,7 +808,7 @@ class Linter:
                 west, _, _, east, _, _ = bbox
 
             msg_1 = f"BBox crossing the antimeridian should have west longitude > east longitude (found west={west}, east={east})"
-            msg_2 = "Current bbox format appears to be belting the globe instead of properly crossing the antimeridian"
+            msg_2 = f"Current bbox format appears to be belting the globe instead of properly crossing the antimeridian. Bbox: {bbox}"
 
             best_practices_dict["check_bbox_antimeridian"] = [msg_1, msg_2]
 

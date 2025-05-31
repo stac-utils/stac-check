@@ -21,6 +21,10 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 
 - Improved bbox validation output to show detailed information about mismatches between bbox and geometry bounds, including which specific coordinates differ and by how much ([#126](https://github.com/stac-utils/stac-check/pull/126))
 
+### Fixed
+
+- Fixed collection summaries check incorrectly showing messages for Item assets ([#121](https://github.com/stac-utils/stac-check/pull/127))
+
 ### Updated
 
 - Improved README with table of contents, better formatting, stac-check logo, and enhanced documentation ([#122](https://github.com/stac-utils/stac-check/pull/122))
