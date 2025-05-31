@@ -277,6 +277,94 @@ def test_unlocated_item():
     assert linter.check_geometry_null() == True
 
 
+def test_bbox_matches_geometry():
+    # Test with matching bbox and geometry
+    file = "sample_files/1.0.0/core-item.json"
+    linter = Linter(file)
+    assert linter.check_bbox_matches_geometry() is True
+
+    # Test with mismatched bbox and geometry
+    mismatched_item = {
+        "stac_version": "1.0.0",
+        "stac_extensions": [],
+        "type": "Feature",
+        "id": "test-item",
+        "bbox": [100.0, 0.0, 105.0, 1.0],  # Deliberately wrong bbox
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+                [
+                    [172.91173669923782, 1.3438851951615003],
+                    [172.95469614953714, 1.3438851951615003],
+                    [172.95469614953714, 1.3690476620161975],
+                    [172.91173669923782, 1.3690476620161975],
+                    [172.91173669923782, 1.3438851951615003],
+                ]
+            ],
+        },
+        "properties": {"datetime": "2020-12-11T22:38:32.125Z"},
+    }
+    linter = Linter(mismatched_item)
+    result = linter.check_bbox_matches_geometry()
+
+    # Check that the result is a tuple and the first element is False
+    assert isinstance(result, tuple)
+    assert result[0] is False
+
+    # Check that the tuple contains the expected elements (calculated bbox, actual bbox, differences)
+    assert len(result) == 4
+    calc_bbox, actual_bbox, differences = result[1], result[2], result[3]
+
+    # Verify the calculated bbox matches the geometry coordinates
+    assert calc_bbox == [
+        172.91173669923782,
+        1.3438851951615003,
+        172.95469614953714,
+        1.3690476620161975,
+    ]
+
+    # Verify the actual bbox is what we provided
+    assert actual_bbox == [100.0, 0.0, 105.0, 1.0]
+
+    # Verify the differences are calculated correctly
+    expected_differences = [abs(actual_bbox[i] - calc_bbox[i]) for i in range(4)]
+    assert differences == expected_differences
+
+    # Test with null geometry (should return True as check is not applicable)
+    null_geom_item = {
+        "stac_version": "1.0.0",
+        "type": "Feature",
+        "id": "test-item-null-geom",
+        "bbox": [100.0, 0.0, 105.0, 1.0],
+        "geometry": None,
+        "properties": {"datetime": "2020-12-11T22:38:32.125Z"},
+    }
+    linter = Linter(null_geom_item)
+    assert linter.check_bbox_matches_geometry() is True
+
+    # Test with missing bbox (should return True as check is not applicable)
+    no_bbox_item = {
+        "stac_version": "1.0.0",
+        "type": "Feature",
+        "id": "test-item-no-bbox",
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+                [
+                    [172.91173669923782, 1.3438851951615003],
+                    [172.95469614953714, 1.3438851951615003],
+                    [172.95469614953714, 1.3690476620161975],
+                    [172.91173669923782, 1.3690476620161975],
+                    [172.91173669923782, 1.3438851951615003],
+                ]
+            ],
+        },
+        "properties": {"datetime": "2020-12-11T22:38:32.125Z"},
+    }
+    linter = Linter(no_bbox_item)
+    assert linter.check_bbox_matches_geometry() is True
+
+
 def test_bloated_item():
     file = "sample_files/1.0.0/core-item-bloated.json"
     linter = Linter(file)
@@ -572,7 +660,7 @@ def test_lint_assets_no_links():
         },
     }
 
-
+    
 def test_bbox_antimeridian():
     """Test the check_bbox_antimeridian method for detecting incorrectly formatted bboxes that cross the antimeridian."""
     # Create a test item with an incorrectly formatted bbox that belts the globe
@@ -679,3 +767,36 @@ def test_bbox_antimeridian():
     # Test with a normal bbox - this should pass
     linter = Linter(normal_item)
     assert linter.check_bbox_antimeridian() == True
+
+def test_lint_pydantic_validation_valid():
+    """Test pydantic validation with a valid STAC item."""
+    file = "sample_files/1.0.0/core-item.json"
+    linter = Linter(file, pydantic=True)
+
+    assert linter.valid_stac == True
+    assert linter.asset_type == "ITEM"
+    assert "stac-pydantic Item model" in linter.message["schema"]
+    assert linter.message["validation_method"] == "pydantic"
+
+
+def test_lint_pydantic_validation_invalid():
+    """Test pydantic validation with an invalid STAC item (missing required fields)."""
+    file = "sample_files/1.0.0/bad-item.json"
+    linter = Linter(file, pydantic=True)
+
+    assert linter.valid_stac == False
+    assert "PydanticValidationError" in linter.message["error_type"]
+    assert "id: Field required" in linter.message["error_message"]
+    assert linter.message["validation_method"] == "pydantic"
+
+
+def test_lint_pydantic_validation_recursive():
+    """Test pydantic validation with recursive option."""
+    file = "sample_files/1.0.0/collection.json"
+    linter = Linter(file, recursive=True, max_depth=1, pydantic=True)
+
+    assert linter.valid_stac == True
+    assert linter.asset_type == "COLLECTION"
+    assert "stac-pydantic Collection model" in linter.message["schema"]
+    assert linter.message["validation_method"] == "pydantic"
+   

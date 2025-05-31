@@ -13,6 +13,13 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
   - Detects and reports cases where a bbox incorrectly "belts the globe" instead of properly crossing the antimeridian
   - Provides clear error messages to help users fix incorrectly formatted bboxes
 - Added sponsors and supporters section with logos ([#122](https://github.com/stac-utils/stac-check/pull/122))
+- Added check to verify that bbox matches item's polygon geometry ([#123](https://github.com/stac-utils/stac-check/pull/123))
+- Added configuration documentation to README ([#124](https://github.com/stac-utils/stac-check/pull/124))
+- Added `--pydantic` option for validating STAC objects using stac-pydantic models, providing enhanced type checking and validation ([#126](https://github.com/stac-utils/stac-check/pull/126))
+
+### Enhanced
+
+- Improved bbox validation output to show detailed information about mismatches between bbox and geometry bounds, including which specific coordinates differ and by how much ([#126](https://github.com/stac-utils/stac-check/pull/126))
 
 ### Updated
 
