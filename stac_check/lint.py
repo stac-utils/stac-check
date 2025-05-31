@@ -98,6 +98,9 @@ class Linter:
         check_searchable_identifiers(self) -> bool:
             Checks whether the STAC JSON file has searchable identifiers.
 
+        check_bbox_antimeridian(self) -> bool:
+            Checks if a bbox that crosses the antimeridian is correctly formatted.
+
         check_percent_encoded(self) -> bool:
             Checks whether the STAC JSON file has percent-encoded characters.
 
@@ -194,10 +197,13 @@ class Linter:
             with open(default_config_file) as f:
                 default_config = yaml.load(f, Loader=yaml.FullLoader)
         else:
-            with importlib.resources.open_text(
-                "stac_check", "stac-check.config.yml"
-            ) as f:
-                default_config = yaml.load(f, Loader=yaml.FullLoader)
+            config_file_path = importlib.resources.files("stac_check").joinpath(
+                "stac-check.config.yml"
+            )
+            with importlib.resources.as_file(config_file_path) as path:
+                with open(path) as f:
+                    default_config = yaml.load(f, Loader=yaml.FullLoader)
+
         if config_file:
             with open(config_file) as f:
                 config = yaml.load(f, Loader=yaml.FullLoader)
@@ -670,7 +676,11 @@ class Linter:
             best_practices_dict["check_catalog_id"] = [msg_1]
 
         # best practices - collections should contain summaries
-        if self.check_summaries() == False and config["check_summaries"] == True:
+        if (
+            self.asset_type == "COLLECTION"
+            and self.check_summaries() == False
+            and config["check_summaries"] == True
+        ):
             msg_1 = "A STAC collection should contain a summaries field"
             msg_2 = "It is recommended to store information like eo:bands in summaries"
             best_practices_dict["check_summaries"] = [msg_1, msg_2]
@@ -783,7 +793,63 @@ class Linter:
             msg_1 = "A link to 'self' in links is strongly recommended"
             best_practices_dict["check_links_self"] = [msg_1]
 
+        # Check if a bbox that crosses the antimeridian is correctly formatted
+        if not self.check_bbox_antimeridian() and config.get(
+            "check_bbox_antimeridian", True
+        ):
+            # Get the bbox values to include in the error message
+            bbox = self.data.get("bbox", [])
+
+            if len(bbox) == 4:  # 2D bbox [west, south, east, north]
+                west, _, east, _ = bbox
+            elif (
+                len(bbox) == 6
+            ):  # 3D bbox [west, south, min_elev, east, north, max_elev]
+                west, _, _, east, _, _ = bbox
+
+            msg_1 = f"BBox crossing the antimeridian should have west longitude > east longitude (found west={west}, east={east})"
+            msg_2 = f"Current bbox format appears to be belting the globe instead of properly crossing the antimeridian. Bbox: {bbox}"
+
+            best_practices_dict["check_bbox_antimeridian"] = [msg_1, msg_2]
+
         return best_practices_dict
+
+    def check_bbox_antimeridian(self) -> bool:
+        """
+        Checks if a bbox that crosses the antimeridian is correctly formatted.
+
+        According to the GeoJSON spec, when a bbox crosses the antimeridian (180°/-180° longitude),
+        the minimum longitude (bbox[0]) should be greater than the maximum longitude (bbox[2]).
+        This method checks if this convention is followed correctly.
+
+        Returns:
+            bool: True if the bbox is valid (either doesn't cross antimeridian or crosses it correctly),
+                  False if it incorrectly crosses the antimeridian.
+        """
+        if "bbox" not in self.data:
+            return True
+
+        bbox = self.data["bbox"]
+
+        # Extract the 2D part of the bbox (ignoring elevation if present)
+        if len(bbox) == 4:  # 2D bbox [west, south, east, north]
+            west, south, east, north = bbox
+        elif len(bbox) == 6:  # 3D bbox [west, south, min_elev, east, north, max_elev]
+            west, south, _, east, north, _ = bbox
+        else:
+            # Invalid bbox format, can't check
+            return True
+
+        # Check if the bbox appears to cross the antimeridian
+        # This is the case when west > east in a valid bbox that crosses the antimeridian
+        # For example: [170, -10, -170, 10] crosses the antimeridian correctly
+        # But [-170, -10, 170, 10] is incorrectly belting the globe
+
+        # Invalid if bbox "belts the globe" (too wide)
+        if west < east and (east - west) > 180:
+            return False
+        # Otherwise, valid (normal or valid antimeridian crossing)
+        return True
 
     def create_best_practices_msg(self) -> List[str]:
         """

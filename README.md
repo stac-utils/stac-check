@@ -129,6 +129,8 @@ linting:
   links_title: true
   # Ensure that links in catalogs and collections include self link
   links_self: true
+  # check if a bbox that crosses the antimeridian is correctly formatted
+  check_bbox_antimeridian: true
 
 settings:
   # Number of links before the bloated links warning is shown
