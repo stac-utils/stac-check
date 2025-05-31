@@ -117,8 +117,8 @@ linting:
   null_datetime: true
   # Check unlocated items to make sure bbox field is not set
   check_unlocated: true
-  # Check if bbox matches the bounds of the geometry
-  check_bbox_geometry_match: true
+  # Recommend items have a geometry
+  check_geometry: true
   # Check to see if there are too many links
   bloated_links: true
   # Check for bloated metadata in properties
@@ -129,6 +129,8 @@ linting:
   links_title: true
   # Ensure that links in catalogs and collections include self link
   links_self: true
+  # check if geometry coordinates are potentially ordered incorrectly (longitude, latitude)
+  geometry_coordinates_order: true
   # check if a bbox that crosses the antimeridian is correctly formatted
   check_bbox_antimeridian: true
 

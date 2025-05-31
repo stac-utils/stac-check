@@ -27,6 +27,8 @@ linting:
   links_title: true
   # best practices - ensure that links in catalogs and collections include self link
   links_self: true
+  # check if geometry coordinates are potentially ordered incorrectly (longitude, latitude)
+  geometry_coordinates_order: true
   # check if a bbox that crosses the antimeridian is correctly formatted
   check_bbox_antimeridian: true
 
