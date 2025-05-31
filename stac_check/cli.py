@@ -91,6 +91,13 @@ def intro_message(linter: Linter) -> None:
         f"Validator: stac-validator {linter.validator_version}", bg="blue", fg="white"
     )
 
+    # Always show validation method
+    validation_method = (
+        "Pydantic" if hasattr(linter, "pydantic") and linter.pydantic else "JSONSchema"
+    )
+    click.secho()
+    click.secho(f"Validation method: {validation_method}", bg="yellow", fg="black")
+
     click.secho()
 
 
@@ -111,7 +118,17 @@ def cli_message(linter: Linter) -> None:
 
     """ schemas validated for core object """
     click.secho()
-    if len(linter.schema) > 0:
+
+    # Determine if we're using Pydantic validation
+    using_pydantic = hasattr(linter, "pydantic") and linter.pydantic
+
+    # For Pydantic validation, always show the appropriate schema model
+    if using_pydantic:
+        click.secho("Schemas validated: ", fg="blue")
+        asset_type = linter.asset_type.capitalize() if linter.asset_type else "Item"
+        click.secho(f"    stac-pydantic {asset_type} model")
+    # For JSONSchema validation or when schemas are available
+    elif len(linter.schema) > 0:
         click.secho("Schemas validated: ", fg="blue")
         for schema in linter.schema:
             click.secho(f"    {schema}")
@@ -194,10 +211,15 @@ def cli_message(linter: Linter) -> None:
     multiple=True,
     help="HTTP header to include in the requests. Can be used multiple times.",
 )
+@click.option(
+    "--pydantic",
+    is_flag=True,
+    help="Use stac-pydantic for enhanced validation with Pydantic models.",
+)
 @click.command()
 @click.argument("file")
 @click.version_option(version=importlib.metadata.distribution("stac-check").version)
-def main(file, recursive, max_depth, assets, links, no_assets_urls, header):
+def main(file, recursive, max_depth, assets, links, no_assets_urls, header, pydantic):
     linter = Linter(
         file,
         assets=assets,
@@ -206,6 +228,7 @@ def main(file, recursive, max_depth, assets, links, no_assets_urls, header):
         max_depth=max_depth,
         assets_open_urls=not no_assets_urls,
         headers=dict(header),
+        pydantic=pydantic,
     )
     intro_message(linter)
     if recursive > 0:
