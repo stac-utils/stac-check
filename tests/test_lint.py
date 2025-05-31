@@ -633,3 +633,36 @@ def test_lint_assets_no_links():
             "request_invalid": [],
         },
     }
+
+
+def test_lint_pydantic_validation_valid():
+    """Test pydantic validation with a valid STAC item."""
+    file = "sample_files/1.0.0/core-item.json"
+    linter = Linter(file, pydantic=True)
+
+    assert linter.valid_stac == True
+    assert linter.asset_type == "ITEM"
+    assert "stac-pydantic Item model" in linter.message["schema"]
+    assert linter.message["validation_method"] == "pydantic"
+
+
+def test_lint_pydantic_validation_invalid():
+    """Test pydantic validation with an invalid STAC item (missing required fields)."""
+    file = "sample_files/1.0.0/bad-item.json"
+    linter = Linter(file, pydantic=True)
+
+    assert linter.valid_stac == False
+    assert "PydanticValidationError" in linter.message["error_type"]
+    assert "id: Field required" in linter.message["error_message"]
+    assert linter.message["validation_method"] == "pydantic"
+
+
+def test_lint_pydantic_validation_recursive():
+    """Test pydantic validation with recursive option."""
+    file = "sample_files/1.0.0/collection.json"
+    linter = Linter(file, recursive=True, max_depth=1, pydantic=True)
+
+    assert linter.valid_stac == True
+    assert linter.asset_type == "COLLECTION"
+    assert "stac-pydantic Collection model" in linter.message["schema"]
+    assert linter.message["validation_method"] == "pydantic"

@@ -27,6 +27,7 @@ class Linter:
         max_depth (Optional[int], optional): An optional integer indicating the maximum depth to validate recursively. Defaults to None.
         assets_open_urls (bool): Whether to open assets URLs when validating assets. Defaults to True.
         headers (dict): HTTP headers to include in the requests.
+        pydantic (bool, optional): A boolean value indicating whether to use pydantic validation. Defaults to False.
 
     Attributes:
         data (dict): A dictionary representing the STAC JSON file.
@@ -122,14 +123,15 @@ class Linter:
             Creates a message with best practices recommendations for the STAC JSON file.
     """
 
-    item: Union[str, dict]  # url, file name, or dictionary
+    item: Union[str, Dict]
     config_file: Optional[str] = None
     assets: bool = False
     links: bool = False
     recursive: bool = False
     max_depth: Optional[int] = None
     assets_open_urls: bool = True
-    headers: dict = field(default_factory=dict)
+    headers: Dict = field(default_factory=dict)
+    pydantic: bool = False
 
     def __post_init__(self):
         self.data = self.load_data(self.item)
@@ -270,16 +272,21 @@ class Linter:
                 assets=self.assets,
                 assets_open_urls=self.assets_open_urls,
                 headers=self.headers,
+                pydantic=self.pydantic,
             )
             stac.run()
         elif isinstance(file, dict):
             stac = StacValidate(
-                assets_open_urls=self.assets_open_urls, headers=self.headers
+                assets_open_urls=self.assets_open_urls,
+                headers=self.headers,
+                pydantic=self.pydantic,
             )
             stac.validate_dict(file)
         else:
             raise ValueError("Input must be a file path or STAC dictionary.")
-        return stac.message[0]
+
+        message = stac.message[0]
+        return message
 
     def recursive_validation(self, file: Union[str, Dict[str, Any]]) -> str:
         """Recursively validate a STAC item or catalog file and its child items.
@@ -302,6 +309,7 @@ class Linter:
                     max_depth=self.max_depth,
                     assets_open_urls=self.assets_open_urls,
                     headers=self.headers,
+                    pydantic=self.pydantic,
                 )
                 stac.run()
             else:
@@ -310,6 +318,7 @@ class Linter:
                     max_depth=self.max_depth,
                     assets_open_urls=self.assets_open_urls,
                     headers=self.headers,
+                    pydantic=self.pydantic,
                 )
                 stac.validate_dict(file)
             return stac.message

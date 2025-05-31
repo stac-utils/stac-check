@@ -86,6 +86,7 @@ Options:
                            (enabled by default).
   --header KEY VALUE       HTTP header to include in the requests. Can be used
                            multiple times.
+  --pydantic               Use stac-pydantic for enhanced validation with Pydantic models.
   --help                   Show this message and exit.
 ```
 

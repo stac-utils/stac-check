@@ -11,6 +11,7 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 - Added sponsors and supporters section with logos ([#122](https://github.com/stac-utils/stac-check/pull/122))
 - Added check to verify that bbox matches item's polygon geometry ([#123](https://github.com/stac-utils/stac-check/pull/123))
 - Added configuration documentation to README ([#124](https://github.com/stac-utils/stac-check/pull/124))
+- Added `--pydantic` option for validating STAC objects using stac-pydantic models, providing enhanced type checking and validation ([#125](https://github.com/stac-utils/stac-check/pull/125))
 
 ### Updated
 
