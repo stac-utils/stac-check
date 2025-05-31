@@ -15,6 +15,8 @@ linting:
   check_unlocated: true
   # best practices - recommend items have a geometry
   check_geometry: true
+  # best practices - check if bbox matches the bounds of the geometry
+  check_bbox_geometry_match: true
   # check to see if there are too many links
   bloated_links: true
   # best practices - check for bloated metadata in properties
@@ -27,6 +29,8 @@ linting:
   links_self: true
   # check if geometry coordinates are potentially ordered incorrectly (longitude, latitude)
   geometry_coordinates_order: true
+  # check if a bbox that crosses the antimeridian is correctly formatted
+  check_bbox_antimeridian: true
 
 settings:
   # number of links before the bloated links warning is shown

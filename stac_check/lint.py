@@ -3,7 +3,7 @@ import importlib.resources
 import json
 import os
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import requests
 import yaml
@@ -27,6 +27,7 @@ class Linter:
         max_depth (Optional[int], optional): An optional integer indicating the maximum depth to validate recursively. Defaults to None.
         assets_open_urls (bool): Whether to open assets URLs when validating assets. Defaults to True.
         headers (dict): HTTP headers to include in the requests.
+        pydantic (bool, optional): A boolean value indicating whether to use pydantic validation. Defaults to False.
 
     Attributes:
         data (dict): A dictionary representing the STAC JSON file.
@@ -97,6 +98,9 @@ class Linter:
         check_searchable_identifiers(self) -> bool:
             Checks whether the STAC JSON file has searchable identifiers.
 
+        check_bbox_antimeridian(self) -> bool:
+            Checks if a bbox that crosses the antimeridian is correctly formatted.
+
         check_percent_encoded(self) -> bool:
             Checks whether the STAC JSON file has percent-encoded characters.
 
@@ -122,14 +126,15 @@ class Linter:
             Creates a message with best practices recommendations for the STAC JSON file.
     """
 
-    item: Union[str, dict]  # url, file name, or dictionary
+    item: Union[str, Dict]
     config_file: Optional[str] = None
     assets: bool = False
     links: bool = False
     recursive: bool = False
     max_depth: Optional[int] = None
     assets_open_urls: bool = True
-    headers: dict = field(default_factory=dict)
+    headers: Dict = field(default_factory=dict)
+    pydantic: bool = False
 
     def __post_init__(self):
         self.data = self.load_data(self.item)
@@ -192,10 +197,13 @@ class Linter:
             with open(default_config_file) as f:
                 default_config = yaml.load(f, Loader=yaml.FullLoader)
         else:
-            with importlib.resources.open_text(
-                "stac_check", "stac-check.config.yml"
-            ) as f:
-                default_config = yaml.load(f, Loader=yaml.FullLoader)
+            config_file_path = importlib.resources.files("stac_check").joinpath(
+                "stac-check.config.yml"
+            )
+            with importlib.resources.as_file(config_file_path) as path:
+                with open(path) as f:
+                    default_config = yaml.load(f, Loader=yaml.FullLoader)
+
         if config_file:
             with open(config_file) as f:
                 config = yaml.load(f, Loader=yaml.FullLoader)
@@ -270,16 +278,21 @@ class Linter:
                 assets=self.assets,
                 assets_open_urls=self.assets_open_urls,
                 headers=self.headers,
+                pydantic=self.pydantic,
             )
             stac.run()
         elif isinstance(file, dict):
             stac = StacValidate(
-                assets_open_urls=self.assets_open_urls, headers=self.headers
+                assets_open_urls=self.assets_open_urls,
+                headers=self.headers,
+                pydantic=self.pydantic,
             )
             stac.validate_dict(file)
         else:
             raise ValueError("Input must be a file path or STAC dictionary.")
-        return stac.message[0]
+
+        message = stac.message[0]
+        return message
 
     def recursive_validation(self, file: Union[str, Dict[str, Any]]) -> str:
         """Recursively validate a STAC item or catalog file and its child items.
@@ -302,6 +315,7 @@ class Linter:
                     max_depth=self.max_depth,
                     assets_open_urls=self.assets_open_urls,
                     headers=self.headers,
+                    pydantic=self.pydantic,
                 )
                 stac.run()
             else:
@@ -310,6 +324,7 @@ class Linter:
                     max_depth=self.max_depth,
                     assets_open_urls=self.assets_open_urls,
                     headers=self.headers,
+                    pydantic=self.pydantic,
                 )
                 stac.validate_dict(file)
             return stac.message
@@ -450,9 +465,74 @@ class Linter:
             bool: A boolean indicating whether the geometry property is null (True) or not (False).
         """
         if "geometry" in self.data:
-            return self.data["geometry"] is None
+            return self.data.get("geometry") is None
         else:
             return False
+
+    def check_bbox_matches_geometry(
+        self,
+    ) -> Union[bool, Tuple[bool, List[float], List[float], List[float]]]:
+        """Checks if the bbox of a STAC item matches its geometry.
+
+        This function verifies that the bounding box (bbox) accurately represents
+        the minimum bounding rectangle of the item's geometry. It only applies to
+        items with non-null geometry of type Polygon or MultiPolygon.
+
+        Returns:
+            Union[bool, Tuple[bool, List[float], List[float], List[float]]]:
+                - True if the bbox matches the geometry or if the check is not applicable
+                  (e.g., null geometry or non-polygon type).
+                - When there's a mismatch: a tuple containing (False, calculated_bbox, actual_bbox, differences)
+        """
+        # Skip check if geometry is null or bbox is not present
+        if (
+            "geometry" not in self.data
+            or self.data.get("geometry") is None
+            or "bbox" not in self.data
+            or self.data.get("bbox") is None
+        ):
+            return True
+
+        geometry = self.data.get("geometry")
+        bbox = self.data.get("bbox")
+
+        # Only process Polygon and MultiPolygon geometries
+        geom_type = geometry.get("type")
+        if geom_type not in ["Polygon", "MultiPolygon"]:
+            return True
+
+        # Extract coordinates based on geometry type
+        coordinates = []
+        if geom_type == "Polygon":
+            # For Polygon, use the exterior ring (first element)
+            if len(geometry.get("coordinates", [])) > 0:
+                coordinates = geometry.get("coordinates")[0]
+        elif geom_type == "MultiPolygon":
+            # For MultiPolygon, collect all coordinates from all polygons
+            for polygon in geometry.get("coordinates", []):
+                if len(polygon) > 0:
+                    coordinates.extend(polygon[0])
+
+        # If no valid coordinates, skip check
+        if not coordinates:
+            return True
+
+        # Calculate min/max from coordinates
+        lons = [coord[0] for coord in coordinates]
+        lats = [coord[1] for coord in coordinates]
+
+        calc_bbox = [min(lons), min(lats), max(lons), max(lats)]
+
+        # Allow for differences that would be invisible when rounded to 6 decimal places
+        # 1e-6 would be exactly at the 6th decimal place, so use 5e-7 to be just under that threshold
+        epsilon = 5e-7
+        differences = [abs(bbox[i] - calc_bbox[i]) for i in range(4)]
+
+        if any(diff > epsilon for diff in differences):
+            # Return False along with the calculated bbox, actual bbox, and the differences
+            return (False, calc_bbox, bbox, differences)
+
+        return True
 
     def check_searchable_identifiers(self) -> bool:
         """Checks if the identifiers of a STAC item are searchable, i.e.,
@@ -655,7 +735,11 @@ class Linter:
             best_practices_dict["check_catalog_id"] = [msg_1]
 
         # best practices - collections should contain summaries
-        if self.check_summaries() == False and config["check_summaries"] == True:
+        if (
+            self.asset_type == "COLLECTION"
+            and self.check_summaries() == False
+            and config["check_summaries"] == True
+        ):
             msg_1 = "A STAC collection should contain a summaries field"
             msg_2 = "It is recommended to store information like eo:bands in summaries"
             best_practices_dict["check_summaries"] = [msg_1, msg_2]
@@ -674,6 +758,62 @@ class Linter:
         if self.check_geometry_null() and config["check_geometry"] == True:
             msg_1 = "All items should have a geometry field. STAC is not meant for non-spatial data"
             best_practices_dict["null_geometry"] = [msg_1]
+
+        # best practices - check if bbox matches geometry
+        bbox_check_result = self.check_bbox_matches_geometry()
+        bbox_mismatch = False
+
+        if isinstance(bbox_check_result, tuple):
+            bbox_mismatch = not bbox_check_result[0]
+        else:
+            bbox_mismatch = not bbox_check_result
+
+        if bbox_mismatch and config.get("check_bbox_geometry_match", True) == True:
+            if isinstance(bbox_check_result, tuple):
+                # Unpack the result
+                _, calc_bbox, actual_bbox, differences = bbox_check_result
+
+                # Format the bbox values for display
+                calc_bbox_str = ", ".join([f"{v:.6f}" for v in calc_bbox])
+                actual_bbox_str = ", ".join([f"{v:.6f}" for v in actual_bbox])
+
+                # Create a more detailed message about which coordinates differ
+                coordinate_labels = [
+                    "min longitude",
+                    "min latitude",
+                    "max longitude",
+                    "max latitude",
+                ]
+                mismatch_details = []
+
+                # Use the same epsilon threshold as in check_bbox_matches_geometry
+                epsilon = 5e-7
+
+                for i, (diff, label) in enumerate(zip(differences, coordinate_labels)):
+                    if diff > epsilon:
+                        mismatch_details.append(
+                            f"{label}: calculated={calc_bbox[i]:.6f}, actual={actual_bbox[i]:.6f}, diff={diff:.7f}"
+                        )
+
+                msg_1 = "The bbox field does not match the bounds of the geometry. The bbox should be the minimum bounding rectangle of the geometry."
+                msg_2 = f"Calculated bbox from geometry: [{calc_bbox_str}]"
+                msg_3 = f"Actual bbox in metadata: [{actual_bbox_str}]"
+
+                messages = [msg_1, msg_2, msg_3]
+                if mismatch_details:
+                    messages.append("Mismatched coordinates:")
+                    messages.extend(mismatch_details)
+                else:
+                    # If we got here but there are no visible differences at 6 decimal places,
+                    # add a note explaining that the differences are too small to matter
+                    messages.append(
+                        "Note: The differences are too small to be visible at 6 decimal places and can be ignored."
+                    )
+
+                best_practices_dict["bbox_geometry_mismatch"] = messages
+            else:
+                msg_1 = "The bbox field does not match the bounds of the geometry. The bbox should be the minimum bounding rectangle of the geometry."
+                best_practices_dict["bbox_geometry_mismatch"] = [msg_1]
 
         # check to see if there are too many links
         if (
@@ -719,8 +859,64 @@ class Linter:
         ):
             msg_1 = "Geometry coordinates may be reversed or contain errors (expected order: longitude, latitude)"
             best_practices_dict["geometry_coordinates_order"] = [msg_1]
+          
+        # Check if a bbox that crosses the antimeridian is correctly formatted
+        if not self.check_bbox_antimeridian() and config.get(
+            "check_bbox_antimeridian", True
+        ):
+            # Get the bbox values to include in the error message
+            bbox = self.data.get("bbox", [])
+
+            if len(bbox) == 4:  # 2D bbox [west, south, east, north]
+                west, _, east, _ = bbox
+            elif (
+                len(bbox) == 6
+            ):  # 3D bbox [west, south, min_elev, east, north, max_elev]
+                west, _, _, east, _, _ = bbox
+
+            msg_1 = f"BBox crossing the antimeridian should have west longitude > east longitude (found west={west}, east={east})"
+            msg_2 = f"Current bbox format appears to be belting the globe instead of properly crossing the antimeridian. Bbox: {bbox}"
+
+            best_practices_dict["check_bbox_antimeridian"] = [msg_1, msg_2]
 
         return best_practices_dict
+
+    def check_bbox_antimeridian(self) -> bool:
+        """
+        Checks if a bbox that crosses the antimeridian is correctly formatted.
+
+        According to the GeoJSON spec, when a bbox crosses the antimeridian (180°/-180° longitude),
+        the minimum longitude (bbox[0]) should be greater than the maximum longitude (bbox[2]).
+        This method checks if this convention is followed correctly.
+
+        Returns:
+            bool: True if the bbox is valid (either doesn't cross antimeridian or crosses it correctly),
+                  False if it incorrectly crosses the antimeridian.
+        """
+        if "bbox" not in self.data:
+            return True
+
+        bbox = self.data["bbox"]
+
+        # Extract the 2D part of the bbox (ignoring elevation if present)
+        if len(bbox) == 4:  # 2D bbox [west, south, east, north]
+            west, south, east, north = bbox
+        elif len(bbox) == 6:  # 3D bbox [west, south, min_elev, east, north, max_elev]
+            west, south, _, east, north, _ = bbox
+        else:
+            # Invalid bbox format, can't check
+            return True
+
+        # Check if the bbox appears to cross the antimeridian
+        # This is the case when west > east in a valid bbox that crosses the antimeridian
+        # For example: [170, -10, -170, 10] crosses the antimeridian correctly
+        # But [-170, -10, 170, 10] is incorrectly belting the globe
+
+        # Invalid if bbox "belts the globe" (too wide)
+        if west < east and (east - west) > 180:
+            return False
+        # Otherwise, valid (normal or valid antimeridian crossing)
+        return True
 
     def create_best_practices_msg(self) -> List[str]:
         """

@@ -8,17 +8,35 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 
 ### Added
 
+- Added validation for bounding boxes that cross the antimeridian (180°/-180° longitude) ([#121](https://github.com/stac-utils/stac-check/pull/121))
+  - Checks that bbox coordinates follow the GeoJSON specification for antimeridian crossing
+  - Detects and reports cases where a bbox incorrectly "belts the globe" instead of properly crossing the antimeridian
+  - Provides clear error messages to help users fix incorrectly formatted bboxes
 - Added sponsors and supporters section with logos ([#122](https://github.com/stac-utils/stac-check/pull/122))
+- Added check to verify that bbox matches item's polygon geometry ([#123](https://github.com/stac-utils/stac-check/pull/123))
 - Added configuration documentation to README ([#124](https://github.com/stac-utils/stac-check/pull/124))
 - Added validation for geometry coordinates order to detect potentially reversed lat/lon coordinates ([#125](https://github.com/stac-utils/stac-check/pull/125))
   - Checks that coordinates follow the GeoJSON specification with [longitude, latitude] order
   - Uses heuristics to identify coordinates that may be reversed or contain errors
   - Provides nuanced error messages acknowledging the uncertainty in coordinate validation
+- Added `--pydantic` option for validating STAC objects using stac-pydantic models, providing enhanced type checking and validation ([#126](https://github.com/stac-utils/stac-check/pull/126))
+
+### Enhanced
+
+- Improved bbox validation output to show detailed information about mismatches between bbox and geometry bounds, including which specific coordinates differ and by how much ([#126](https://github.com/stac-utils/stac-check/pull/126))
+
+### Fixed
+
+- Fixed collection summaries check incorrectly showing messages for Item assets ([#121](https://github.com/stac-utils/stac-check/pull/127))
 
 ### Updated
 
 - Improved README with table of contents, better formatting, stac-check logo, and enhanced documentation ([#122](https://github.com/stac-utils/stac-check/pull/122))
 - Enhanced Contributing guidelines with step-by-step instructions ([#122](https://github.com/stac-utils/stac-check/pull/122))
+
+### Removed 
+
+- Support for Python 3.8 ([#121](https://github.com/stac-utils/stac-check/pull/121))
 
 ## [v1.6.0] - 2025-03-14
 

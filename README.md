@@ -86,6 +86,7 @@ Options:
                            (enabled by default).
   --header KEY VALUE       HTTP header to include in the requests. Can be used
                            multiple times.
+  --pydantic               Use stac-pydantic for enhanced validation with Pydantic models.
   --help                   Show this message and exit.
 ```
 
@@ -130,6 +131,8 @@ linting:
   links_self: true
   # check if geometry coordinates are potentially ordered incorrectly (longitude, latitude)
   geometry_coordinates_order: true
+  # check if a bbox that crosses the antimeridian is correctly formatted
+  check_bbox_antimeridian: true
 
 settings:
   # Number of links before the bloated links warning is shown
