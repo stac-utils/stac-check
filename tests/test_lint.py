@@ -686,18 +686,18 @@ def test_geometry_coordinates_order():
     }
 
     # Create a test item with coordinates in the wrong order (latitude, longitude)
-    # This will have "latitude" values outside the valid range (-90 to 90)
-    incorrect_item = {
+    # but with values that don't trigger the validation checks
+    undetectable_reversed_item = {
         "stac_version": "1.0.0",
         "stac_extensions": [],
         "type": "Feature",
-        "id": "test-coordinates-incorrect",
+        "id": "test-coordinates-undetectable-reversed",
         "bbox": [10.0, -10.0, 20.0, 10.0],
         "geometry": {
             "type": "Polygon",
             "coordinates": [
                 [
-                    [-10.0, 10.0],  # lat, lon (reversed)
+                    [-10.0, 10.0],  # lat, lon (reversed) but within valid ranges
                     [-10.0, 20.0],
                     [10.0, 20.0],
                     [10.0, 10.0],
@@ -757,12 +757,12 @@ def test_geometry_coordinates_order():
     linter = Linter(correct_item)
     assert linter.check_geometry_coordinates_order() == True
 
-    # Test with incorrect coordinates that are within valid ranges
-    # This will now fail with our enhanced heuristic
-    linter = Linter(incorrect_item)
+    # Test with reversed coordinates that are within valid ranges
+    # Current implementation can't detect this case, so the test passes
+    linter = Linter(undetectable_reversed_item)
     assert (
         linter.check_geometry_coordinates_order() == True
-    )  # Still passes as values are within valid ranges
+    )  # Passes because values are within valid ranges
 
     # Test with clearly incorrect coordinates - this should fail
     linter = Linter(clearly_incorrect_item)
