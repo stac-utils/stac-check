@@ -223,7 +223,8 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 - Validation from stac-validator 2.3.0
 - Links and assets validation checks
 
-[Unreleased]: https://github.com/stac-utils/stac-check/compare/v1.6.0...main
+[Unreleased]: https://github.com/stac-utils/stac-check/compare/v1.7.0...main
+[v1.7.0]: https://github.com/stac-utils/stac-check/compare/v1.6.0...v1.7.0
 [v1.6.0]: https://github.com/stac-utils/stac-check/compare/v1.5.0...v1.6.0
 [v1.5.0]: https://github.com/stac-utils/stac-check/compare/v1.4.0...v1.5.0
 [v1.4.0]: https://github.com/stac-utils/stac-check/compare/v1.3.3...v1.4.0
