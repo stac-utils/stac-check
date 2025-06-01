@@ -662,7 +662,7 @@ def test_lint_assets_no_links():
 
 
 def test_geometry_coordinates_order():
-    """Test the check_geometry_coordinates_order method for detecting incorrectly ordered coordinates."""
+    """Test the check_geometry_coordinates_order method for detecting potentially incorrectly ordered coordinates."""
     # Create a test item with coordinates in the correct order (longitude, latitude)
     correct_item = {
         "stac_version": "1.0.0",
@@ -753,31 +753,60 @@ def test_geometry_coordinates_order():
         "properties": {"datetime": "2023-01-01T00:00:00Z"},
     }
 
-    # Test with correct coordinates - this should pass
+    # Test with correct coordinates - this should pass both checks
     linter = Linter(correct_item)
     assert linter.check_geometry_coordinates_order() == True
+    assert linter.check_geometry_coordinates_definite_errors() == True
 
     # Test with reversed coordinates that are within valid ranges
-    # Current implementation can't detect this case, so the test passes
+    # Current implementation can't detect this case, so both checks pass
     linter = Linter(undetectable_reversed_item)
     assert (
         linter.check_geometry_coordinates_order() == True
     )  # Passes because values are within valid ranges
+    assert (
+        linter.check_geometry_coordinates_definite_errors() == True
+    )  # Passes because values are within valid ranges
 
-    # Test with clearly incorrect coordinates - this should fail
+    # Test with clearly incorrect coordinates (latitude > 90)
+    # This should fail the definite errors check but pass the order check (which now only uses heuristic)
     linter = Linter(clearly_incorrect_item)
-    assert linter.check_geometry_coordinates_order() == False
+    assert (
+        linter.check_geometry_coordinates_order() == True
+    )  # Now passes because it only checks heuristic
+    assert (
+        linter.check_geometry_coordinates_definite_errors() == False
+    )  # Fails because latitude > 90
 
-    # Test with coordinates that trigger the heuristic - this should fail
+    # Test with coordinates that trigger the heuristic
+    # This should fail the order check but pass the definite errors check
     linter = Linter(heuristic_incorrect_item)
-    assert linter.check_geometry_coordinates_order() == False
+    assert (
+        linter.check_geometry_coordinates_order() == False
+    )  # Fails because of heuristic
+    assert (
+        linter.check_geometry_coordinates_definite_errors() == True
+    )  # Passes because values are within valid ranges
 
-    # Test that the best practices dictionary contains the error message
+    # Test that the best practices dictionary contains the appropriate error messages
+    best_practices = linter.create_best_practices_dict()
+
+    # For heuristic-based detection
+    linter = Linter(heuristic_incorrect_item)
     best_practices = linter.create_best_practices_dict()
     assert "geometry_coordinates_order" in best_practices
-    assert best_practices["geometry_coordinates_order"] == [
-        "Geometry coordinates may be reversed or contain errors (expected order: longitude, latitude)"
-    ]
+    assert (
+        "may be in the wrong order" in best_practices["geometry_coordinates_order"][0]
+    )
+
+    # For definite errors detection
+    linter = Linter(clearly_incorrect_item)
+    best_practices = linter.create_best_practices_dict()
+    assert "geometry_coordinates_definite_errors" in best_practices
+    assert (
+        "contain invalid values"
+        in best_practices["geometry_coordinates_definite_errors"][0]
+    )
 
 
 def test_bbox_antimeridian():

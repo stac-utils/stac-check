@@ -633,31 +633,27 @@ class Linter:
         else:
             return True
 
-    def check_geometry_coordinates_order(self) -> bool:
-        """Checks if the coordinates in a geometry may be in the incorrect order.
+    def check_geometry_coordinates_definite_errors(self) -> bool:
+        """Checks if the coordinates in a geometry contain definite errors.
 
-        This function attempts to detect cases where coordinates might not follow the GeoJSON
-        specification where positions should be in [longitude, latitude] order. It uses several
-        heuristics to identify potentially problematic coordinates:
+        This function checks for coordinates that definitely violate the GeoJSON specification:
 
-        1. Checks if latitude values (second element) exceed ±90 degrees
-        2. Checks if longitude values (first element) exceed ±180 degrees
-        3. Uses a heuristic to detect when coordinates are likely reversed
-           (when first value > 90, second value < 90, and first value > second value*2)
+        1. Latitude values (second element) exceed ±90 degrees
+        2. Longitude values (first element) exceed ±180 degrees
 
-        Note that this check can never definitively determine if coordinates are reversed
-        or simply contain errors, it can only flag suspicious patterns.
+        This check focuses on definite errors rather than potential/likely errors.
+        For checking potential errors (likely reversed coordinates), use check_geometry_coordinates_order().
 
         Returns:
-            bool: True if coordinates appear to be in the expected order, False if they may be reversed.
+            bool: True if coordinates are within valid ranges, False if they contain definite errors.
         """
-        if "geometry" not in self.data or self.data["geometry"] is None:
+        if "geometry" not in self.data or self.data.get("geometry") is None:
             return True
 
-        geometry = self.data["geometry"]
+        geometry = self.data.get("geometry")
 
-        # Function to check a single coordinate pair
-        def is_valid_coordinate(coord):
+        # Function to check a single coordinate pair for definite errors
+        def is_within_valid_ranges(coord):
             if len(coord) < 2:
                 return True  # Not enough elements to check
 
@@ -671,9 +667,49 @@ class Linter:
             if abs(lon) > 180:
                 return False
 
-            # Additional heuristic for likely reversed coordinates
-            # If the first value (supposed longitude) is > 90, second value (supposed latitude) is < 90,
-            # and first value is significantly larger than second value, they may be reversed
+            return True
+
+        # Function to recursively check all coordinates in a geometry
+        def check_coordinates(coords):
+            if isinstance(coords, list):
+                if coords and isinstance(coords[0], (int, float)):
+                    # This is a single coordinate
+                    return is_within_valid_ranges(coords)
+                else:
+                    # This is a list of coordinates or a list of lists of coordinates
+                    return all(check_coordinates(coord) for coord in coords)
+            return True
+
+        return check_coordinates(geometry.get("coordinates", []))
+
+    def check_geometry_coordinates_order(self) -> bool:
+        """Checks if the coordinates in a geometry may be in the incorrect order.
+
+        This function uses a heuristic to detect coordinates that are likely in the wrong order
+        (latitude, longitude instead of longitude, latitude). It looks for cases where:
+        - The first value (supposed to be longitude) is > 90 degrees
+        - The second value (supposed to be latitude) is < 90 degrees
+        - The first value is more than twice the second value
+
+        For checking definite errors (values outside valid ranges), use check_geometry_coordinates_definite_errors().
+
+        Returns:
+            bool: True if coordinates appear to be in the correct order, False if they may be reversed.
+        """
+        if "geometry" not in self.data or self.data.get("geometry") is None:
+            return True
+
+        geometry = self.data.get("geometry")
+
+        # Function to check if a single coordinate pair is likely in the correct order
+        def is_likely_correct_order(coord):
+            if len(coord) < 2:
+                return True  # Not enough elements to check
+
+            lon, lat = coord[0], coord[1]
+
+            # Heuristic: If the supposed longitude is > 90 and the supposed latitude is < 90,
+            # and the longitude is more than twice the latitude, it's likely in the correct order
             if abs(lon) > 90 and abs(lat) < 90 and abs(lon) > abs(lat) * 2:
                 return False
 
@@ -684,13 +720,47 @@ class Linter:
             if isinstance(coords, list):
                 if coords and isinstance(coords[0], (int, float)):
                     # This is a single coordinate
-                    return is_valid_coordinate(coords)
+                    return is_likely_correct_order(coords)
                 else:
                     # This is a list of coordinates or a list of lists of coordinates
                     return all(check_coordinates(coord) for coord in coords)
             return True
 
         return check_coordinates(geometry.get("coordinates", []))
+
+    def check_bbox_antimeridian(self) -> bool:
+        """
+        Checks if a bbox that crosses the antimeridian is correctly formatted.
+
+        According to the GeoJSON spec, when a bbox crosses the antimeridian (180°/-180° longitude),
+        the minimum longitude (bbox[0]) should be greater than the maximum longitude (bbox[2]).
+        This method checks if this convention is followed correctly.
+
+        Returns:
+            bool: True if the bbox is valid (either doesn't cross antimeridian or crosses it correctly),
+                  False if it incorrectly crosses the antimeridian.
+        """
+        if "bbox" not in self.data:
+            return True
+
+        bbox = self.data.get("bbox")
+
+        # Extract the 2D part of the bbox (ignoring elevation if present)
+        if len(bbox) == 4:  # 2D bbox [west, south, east, north]
+            west, _, east, _ = bbox
+        elif len(bbox) == 6:  # 3D bbox [west, south, min_elev, east, north, max_elev]
+            west, _, _, east, _, _ = bbox
+
+        # Check if the bbox appears to cross the antimeridian
+        # This is the case when west > east in a valid bbox that crosses the antimeridian
+        # For example: [170, -10, -170, 10] crosses the antimeridian correctly
+        # But [-170, -10, 170, 10] is incorrectly belting the globe
+
+        # Invalid if bbox "belts the globe" (too wide)
+        if west < east and (east - west) > 180:
+            return False
+        # Otherwise, valid (normal or valid antimeridian crossing)
+        return True
 
     def create_best_practices_dict(self) -> Dict:
         """Creates a dictionary of best practices violations for the current STAC object. The violations are determined
@@ -857,8 +927,16 @@ class Linter:
             not self.check_geometry_coordinates_order()
             and config["geometry_coordinates_order"] == True
         ):
-            msg_1 = "Geometry coordinates may be reversed or contain errors (expected order: longitude, latitude)"
+            msg_1 = "Geometry coordinates may be in the wrong order (required order: longitude, latitude)"
             best_practices_dict["geometry_coordinates_order"] = [msg_1]
+
+        # best practices - check if geometry coordinates contain definite errors
+        if (
+            not self.check_geometry_coordinates_definite_errors()
+            and config["geometry_coordinates_order"] == True
+        ):
+            msg_1 = "Geometry coordinates contain invalid values that violate the GeoJSON specification (latitude must be between -90 and 90, longitude between -180 and 180)"
+            best_practices_dict["geometry_coordinates_definite_errors"] = [msg_1]
 
         # Check if a bbox that crosses the antimeridian is correctly formatted
         if not self.check_bbox_antimeridian() and config.get(
@@ -880,43 +958,6 @@ class Linter:
             best_practices_dict["check_bbox_antimeridian"] = [msg_1, msg_2]
 
         return best_practices_dict
-
-    def check_bbox_antimeridian(self) -> bool:
-        """
-        Checks if a bbox that crosses the antimeridian is correctly formatted.
-
-        According to the GeoJSON spec, when a bbox crosses the antimeridian (180°/-180° longitude),
-        the minimum longitude (bbox[0]) should be greater than the maximum longitude (bbox[2]).
-        This method checks if this convention is followed correctly.
-
-        Returns:
-            bool: True if the bbox is valid (either doesn't cross antimeridian or crosses it correctly),
-                  False if it incorrectly crosses the antimeridian.
-        """
-        if "bbox" not in self.data:
-            return True
-
-        bbox = self.data["bbox"]
-
-        # Extract the 2D part of the bbox (ignoring elevation if present)
-        if len(bbox) == 4:  # 2D bbox [west, south, east, north]
-            west, south, east, north = bbox
-        elif len(bbox) == 6:  # 3D bbox [west, south, min_elev, east, north, max_elev]
-            west, south, _, east, north, _ = bbox
-        else:
-            # Invalid bbox format, can't check
-            return True
-
-        # Check if the bbox appears to cross the antimeridian
-        # This is the case when west > east in a valid bbox that crosses the antimeridian
-        # For example: [170, -10, -170, 10] crosses the antimeridian correctly
-        # But [-170, -10, 170, 10] is incorrectly belting the globe
-
-        # Invalid if bbox "belts the globe" (too wide)
-        if west < east and (east - west) > 180:
-            return False
-        # Otherwise, valid (normal or valid antimeridian crossing)
-        return True
 
     def create_best_practices_msg(self) -> List[str]:
         """
