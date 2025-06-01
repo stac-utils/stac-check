@@ -661,6 +661,160 @@ def test_lint_assets_no_links():
     }
 
 
+def test_geometry_coordinates_order():
+    """Test the check_geometry_coordinates_order method for detecting potentially incorrectly ordered coordinates."""
+    # Create a test item with coordinates in the correct order (longitude, latitude)
+    correct_item = {
+        "stac_version": "1.0.0",
+        "stac_extensions": [],
+        "type": "Feature",
+        "id": "test-coordinates-correct",
+        "bbox": [10.0, -10.0, 20.0, 10.0],
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+                [
+                    [10.0, -10.0],  # lon, lat
+                    [20.0, -10.0],
+                    [20.0, 10.0],
+                    [10.0, 10.0],
+                    [10.0, -10.0],
+                ]
+            ],
+        },
+        "properties": {"datetime": "2023-01-01T00:00:00Z"},
+    }
+
+    # Create a test item with coordinates in the wrong order (latitude, longitude)
+    # but with values that don't trigger the validation checks
+    undetectable_reversed_item = {
+        "stac_version": "1.0.0",
+        "stac_extensions": [],
+        "type": "Feature",
+        "id": "test-coordinates-undetectable-reversed",
+        "bbox": [10.0, -10.0, 20.0, 10.0],
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+                [
+                    [-10.0, 10.0],  # lat, lon (reversed) but within valid ranges
+                    [-10.0, 20.0],
+                    [10.0, 20.0],
+                    [10.0, 10.0],
+                    [-10.0, 10.0],
+                ]
+            ],
+        },
+        "properties": {"datetime": "2023-01-01T00:00:00Z"},
+    }
+
+    # Create a test item with coordinates that are clearly reversed (latitude > 90)
+    clearly_incorrect_item = {
+        "stac_version": "1.0.0",
+        "stac_extensions": [],
+        "type": "Feature",
+        "id": "test-coordinates-clearly-incorrect",
+        "bbox": [10.0, -10.0, 20.0, 10.0],
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+                [
+                    [10.0, 100.0],  # Second value (latitude) > 90
+                    [20.0, 100.0],
+                    [20.0, 100.0],
+                    [10.0, 100.0],
+                    [10.0, 100.0],
+                ]
+            ],
+        },
+        "properties": {"datetime": "2023-01-01T00:00:00Z"},
+    }
+
+    # Create a test item with coordinates that may be reversed based on heuristic
+    # (first value > 90, second value < 90, first value > second value*2)
+    heuristic_incorrect_item = {
+        "stac_version": "1.0.0",
+        "stac_extensions": [],
+        "type": "Feature",
+        "id": "test-coordinates-heuristic-incorrect",
+        "bbox": [10.0, -10.0, 20.0, 10.0],
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+                [
+                    [120.0, 40.0],  # First value > 90, second < 90, first > second*2
+                    [120.0, 40.0],
+                    [120.0, 40.0],
+                    [120.0, 40.0],
+                    [120.0, 40.0],
+                ]
+            ],
+        },
+        "properties": {"datetime": "2023-01-01T00:00:00Z"},
+    }
+
+    # Test with correct coordinates - this should pass both checks
+    linter = Linter(correct_item)
+    assert linter.check_geometry_coordinates_order() == True
+    assert linter.check_geometry_coordinates_definite_errors() == True
+
+    # Test with reversed coordinates that are within valid ranges
+    # Current implementation can't detect this case, so both checks pass
+    linter = Linter(undetectable_reversed_item)
+    assert (
+        linter.check_geometry_coordinates_order() == True
+    )  # Passes because values are within valid ranges
+    assert (
+        linter.check_geometry_coordinates_definite_errors() == True
+    )  # Passes because values are within valid ranges
+
+    # Test with clearly incorrect coordinates (latitude > 90)
+    # This should fail the definite errors check but pass the order check (which now only uses heuristic)
+    linter = Linter(clearly_incorrect_item)
+    assert (
+        linter.check_geometry_coordinates_order() == True
+    )  # Now passes because it only checks heuristic
+
+    # Check that definite errors are detected
+    result = linter.check_geometry_coordinates_definite_errors()
+    assert result is not True  # Should not be True
+    assert isinstance(result, tuple)  # Should be a tuple
+    assert result[0] is False  # First element should be False
+    assert len(result[1]) > 0  # Should have at least one invalid coordinate
+    assert result[1][0][1] == 100.0  # The latitude value should be 100.0
+    assert "latitude > ±90°" in result[1][0][2]  # Should indicate latitude error
+
+    # Test with coordinates that trigger the heuristic
+    # This should fail the order check but pass the definite errors check
+    linter = Linter(heuristic_incorrect_item)
+    assert (
+        linter.check_geometry_coordinates_order() == False
+    )  # Fails because of heuristic
+    assert (
+        linter.check_geometry_coordinates_definite_errors() == True
+    )  # Passes because values are within valid ranges
+
+    # Test that the best practices dictionary contains the appropriate error messages
+    best_practices = linter.create_best_practices_dict()
+
+    # For heuristic-based detection
+    linter = Linter(heuristic_incorrect_item)
+    best_practices = linter.create_best_practices_dict()
+    assert "geometry_coordinates_order" in best_practices
+    assert (
+        "may be in the wrong order" in best_practices["geometry_coordinates_order"][0]
+    )
+
+    # For definite errors detection
+    linter = Linter(clearly_incorrect_item)
+    best_practices = linter.create_best_practices_dict()
+    assert "geometry_coordinates_definite_errors" in best_practices
+    assert (
+        "contain invalid values"
+        in best_practices["geometry_coordinates_definite_errors"][0]
+    )
+
+
 def test_bbox_antimeridian():
     """Test the check_bbox_antimeridian method for detecting incorrectly formatted bboxes that cross the antimeridian."""
     # Create a test item with an incorrectly formatted bbox that belts the globe

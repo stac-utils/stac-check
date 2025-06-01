@@ -26,6 +26,7 @@ The intent of this project is to provide a validation tool that also follows the
 - [Usage](#usage)
   - [CLI Usage](#cli-usage)
   - [Configuration](#configuration)
+  - [Geometry Validation](#geometry-validation)
   - [Python API Usage](#python-api-usage)
 - [Examples](#examples)
   - [Basic Validation](#basic-validation)
@@ -94,10 +95,11 @@ Options:
 
 stac-check uses a configuration file to control which validation checks are performed. By default, it uses the built-in configuration at `stac_check/stac-check.config.yml`. You can customize the validation behavior by creating your own configuration file.
 
-The configuration file has two main sections:
+The configuration file has three main sections:
 
-1. **linting**: Controls which best practices checks are enabled
-2. **settings**: Configures thresholds for certain checks
+1. **linting**: Controls which general best practices checks are enabled
+2. **geometry_validation**: Controls geometry-specific validation checks [BETA]
+3. **settings**: Configures thresholds for certain checks
 
 Here's an example of the configuration options:
 
@@ -105,7 +107,7 @@ Here's an example of the configuration options:
 linting:
   # Identifiers should consist of only lowercase characters, numbers, '_', and '-'
   searchable_identifiers: true
-  # Item name should not contain ':' or '/'
+  # Item name '{self.object_id}' should not contain ':' or '/'
   percent_encoded: true
   # Item file names should match their ids
   item_id_file_name: true
@@ -115,27 +117,37 @@ linting:
   check_summaries: true
   # Datetime fields should not be set to null
   null_datetime: true
-  # Check unlocated items to make sure bbox field is not set
+  # best practices - check unlocated items to make sure bbox field is not set
   check_unlocated: true
-  # Check if bbox matches the bounds of the geometry
-  check_bbox_geometry_match: true
-  # Check to see if there are too many links
+  # best practices - recommend items have a geometry
+  check_geometry: true
+  # check to see if there are too many links
   bloated_links: true
-  # Check for bloated metadata in properties
+  # best practices - check for bloated metadata in properties
   bloated_metadata: true
-  # Ensure thumbnail is a small file size ["png", "jpeg", "jpg", "webp"]
+  # best practices - ensure thumbnail is a small file size ["png", "jpeg", "jpg", "webp"]
   check_thumbnail: true
-  # Ensure that links in catalogs and collections include a title field
+  # best practices - ensure that links in catalogs and collections include a title field
   links_title: true
-  # Ensure that links in catalogs and collections include self link
+  # best practices - ensure that links in catalogs and collections include self link
   links_self: true
+
+geometry_validation:
+  # Master switch to enable/disable all geometry validation checks
+  enabled: true
+  # check if geometry coordinates are potentially ordered incorrectly (longitude, latitude)
+  geometry_coordinates_order: true
+  # check if geometry coordinates contain definite errors (latitude > ±90°, longitude > ±180°)
+  geometry_coordinates_definite_errors: true
+  # check if bbox matches the bounds of the geometry
+  bbox_geometry_match: true
   # check if a bbox that crosses the antimeridian is correctly formatted
-  check_bbox_antimeridian: true
+  bbox_antimeridian: true
 
 settings:
-  # Number of links before the bloated links warning is shown
+  # number of links before the bloated links warning is shown
   max_links: 20
-  # Number of properties before the bloated metadata warning is shown
+  # number of properties before the bloated metadata warning is shown
   max_properties: 20
 ```
 
@@ -145,6 +157,24 @@ To use a custom configuration file, set the `STAC_CHECK_CONFIG` environment vari
 export STAC_CHECK_CONFIG=/path/to/your/config.yml
 stac-check sample_files/1.0.0/core-item.json
 ```
+
+### Geometry Validation
+
+Geometry validation is a feature of stac-check that allows you to validate the geometry of your STAC items. This feature is enabled by default, but can be disabled by setting `geometry_validation.enabled` to `false` in your configuration file.
+
+The geometry validation feature checks for the following:
+
+*   Geometry coordinates are potentially ordered incorrectly (longitude, latitude)
+*   Geometry coordinates contain definite errors (latitude > ±90°, longitude > ±180°)
+*   Bbox matches the bounds of the geometry
+*   Bbox that crosses the antimeridian is correctly formatted
+
+You can customize the geometry validation behavior by setting the following options in your configuration file:
+
+*   `geometry_validation.geometry_coordinates_order`: Check if geometry coordinates are potentially ordered incorrectly (longitude, latitude)
+*   `geometry_validation.geometry_coordinates_definite_errors`: Check if geometry coordinates contain definite errors (latitude > ±90°, longitude > ±180°)
+*   `geometry_validation.bbox_geometry_match`: Check if bbox matches the bounds of the geometry
+*   `geometry_validation.bbox_antimeridian`: Check if a bbox that crosses the antimeridian is correctly formatted
 
 ### Python API Usage
 

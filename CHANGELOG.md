@@ -6,6 +6,8 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 
 ## Unreleased
 
+## [v1.7.0] - 2025-06-01
+
 ### Added
 
 - Added validation for bounding boxes that cross the antimeridian (180°/-180° longitude) ([#121](https://github.com/stac-utils/stac-check/pull/121))
@@ -15,6 +17,20 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 - Added sponsors and supporters section with logos ([#122](https://github.com/stac-utils/stac-check/pull/122))
 - Added check to verify that bbox matches item's polygon geometry ([#123](https://github.com/stac-utils/stac-check/pull/123))
 - Added configuration documentation to README ([#124](https://github.com/stac-utils/stac-check/pull/124))
+- Added validation for geometry coordinates order to detect potentially reversed lat/lon coordinates ([#125](https://github.com/stac-utils/stac-check/pull/125))
+  - Checks that coordinates follow the GeoJSON specification with [longitude, latitude] order
+  - Uses heuristics to identify coordinates that may be reversed or contain errors
+  - Provides nuanced error messages acknowledging the uncertainty in coordinate validation
+- Added validation for definite geometry coordinate errors ([#125](https://github.com/stac-utils/stac-check/pull/125))
+  - Detects coordinates with latitude values exceeding ±90 degrees
+  - Detects coordinates with longitude values exceeding ±180 degrees
+  - Returns detailed information about invalid coordinates
+- Added dedicated geometry validation configuration section ([#125](https://github.com/stac-utils/stac-check/pull/125))
+  - Created a new `geometry_validation` section in the configuration file
+  - Added a master enable/disable switch for all geometry validation checks
+  - Reorganized geometry validation options into the new section
+  - Separated geometry validation errors in CLI output with a [BETA] label
+  - Added detailed documentation for geometry validation features
 - Added `--pydantic` option for validating STAC objects using stac-pydantic models, providing enhanced type checking and validation ([#126](https://github.com/stac-utils/stac-check/pull/126))
 
 ### Enhanced

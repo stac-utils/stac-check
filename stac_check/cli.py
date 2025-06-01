@@ -141,6 +141,15 @@ def cli_message(linter: Linter) -> None:
         else:
             click.secho(message, fg="red")
 
+    """ geometry validation errors """
+    if linter.geometry_errors_msg:
+        click.secho()
+        for message in linter.geometry_errors_msg:
+            if message == linter.geometry_errors_msg[0]:
+                click.secho(message, bg="yellow", fg="black")
+            else:
+                click.secho(message, fg="red")
+
     if linter.validate_all == True:
         click.secho()
         click.secho("Recursive validation has passed!", fg="blue")
