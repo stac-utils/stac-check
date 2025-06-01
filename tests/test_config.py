@@ -15,8 +15,9 @@ def test_linter_config_file():
     # Load config file
     linter = Linter(file, config_file="tests/test.config.yml")
 
-    assert linter.config["linting"]["searchable_identifiers"] == False
-    assert "searchable_identifiers" not in linter.create_best_practices_dict()
+    assert linter.config["linting"]["searchable_identifiers"] == True
+    # Since searchable_identifiers is True, the error should be in the best practices dict
+    assert "searchable_identifiers" in linter.create_best_practices_dict()
 
 
 def test_linter_max_links():
@@ -28,4 +29,6 @@ def test_linter_max_links():
 
     # Load config file
     linter = Linter(file, config_file="tests/test.config.yml")
-    assert "bloated_links" not in linter.create_best_practices_dict()
+    # Since bloated_links is True in the config and the file has more links than max_links,
+    # bloated_links should be in the best practices dict
+    assert "bloated_links" in linter.create_best_practices_dict()

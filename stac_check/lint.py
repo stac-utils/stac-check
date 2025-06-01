@@ -48,6 +48,7 @@ class Linter:
         object_id (str): A string representing the STAC JSON file's ID.
         file_name (str): A string representing the name of the file containing the STAC JSON data.
         best_practices_msg (str): A string representing best practices messages for the STAC JSON file.
+        geometry_errors_msg (str): A string representing geometry-related error messages for the STAC JSON file.
 
     Methods:
         parse_config(config_file: Optional[str] = None) -> Dict:
@@ -124,6 +125,9 @@ class Linter:
 
         create_best_practices_msg(self) -> List[str]:
             Creates a message with best practices recommendations for the STAC JSON file.
+
+        create_geometry_errors_msg(self) -> List[str]:
+            Creates a message with geometry-related error messages for the STAC JSON file.
     """
 
     item: Union[str, Dict]
@@ -167,6 +171,7 @@ class Linter:
         self.object_id = self.data["id"] if "id" in self.data else ""
         self.file_name = self.get_asset_name(self.item)
         self.best_practices_msg = self.create_best_practices_msg()
+        self.geometry_errors_msg = self.create_geometry_errors_msg()
 
     @staticmethod
     def parse_config(config_file: Optional[str] = None) -> Dict:
@@ -633,7 +638,9 @@ class Linter:
         else:
             return True
 
-    def check_geometry_coordinates_definite_errors(self) -> bool:
+    def check_geometry_coordinates_definite_errors(
+        self,
+    ) -> Union[bool, Tuple[bool, List]]:
         """Checks if the coordinates in a geometry contain definite errors.
 
         This function checks for coordinates that definitely violate the GeoJSON specification:
@@ -645,12 +652,15 @@ class Linter:
         For checking potential errors (likely reversed coordinates), use check_geometry_coordinates_order().
 
         Returns:
-            bool: True if coordinates are within valid ranges, False if they contain definite errors.
+            Union[bool, Tuple[bool, List]]:
+                - If no errors: True
+                - If errors found: (False, list_of_invalid_coordinates)
         """
         if "geometry" not in self.data or self.data.get("geometry") is None:
             return True
 
         geometry = self.data.get("geometry")
+        invalid_coords = []
 
         # Function to check a single coordinate pair for definite errors
         def is_within_valid_ranges(coord):
@@ -661,10 +671,12 @@ class Linter:
 
             # Check if latitude (second value) is outside the valid range
             if abs(lat) > 90:
+                invalid_coords.append((lon, lat, "latitude > ±90°"))
                 return False
 
             # Check if longitude (first value) is outside the valid range
             if abs(lon) > 180:
+                invalid_coords.append((lon, lat, "longitude > ±180°"))
                 return False
 
             return True
@@ -680,7 +692,12 @@ class Linter:
                     return all(check_coordinates(coord) for coord in coords)
             return True
 
-        return check_coordinates(geometry.get("coordinates", []))
+        result = check_coordinates(geometry.get("coordinates", []))
+
+        if result:
+            return True
+        else:
+            return (False, invalid_coords)
 
     def check_geometry_coordinates_order(self) -> bool:
         """Checks if the coordinates in a geometry may be in the incorrect order.
@@ -772,34 +789,38 @@ class Linter:
             recommendations for how to fix the violations.
         """
         best_practices_dict = {}
-        config = self.config["linting"]
+        linting_config = self.config["linting"]
+        geometry_validation_config = self.config["geometry_validation"]
         max_links = self.config["settings"]["max_links"]
         max_properties = self.config["settings"]["max_properties"]
 
         # best practices - item ids should only contain searchable identifiers
         if (
             self.check_searchable_identifiers() == False
-            and config["searchable_identifiers"] == True
+            and linting_config["searchable_identifiers"] == True
         ):
             msg_1 = f"Item name '{self.object_id}' should only contain Searchable identifiers"
             msg_2 = "Identifiers should consist of only lowercase characters, numbers, '_', and '-'"
             best_practices_dict["searchable_identifiers"] = [msg_1, msg_2]
 
         # best practices - item ids should not contain ':' or '/' characters
-        if self.check_percent_encoded() and config["percent_encoded"] == True:
+        if self.check_percent_encoded() and linting_config["percent_encoded"] == True:
             msg_1 = f"Item name '{self.object_id}' should not contain ':' or '/'"
             msg_2 = "https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#item-ids"
             best_practices_dict["percent_encoded"] = [msg_1, msg_2]
 
         # best practices - item ids should match file names
-        if not self.check_item_id_file_name() and config["item_id_file_name"] == True:
+        if (
+            not self.check_item_id_file_name()
+            and linting_config["item_id_file_name"] == True
+        ):
             msg_1 = f"Item file names should match their ids: '{self.file_name}' not equal to '{self.object_id}"
             best_practices_dict["check_item_id"] = [msg_1]
 
         # best practices - collection and catalog file names should be collection.json and catalog.json
         if (
             self.check_catalog_file_name() == False
-            and config["catalog_id_file_name"] == True
+            and linting_config["catalog_id_file_name"] == True
         ):
             msg_1 = f"Object should be called '{self.asset_type.lower()}.json' not '{self.file_name}.json'"
             best_practices_dict["check_catalog_id"] = [msg_1]
@@ -808,24 +829,24 @@ class Linter:
         if (
             self.asset_type == "COLLECTION"
             and self.check_summaries() == False
-            and config["check_summaries"] == True
+            and linting_config["check_summaries"] == True
         ):
             msg_1 = "A STAC collection should contain a summaries field"
             msg_2 = "It is recommended to store information like eo:bands in summaries"
             best_practices_dict["check_summaries"] = [msg_1, msg_2]
 
         # best practices - datetime fields should not be set to null
-        if self.check_datetime_null() and config["null_datetime"] == True:
+        if self.check_datetime_null() and linting_config["null_datetime"] == True:
             msg_1 = "Please avoid setting the datetime field to null, many clients search on this field"
             best_practices_dict["datetime_null"] = [msg_1]
 
         # best practices - check unlocated items to make sure bbox field is not set
-        if self.check_unlocated() and config["check_unlocated"] == True:
+        if self.check_unlocated() and linting_config["check_unlocated"] == True:
             msg_1 = "Unlocated item. Please avoid setting the bbox field when geometry is set to null"
             best_practices_dict["check_unlocated"] = [msg_1]
 
         # best practices - recommend items have a geometry
-        if self.check_geometry_null() and config["check_geometry"] == True:
+        if self.check_geometry_null() and linting_config["check_geometry"] == True:
             msg_1 = "All items should have a geometry field. STAC is not meant for non-spatial data"
             best_practices_dict["null_geometry"] = [msg_1]
 
@@ -838,7 +859,11 @@ class Linter:
         else:
             bbox_mismatch = not bbox_check_result
 
-        if bbox_mismatch and config.get("check_bbox_geometry_match", True) == True:
+        if (
+            bbox_mismatch
+            and geometry_validation_config.get("check_bbox_geometry_match", True)
+            == True
+        ):
             if isinstance(bbox_check_result, tuple):
                 # Unpack the result
                 _, calc_bbox, actual_bbox, differences = bbox_check_result
@@ -888,7 +913,7 @@ class Linter:
         # check to see if there are too many links
         if (
             self.check_bloated_links(max_links=max_links)
-            and config["bloated_links"] == True
+            and linting_config["bloated_links"] == True
         ):
             msg_1 = f"You have {len(self.data['links'])} links. Please consider using sub-collections or sub-catalogs"
             best_practices_dict["bloated_links"] = [msg_1]
@@ -896,7 +921,7 @@ class Linter:
         # best practices - check for bloated metadata in properties
         if (
             self.check_bloated_metadata(max_properties=max_properties)
-            and config["bloated_metadata"] == True
+            and linting_config["bloated_metadata"] == True
         ):
             msg_1 = f"You have {len(self.data['properties'])} properties. Please consider using links to avoid bloated metadata"
             best_practices_dict["bloated_metadata"] = [msg_1]
@@ -905,41 +930,68 @@ class Linter:
         if (
             not self.check_thumbnail()
             and self.asset_type == "ITEM"
-            and config["check_thumbnail"] == True
+            and linting_config["check_thumbnail"] == True
         ):
             msg_1 = "A thumbnail should have a small file size ie. png, jpeg, jpg, webp"
             best_practices_dict["check_thumbnail"] = [msg_1]
 
         # best practices - ensure that links in catalogs and collections include a title field
-        if not self.check_links_title_field() and config["links_title"] == True:
+        if not self.check_links_title_field() and linting_config["links_title"] == True:
             msg_1 = (
                 "Links in catalogs and collections should always have a 'title' field"
             )
             best_practices_dict["check_links_title"] = [msg_1]
 
         # best practices - ensure that links in catalogs and collections include self link
-        if not self.check_links_self() and config["links_self"] == True:
+        if not self.check_links_self() and linting_config["links_self"] == True:
             msg_1 = "A link to 'self' in links is strongly recommended"
             best_practices_dict["check_links_self"] = [msg_1]
 
         # best practices - ensure that geometry coordinates are in the correct order
         if (
             not self.check_geometry_coordinates_order()
-            and config["geometry_coordinates_order"] == True
+            and geometry_validation_config["geometry_coordinates_order"] == True
         ):
             msg_1 = "Geometry coordinates may be in the wrong order (required order: longitude, latitude)"
             best_practices_dict["geometry_coordinates_order"] = [msg_1]
 
         # best practices - check if geometry coordinates contain definite errors
+        definite_errors_result = self.check_geometry_coordinates_definite_errors()
+
+        # Check if we have a separate config entry for definite errors, otherwise use the same as order check
+        config_key = "geometry_coordinates_definite_errors"
+        if config_key not in geometry_validation_config:
+            config_key = "geometry_coordinates_order"
+
         if (
-            not self.check_geometry_coordinates_definite_errors()
-            and config["geometry_coordinates_order"] == True
+            isinstance(definite_errors_result, tuple)
+            and not definite_errors_result[0]
+            and geometry_validation_config[config_key]
         ):
+            # We have definite errors with invalid coordinates
+            _, invalid_coords = definite_errors_result
+
+            # Base message
+            msg_1 = "Geometry coordinates contain invalid values that violate the GeoJSON specification (latitude must be between -90 and 90, longitude between -180 and 180)"
+
+            # Add details about invalid coordinates (limit to first 5 to avoid excessive output)
+            messages = [msg_1]
+            for i, (lon, lat, reason) in enumerate(invalid_coords[:5]):
+                messages.append(f"Invalid coordinate: [{lon}, {lat}] - {reason}")
+
+            if len(invalid_coords) > 5:
+                messages.append(
+                    f"...and {len(invalid_coords) - 5} more invalid coordinates"
+                )
+
+            best_practices_dict["geometry_coordinates_definite_errors"] = messages
+        elif definite_errors_result is False and geometry_validation_config[config_key]:
+            # Simple case (backward compatibility)
             msg_1 = "Geometry coordinates contain invalid values that violate the GeoJSON specification (latitude must be between -90 and 90, longitude between -180 and 180)"
             best_practices_dict["geometry_coordinates_definite_errors"] = [msg_1]
 
         # Check if a bbox that crosses the antimeridian is correctly formatted
-        if not self.check_bbox_antimeridian() and config.get(
+        if not self.check_bbox_antimeridian() and geometry_validation_config.get(
             "check_bbox_antimeridian", True
         ):
             # Get the bbox values to include in the error message
@@ -972,9 +1024,65 @@ class Linter:
         base_string = "STAC Best Practices: "
         best_practices.append(base_string)
 
-        for _, v in self.create_best_practices_dict().items():
+        best_practices_dict = self.create_best_practices_dict()
+
+        # Filter out geometry-related errors as they will be displayed separately
+        geometry_keys = [
+            "geometry_coordinates_order",
+            "geometry_coordinates_definite_errors",
+            "check_bbox_antimeridian",
+            "check_bbox_geometry_match",
+        ]
+        filtered_dict = {
+            k: v for k, v in best_practices_dict.items() if k not in geometry_keys
+        }
+
+        for _, v in filtered_dict.items():
             for value in v:
                 best_practices.extend(["    " + value])
             best_practices.extend([""])
 
         return best_practices
+
+    def create_geometry_errors_msg(self) -> List[str]:
+        """
+        Generates a list of geometry-related error messages based on the results of the 'create_best_practices_dict' method.
+
+        This separates geometry coordinate validation errors from other best practices for clearer presentation.
+
+        Returns:
+            A list of strings, where each string contains a geometry error message. Each message starts with the
+            'Geometry Validation Errors [BETA]:' base string and is followed by specific details. Each message is indented
+            with four spaces, and there is an empty string between each message for readability.
+        """
+        # Check if geometry validation is enabled
+        geometry_config = self.config.get("geometry_validation", {})
+        if not geometry_config.get("enabled", True):
+            return []  # Geometry validation is disabled
+
+        geometry_errors = list()
+        base_string = "Geometry Validation Errors [BETA]: "
+        geometry_errors.append(base_string)
+
+        best_practices_dict = self.create_best_practices_dict()
+
+        # Extract only geometry-related errors
+        geometry_keys = [
+            "geometry_coordinates_order",
+            "geometry_coordinates_definite_errors",
+            "check_bbox_antimeridian",
+            "check_bbox_geometry_match",
+        ]
+        geometry_dict = {
+            k: v for k, v in best_practices_dict.items() if k in geometry_keys
+        }
+
+        if not geometry_dict:
+            return []  # No geometry errors found
+
+        for _, v in geometry_dict.items():
+            for value in v:
+                geometry_errors.extend(["    " + value])
+            geometry_errors.extend([""])
+
+        return geometry_errors

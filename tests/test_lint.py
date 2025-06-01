@@ -774,9 +774,15 @@ def test_geometry_coordinates_order():
     assert (
         linter.check_geometry_coordinates_order() == True
     )  # Now passes because it only checks heuristic
-    assert (
-        linter.check_geometry_coordinates_definite_errors() == False
-    )  # Fails because latitude > 90
+
+    # Check that definite errors are detected
+    result = linter.check_geometry_coordinates_definite_errors()
+    assert result is not True  # Should not be True
+    assert isinstance(result, tuple)  # Should be a tuple
+    assert result[0] is False  # First element should be False
+    assert len(result[1]) > 0  # Should have at least one invalid coordinate
+    assert result[1][0][1] == 100.0  # The latitude value should be 100.0
+    assert "latitude > ±90°" in result[1][0][2]  # Should indicate latitude error
 
     # Test with coordinates that trigger the heuristic
     # This should fail the order check but pass the definite errors check
