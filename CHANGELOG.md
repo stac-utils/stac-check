@@ -6,6 +6,14 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 
 ## Unreleased
 
+### Changed
+
+- Migrated documentation from Read the Docs to GitHub Pages ([#128](https://github.com/stac-utils/stac-check/pull/128))
+  - Updated documentation build system to use Sphinx with sphinx_rtd_theme
+  - Added support for Markdown content in documentation using myst-parser
+  - Updated README with instructions for building documentation locally
+  - Added GitHub Actions workflow for automatic documentation deployment
+
 ## [v1.7.0] - 2025-06-01
 
 ### Added
