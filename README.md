@@ -3,7 +3,7 @@
 <!-- markdownlint-disable MD033 MD041 -->
 
 <p align="left">
-  <img src="assets/stac-check.png" width=560>
+  <img src="https://raw.githubusercontent.com/stac-utils/stac-check/main/assets/stac-check.png" width=560>
 </p>
 
 [![Downloads](https://static.pepy.tech/badge/stac-check?color=blue)](https://pepy.tech/project/stac-check)
@@ -45,7 +45,28 @@ The intent of this project is to provide a validation tool that also follows the
 
 ## Documentation
 
-[stac-check.readthedocs.io](https://stac-check.readthedocs.io/en/latest/)
+The documentation is hosted on GitHub Pages at [stac-utils.github.io/stac-check](https://stac-utils.github.io/stac-check/).
+
+### Building Documentation Locally
+
+To build the documentation locally:
+
+```bash
+# Install the package with documentation dependencies
+pip install -e ".[docs]"
+
+# Build the documentation
+make docs
+```
+
+The built documentation will be available in the `docs/_build/html` directory.
+
+Alternatively, you can build the documentation using Docker:
+
+```bash
+# Build the Docker image and documentation
+make docker-docs
+```
 
 ## Installation
 

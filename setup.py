@@ -30,6 +30,12 @@ setup(
             "requests-mock",
             "types-setuptools",
         ],
+        "docs": [
+            "sphinx>=4.0.0",
+            "sphinx_rtd_theme>=1.0.0",
+            "myst-parser>=0.18.0",
+            "sphinx-autodoc-typehints>=1.18.0",
+        ],
     },
     entry_points={"console_scripts": ["stac-check=stac_check.cli:main"]},
     author="Jonathan Healy",
