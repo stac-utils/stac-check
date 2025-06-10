@@ -8,7 +8,7 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 
 ### Changed
 
-- Made `stac-pydantic` an optional dependency ([#XXX](https://github.com/stac-utils/stac-check/pull/XXX))
+- Made `stac-pydantic` an optional dependency ([#129](https://github.com/stac-utils/stac-check/pull/129))
   - `stac-validator` is now installed without the `[pydantic]` extra by default
   - Added `stac-check[pydantic]` extra for users who need pydantic validation
   - Added graceful fallback to JSONSchema validation when pydantic is not available
