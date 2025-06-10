@@ -141,6 +141,21 @@ class Linter:
     pydantic: bool = False
 
     def __post_init__(self):
+        # Check if pydantic validation is requested but not installed
+        if self.pydantic:
+            try:
+                importlib.import_module("stac_pydantic")
+            except ImportError:
+                import warnings
+
+                warnings.warn(
+                    "stac-pydantic is not installed. Pydantic validation will be disabled. "
+                    "Install it with: pip install stac-check[pydantic]",
+                    UserWarning,
+                    stacklevel=2,
+                )
+                self.pydantic = False
+
         self.data = self.load_data(self.item)
         self.message = self.validate_file(self.item)
         self.config = self.parse_config(self.config_file)
