@@ -6,6 +6,8 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 
 ## Unreleased
 
+## [v1.8.0] - 2025-06-11
+
 ### Changed
 
 - Made `stac-pydantic` an optional dependency ([#129](https://github.com/stac-utils/stac-check/pull/129))
@@ -238,7 +240,8 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 - Validation from stac-validator 2.3.0
 - Links and assets validation checks
 
-[Unreleased]: https://github.com/stac-utils/stac-check/compare/v1.7.0...main
+[Unreleased]: https://github.com/stac-utils/stac-check/compare/v1.8.0...main
+[v1.8.0]: https://github.com/stac-utils/stac-check/compare/v1.7.0...v1.8.0
 [v1.7.0]: https://github.com/stac-utils/stac-check/compare/v1.6.0...v1.7.0
 [v1.6.0]: https://github.com/stac-utils/stac-check/compare/v1.5.0...v1.6.0
 [v1.5.0]: https://github.com/stac-utils/stac-check/compare/v1.4.0...v1.5.0
