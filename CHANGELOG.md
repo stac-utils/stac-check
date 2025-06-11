@@ -8,6 +8,13 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 
 ### Changed
 
+- Made `stac-pydantic` an optional dependency ([#129](https://github.com/stac-utils/stac-check/pull/129))
+  - `stac-validator` is now installed without the `[pydantic]` extra by default
+  - Added `stac-check[pydantic]` extra for users who need pydantic validation
+  - Added graceful fallback to JSONSchema validation when pydantic is not available
+  - Updated tests to handle both scenarios (with and without pydantic installed)
+  - Added helpful warning messages when pydantic is requested but not installed
+
 - Migrated documentation from Read the Docs to GitHub Pages ([#128](https://github.com/stac-utils/stac-check/pull/128))
   - Updated documentation build system to use Sphinx with sphinx_rtd_theme
   - Added support for Markdown content in documentation using myst-parser

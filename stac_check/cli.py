@@ -223,12 +223,24 @@ def cli_message(linter: Linter) -> None:
 @click.option(
     "--pydantic",
     is_flag=True,
-    help="Use stac-pydantic for enhanced validation with Pydantic models.",
+    help="Use pydantic validation (requires stac-pydantic to be installed).",
 )
 @click.command()
 @click.argument("file")
 @click.version_option(version=importlib.metadata.distribution("stac-check").version)
 def main(file, recursive, max_depth, assets, links, no_assets_urls, header, pydantic):
+    # Check if pydantic validation is requested but not installed
+    if pydantic:
+        try:
+            importlib.import_module("stac_pydantic")
+        except ImportError:
+            click.secho(
+                "Warning: stac-pydantic is not installed. Pydantic validation will be disabled.\n"
+                "To enable pydantic validation, install it with: pip install stac-check[pydantic]",
+                fg="yellow",
+            )
+            pydantic = False
+
     linter = Linter(
         file,
         assets=assets,
