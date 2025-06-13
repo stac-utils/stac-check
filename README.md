@@ -109,6 +109,7 @@ Options:
   --header KEY VALUE       HTTP header to include in the requests. Can be used
                            multiple times.
   --pydantic               Use stac-pydantic for enhanced validation with Pydantic models.
+  --verbose                Show verbose error messages.
   --help                   Show this message and exit.
 ```
 

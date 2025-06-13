@@ -3,7 +3,7 @@
 
 from setuptools import find_packages, setup
 
-__version__ = "1.8.0"
+__version__ = "1.9.0"
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -20,7 +20,7 @@ setup(
         "requests>=2.32.3",
         "jsonschema>=4.23.0",
         "click>=8.1.8",
-        "stac-validator>=3.8.1",
+        "stac-validator~=3.9.0",
         "PyYAML",
         "python-dotenv",
     ],
@@ -29,7 +29,7 @@ setup(
             "pytest",
             "requests-mock",
             "types-setuptools",
-            "stac-validator[pydantic]",
+            "stac-validator[pydantic]~=3.9.0",
         ],
         "docs": [
             "sphinx>=4.0.0",
@@ -37,7 +37,7 @@ setup(
             "myst-parser>=0.18.0",
             "sphinx-autodoc-typehints>=1.18.0",
         ],
-        "pydantic": ["stac-validator[pydantic]"],
+        "pydantic": ["stac-validator[pydantic]~=3.9.0"],
     },
     entry_points={"console_scripts": ["stac-check=stac_check.cli:main"]},
     author="Jonathan Healy",

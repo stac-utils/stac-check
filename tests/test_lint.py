@@ -980,3 +980,34 @@ def test_pydantic_fallback_without_import(monkeypatch):
     assert linter.valid_stac is True
     assert linter.asset_type == "ITEM"
     assert linter.message["validation_method"] == "default"
+
+
+def test_verbose_error_message():
+    """Test that verbose error messages are properly formatted and included."""
+    # Test with a known bad item that will generate validation errors
+    file = "sample_files/1.0.0/bad-item.json"
+    linter = Linter(file, verbose=True)
+
+    # Verify the item is invalid
+    assert linter.valid_stac is False
+
+    # Check that we have the expected error message
+    assert "id" in linter.error_msg.lower()
+    assert "required" in linter.error_msg.lower()
+
+    # Check that verbose error message contains expected structure
+    assert isinstance(linter.verbose_error_msg, dict)
+    assert "validator" in linter.verbose_error_msg
+    assert "path_in_schema" in linter.verbose_error_msg
+
+    # Check specific parts of the verbose error message
+    assert linter.verbose_error_msg.get("validator") == "required"
+
+    # Check path_in_schema - it might contain both strings and integers
+    path_in_schema = linter.verbose_error_msg.get("path_in_schema", [])
+    assert any(isinstance(p, (str, int)) for p in path_in_schema)
+
+    # Check that the error message is included in the string representation
+    verbose_str = str(linter.verbose_error_msg)
+    assert "required" in verbose_str
+    assert "id" in verbose_str
