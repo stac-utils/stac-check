@@ -28,6 +28,7 @@ class Linter:
         assets_open_urls (bool): Whether to open assets URLs when validating assets. Defaults to True.
         headers (dict): HTTP headers to include in the requests.
         pydantic (bool, optional): A boolean value indicating whether to use pydantic validation. Defaults to False.
+        verbose (bool, optional): A boolean value indicating whether to enable verbose output. Defaults to False.
 
     Attributes:
         data (dict): A dictionary representing the STAC JSON file.
@@ -139,6 +140,7 @@ class Linter:
     assets_open_urls: bool = True
     headers: Dict = field(default_factory=dict)
     pydantic: bool = False
+    verbose: bool = False
 
     def __post_init__(self):
         # Check if pydantic validation is requested but not installed
@@ -170,6 +172,7 @@ class Linter:
         self.valid_stac = self.message["valid_stac"]
         self.error_type = self.check_error_type()
         self.error_msg = self.check_error_message()
+        self.verbose_error_msg = self.check_verbose_error_message()
         self.invalid_asset_format = (
             self.check_links_assets(10, "assets", "format") if self.assets else None
         )
@@ -291,7 +294,18 @@ class Linter:
         Raises:
             ValueError: If `file` is not a valid file path or STAC dictionary.
         """
-        if isinstance(file, str):
+        if isinstance(file, str) and self.verbose:
+            stac = StacValidate(
+                file,
+                links=self.links,
+                assets=self.assets,
+                assets_open_urls=self.assets_open_urls,
+                headers=self.headers,
+                pydantic=self.pydantic,
+                verbose=self.verbose,
+            )
+            stac.run()
+        elif isinstance(file, str):
             stac = StacValidate(
                 file,
                 links=self.links,
@@ -408,6 +422,17 @@ class Linter:
         """
         if "error_message" in self.message:
             return self.message["error_message"]
+        else:
+            return ""
+
+    def check_verbose_error_message(self) -> str:
+        """Checks whether the `message` attribute contains an `verbose_error_message` field.
+
+        Returns:
+            A string containing the value of the `verbose_error_message` field, or an empty string if the field is not present.
+        """
+        if "error_verbose" in self.message:
+            return self.message["error_verbose"]
         else:
             return ""
 
@@ -1047,6 +1072,7 @@ class Linter:
             "geometry_coordinates_definite_errors",
             "check_bbox_antimeridian",
             "check_bbox_geometry_match",
+            "bbox_geometry_mismatch",
         ]
         filtered_dict = {
             k: v for k, v in best_practices_dict.items() if k not in geometry_keys
@@ -1087,6 +1113,7 @@ class Linter:
             "geometry_coordinates_definite_errors",
             "check_bbox_antimeridian",
             "check_bbox_geometry_match",
+            "bbox_geometry_mismatch",
         ]
         geometry_dict = {
             k: v for k, v in best_practices_dict.items() if k in geometry_keys

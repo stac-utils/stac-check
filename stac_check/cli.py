@@ -4,6 +4,7 @@ import click
 
 from .lint import Linter
 from .logo import logo
+from .utilities import format_verbose_error
 
 
 def link_asset_message(
@@ -88,7 +89,10 @@ def intro_message(linter: Linter) -> None:
     click.secho()
 
     click.secho(
-        f"Validator: stac-validator {linter.validator_version}", bg="blue", fg="white"
+        f"\n Validator: stac-validator {linter.validator_version}",
+        bold=True,
+        bg="black",
+        fg="white",
     )
 
     # Always show validation method
@@ -96,7 +100,7 @@ def intro_message(linter: Linter) -> None:
         "Pydantic" if hasattr(linter, "pydantic") and linter.pydantic else "JSONSchema"
     )
     click.secho()
-    click.secho(f"Validation method: {validation_method}", bg="yellow", fg="black")
+    click.secho(f"\n Validation method: {validation_method}", bg="black", fg="white")
 
     click.secho()
 
@@ -137,7 +141,7 @@ def cli_message(linter: Linter) -> None:
     click.secho()
     for message in linter.best_practices_msg:
         if message == linter.best_practices_msg[0]:
-            click.secho(message, bg="blue")
+            click.secho("\n " + message, bg="blue")
         else:
             click.secho(message, fg="red")
 
@@ -146,7 +150,7 @@ def cli_message(linter: Linter) -> None:
         click.secho()
         for message in linter.geometry_errors_msg:
             if message == linter.geometry_errors_msg[0]:
-                click.secho(message, bg="yellow", fg="black")
+                click.secho("\n " + message, bg="yellow", fg="black")
             else:
                 click.secho(message, fg="red")
 
@@ -176,14 +180,36 @@ def cli_message(linter: Linter) -> None:
         link_asset_message(linter.invalid_link_request, "link", "request", True)
 
     if linter.error_type != "":
+        click.secho()
+        click.secho("\n Validation Errors: ", fg="white", bold=True, bg="black")
         click.secho("Validation error type: ", fg="red")
         click.secho(f"    {linter.error_type}")
+        click.secho()
 
     if linter.error_msg != "":
         click.secho("Validation error message: ", fg="red")
         click.secho(f"    {linter.error_msg}")
+        click.secho()
 
-    click.secho(f"This object has {len(linter.data['links'])} links")
+    if linter.error_msg != "" and linter.verbose_error_msg == "":
+        click.secho("Refer to --verbose for more details.", fg="blue")
+        click.secho()
+
+    if linter.verbose_error_msg:
+        click.secho()
+        click.secho("\n Verbose Validation Output: ", fg="white", bg="red")
+
+        if isinstance(linter.verbose_error_msg, dict):
+            formatted_error = format_verbose_error(linter.verbose_error_msg)
+        else:
+            formatted_error = str(linter.verbose_error_msg)
+
+        click.secho(formatted_error)
+
+    click.secho()
+    click.secho()
+    click.secho("\n Additional Information: ", bg="green", fg="white")
+    click.secho(f"This object has {len(linter.data['links'])} links", bold=True)
 
     click.secho()
 
@@ -225,10 +251,18 @@ def cli_message(linter: Linter) -> None:
     is_flag=True,
     help="Use pydantic validation (requires stac-pydantic to be installed).",
 )
+@click.option(
+    "--verbose",
+    "-v",
+    is_flag=True,
+    help="Enable verbose output.",
+)
 @click.command()
 @click.argument("file")
 @click.version_option(version=importlib.metadata.distribution("stac-check").version)
-def main(file, recursive, max_depth, assets, links, no_assets_urls, header, pydantic):
+def main(
+    file, recursive, max_depth, assets, links, no_assets_urls, header, pydantic, verbose
+):
     # Check if pydantic validation is requested but not installed
     if pydantic:
         try:
@@ -250,6 +284,7 @@ def main(file, recursive, max_depth, assets, links, no_assets_urls, header, pyda
         assets_open_urls=not no_assets_urls,
         headers=dict(header),
         pydantic=pydantic,
+        verbose=verbose,
     )
     intro_message(linter)
     if recursive > 0:

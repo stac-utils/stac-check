@@ -6,6 +6,18 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 
 ## Unreleased
 
+
+## [v1.9.0] - 2025-06-13
+
+### Added
+
+- Added support for --verbose flag to show verbose error messages ([#130](https://github.com/stac-utils/stac-check/pull/130))
+
+### Changed
+
+- Updated stac-validator to v3.9.0 ([#130](https://github.com/stac-utils/stac-check/pull/130))
+- Improved cli output, message formatting ([#130](https://github.com/stac-utils/stac-check/pull/130))
+
 ## [v1.8.0] - 2025-06-11
 
 ### Changed
@@ -240,7 +252,8 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 - Validation from stac-validator 2.3.0
 - Links and assets validation checks
 
-[Unreleased]: https://github.com/stac-utils/stac-check/compare/v1.8.0...main
+[Unreleased]: https://github.com/stac-utils/stac-check/compare/v1.9.0...main
+[v1.9.0]: https://github.com/stac-utils/stac-check/compare/v1.8.0...v1.9.0
 [v1.8.0]: https://github.com/stac-utils/stac-check/compare/v1.7.0...v1.8.0
 [v1.7.0]: https://github.com/stac-utils/stac-check/compare/v1.6.0...v1.7.0
 [v1.6.0]: https://github.com/stac-utils/stac-check/compare/v1.5.0...v1.6.0
