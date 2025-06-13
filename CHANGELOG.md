@@ -11,12 +11,12 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 
 ### Added
 
-- Added support for --verbose flag to show verbose error messages ([#130](https://github.com/stac-utils/stac-check/pull/130))
+- Added support for --verbose flag to show verbose error messages ([#132](https://github.com/stac-utils/stac-check/pull/132))
 
 ### Changed
 
-- Updated stac-validator to v3.9.0 ([#130](https://github.com/stac-utils/stac-check/pull/130))
-- Improved cli output, message formatting ([#130](https://github.com/stac-utils/stac-check/pull/130))
+- Updated stac-validator to v3.9.0 ([#132](https://github.com/stac-utils/stac-check/pull/132))
+- Improved cli output, message formatting ([#132](https://github.com/stac-utils/stac-check/pull/132))
 
 ## [v1.8.0] - 2025-06-11
 
