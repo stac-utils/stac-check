@@ -1,3 +1,40 @@
+def determine_asset_type(data):
+    """Determine the STAC asset type from the given data dictionary.
+
+    This function identifies the type of STAC object based on its structure and content.
+    It handles all STAC object types including Item, Collection, Catalog, and FeatureCollection.
+
+    Args:
+        data (dict): The STAC data dictionary
+
+    Returns:
+        str: The asset type in uppercase (e.g., 'ITEM', 'COLLECTION', 'FEATURECOLLECTION', 'CATALOG')
+             or an empty string if the type cannot be determined.
+    """
+    if not isinstance(data, dict):
+        return ""
+
+    # Check for STAC Item types
+    if data.get("type") == "Feature":
+        return "ITEM"
+    elif data.get("type") == "FeatureCollection":
+        return "FEATURECOLLECTION"
+    elif data.get("type") == "Collection":
+        return "COLLECTION"
+
+    # For STAC Catalog/Collection without explicit type or with older STAC versions
+    if "stac_version" in data and "id" in data:
+        if data.get("type") == "Catalog":
+            return "CATALOG"
+        # If type is not explicitly set, determine based on structure
+        if "extent" in data and "links" in data:
+            return "COLLECTION"
+        return "CATALOG"
+
+    # If we can't determine the type
+    return ""
+
+
 def format_verbose_error(error_data):
     """Format verbose error data into a human-readable string."""
     if not error_data or not isinstance(error_data, dict):
