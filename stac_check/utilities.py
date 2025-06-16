@@ -1,3 +1,27 @@
+def determine_asset_type(data):
+    """Determine the STAC asset type from the given data dictionary.
+
+    Args:
+        data (dict): The STAC data dictionary
+
+    Returns:
+        str: The asset type (e.g., 'ITEM', 'COLLECTION', 'FEATURECOLLECTION', 'CATALOG')
+    """
+    if not isinstance(data, dict):
+        return ""
+
+    if data.get("type") == "Feature":
+        return "ITEM"
+    elif data.get("type") == "FeatureCollection":
+        return "FEATURECOLLECTION"
+    elif data.get("type") == "Collection":
+        return "COLLECTION"
+    elif "stac_version" in data and "id" in data:
+        # This is likely a STAC Catalog or Collection
+        return "CATALOG" if data.get("type") == "Catalog" else ""
+    return ""
+
+
 def format_verbose_error(error_data):
     """Format verbose error data into a human-readable string."""
     if not error_data or not isinstance(error_data, dict):

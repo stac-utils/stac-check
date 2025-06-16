@@ -162,19 +162,19 @@ class Linter:
         self.message = self.validate_file(self.item)
         self.config = self.parse_config(self.config_file)
 
+        from .utilities import determine_asset_type
+
         # Set message fields using the get_message_field method
         self.asset_type = self.get_message_field("asset_type")
 
         # If asset_type is not in message, try to determine it from the data
         if self.asset_type == "" and isinstance(self.data, dict):
-            if self.data.get("type") == "Feature":
-                self.asset_type = "ITEM"
-            elif self.data.get("type") == "FeatureCollection":
-                self.asset_type = "FEATURECOLLECTION"
-            elif self.data.get("type") == "Collection":
-                self.asset_type = "COLLECTION"
-            elif "stac_version" in self.data and "id" in self.data:
-                # This is likely a STAC Catalog or Collection
+            self.asset_type = determine_asset_type(self.data)
+            if (
+                self.asset_type == ""
+                and "stac_version" in self.data
+                and "id" in self.data
+            ):
                 self.asset_type = (
                     "CATALOG" if "extent" not in self.data else "COLLECTION"
                 )
@@ -430,27 +430,6 @@ class Linter:
             The value of the field if it exists, otherwise an empty string.
         """
         return self.message.get(field_name, "")
-
-    # Backward compatibility methods
-    def check_error_type(self) -> str:
-        """Returns the error type from the validation message."""
-        return self.get_message_field("error_type")
-
-    def check_error_message(self) -> str:
-        """Returns the error message from the validation message."""
-        return self.get_message_field("error_message")
-
-    def check_failed_schema(self) -> str:
-        """Returns the failed schema from the validation message."""
-        return self.get_message_field("failed_schema")
-
-    def check_recommendation(self) -> str:
-        """Returns the recommendation from the validation message."""
-        return self.get_message_field("recommendation")
-
-    def check_verbose_error_message(self) -> str:
-        """Returns the verbose error message from the validation message."""
-        return self.get_message_field("error_verbose")
 
     def check_summaries(self) -> bool:
         """Check if a Collection asset has a "summaries" property.

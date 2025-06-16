@@ -75,7 +75,7 @@ def intro_message(linter: Linter) -> None:
     Returns:
         None.
     """
-    click.secho(logo)
+    click.secho(logo, bold=True, fg="bright_black")
 
     click.secho("stac-check: STAC spec validation and linting tool", bold=True)
 
@@ -85,8 +85,6 @@ def intro_message(linter: Linter) -> None:
         click.secho(linter.set_update_message(), fg="green")
     else:
         click.secho(linter.set_update_message(), fg="red")
-
-    # click.secho()
 
     click.secho(
         f"\n Validator: stac-validator {linter.validator_version}",
