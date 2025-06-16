@@ -167,17 +167,9 @@ class Linter:
         # Set message fields using the get_message_field method
         self.asset_type = self.get_message_field("asset_type")
 
-        # If asset_type is not in message, try to determine it from the data
+        # If asset_type is not in message, determine it from the data
         if self.asset_type == "" and isinstance(self.data, dict):
             self.asset_type = determine_asset_type(self.data)
-            if (
-                self.asset_type == ""
-                and "stac_version" in self.data
-                and "id" in self.data
-            ):
-                self.asset_type = (
-                    "CATALOG" if "extent" not in self.data else "COLLECTION"
-                )
 
         self.version = self.get_message_field("version")
         self.valid_stac = self.get_message_field("valid_stac")
