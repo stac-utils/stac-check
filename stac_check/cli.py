@@ -52,7 +52,7 @@ def recursive_message(linter: Linter) -> None:
             cli_message(recursive_linter)
         else:
             click.secho(f"Valid: {msg['valid_stac']}", fg="red")
-            click.secho("Schemas validated: ", fg="blue")
+            click.secho("Schemas checked: ", fg="blue")
             for schema in msg["schema"]:
                 click.secho(f"    {schema}")
             click.secho(f"Error Type: {msg['error_type']}", fg="red")
@@ -132,12 +132,12 @@ def cli_message(linter: Linter) -> None:
 
     # For Pydantic validation, always show the appropriate schema model
     if using_pydantic:
-        click.secho("Schemas validated: ", fg="blue")
+        click.secho("Schemas checked: ", fg="blue")
         asset_type = linter.asset_type.capitalize() if linter.asset_type else "Item"
         click.secho(f"    stac-pydantic {asset_type} model")
     # For JSONSchema validation or when schemas are available
     elif len(linter.schema) > 0:
-        click.secho("Schemas validated: ", fg="blue")
+        click.secho("Schemas checked: ", fg="blue")
         for schema in linter.schema:
             click.secho(f"    {schema}")
 
