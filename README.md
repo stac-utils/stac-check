@@ -121,6 +121,10 @@ The configuration file has three main sections:
 
 1. **linting**: Controls which general best practices checks are enabled
 2. **geometry_validation**: Controls geometry-specific validation checks [BETA]
+
+> **Note on Schema Validation**
+> Schema-based STAC validation may be incomplete and should only be considered as a first indicator of validity. For comprehensive validation, consider additional checks and context-specific validation.
+> See: [STAC Schema Validation Discussion](https://github.com/radiantearth/stac-spec/discussions/1242)
 3. **settings**: Configures thresholds for certain checks
 
 Here's an example of the configuration options:

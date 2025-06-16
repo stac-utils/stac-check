@@ -102,10 +102,10 @@ def test_linter_collection_no_summaries():
     assert linter.check_summaries() == False
     assert linter.best_practices_msg == [
         "STAC Best Practices: ",
-        "    Object should be called 'collection.json' not 'collection-no-summaries.json'",
+        "Object should be called 'collection.json' not 'collection-no-summaries.json'",
         "",
-        "    A STAC collection should contain a summaries field",
-        "    It is recommended to store information like eo:bands in summaries",
+        "A STAC collection should contain a summaries field",
+        "It is recommended to store information like eo:bands in summaries",
         "",
     ]
 

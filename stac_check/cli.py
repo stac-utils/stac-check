@@ -86,7 +86,7 @@ def intro_message(linter: Linter) -> None:
     else:
         click.secho(linter.set_update_message(), fg="red")
 
-    click.secho()
+    # click.secho()
 
     click.secho(
         f"\n Validator: stac-validator {linter.validator_version}",
@@ -99,8 +99,8 @@ def intro_message(linter: Linter) -> None:
     validation_method = (
         "Pydantic" if hasattr(linter, "pydantic") and linter.pydantic else "JSONSchema"
     )
-    click.secho()
-    click.secho(f"\n Validation method: {validation_method}", bg="black", fg="white")
+
+    click.secho(f"\n Validation method: {validation_method}", bg="cyan", fg="white")
 
     click.secho()
 
@@ -116,9 +116,13 @@ def cli_message(linter: Linter) -> None:
         None
     """
     if linter.valid_stac == True:
-        click.secho(f"Valid {linter.asset_type}: {linter.valid_stac}", fg="green")
+        click.secho(
+            f"{linter.asset_type} Passed: {linter.valid_stac}", fg="green", bold=True
+        )
     else:
-        click.secho(f"Valid {linter.asset_type}: {linter.valid_stac}", fg="red")
+        click.secho(
+            f"{linter.asset_type} Passed: {linter.valid_stac}", fg="red", bold=True
+        )
 
     """ schemas validated for core object """
     click.secho()
@@ -137,22 +141,32 @@ def cli_message(linter: Linter) -> None:
         for schema in linter.schema:
             click.secho(f"    {schema}")
 
+    click.secho()
+    if linter.failed_schema != "":
+        click.secho("Failed Schema: ", fg="blue")
+        click.secho(f"    {linter.failed_schema}")
+    click.secho()
+    if linter.recommendation != "":
+        click.secho("Recommendation: ", fg="blue")
+        click.secho(f"    {linter.recommendation}")
+
     """ best practices message"""
     click.secho()
     for message in linter.best_practices_msg:
         if message == linter.best_practices_msg[0]:
             click.secho("\n " + message, bg="blue")
+            click.secho()
         else:
-            click.secho(message, fg="red")
+            click.secho(message, fg="black")
 
     """ geometry validation errors """
     if linter.geometry_errors_msg:
-        click.secho()
         for message in linter.geometry_errors_msg:
             if message == linter.geometry_errors_msg[0]:
-                click.secho("\n " + message, bg="yellow", fg="black")
+                click.secho("\n " + message, bg="magenta", fg="black")
+                click.secho()
             else:
-                click.secho(message, fg="red")
+                click.secho(message, fg="black")
 
     if linter.validate_all == True:
         click.secho()
@@ -180,8 +194,8 @@ def cli_message(linter: Linter) -> None:
         link_asset_message(linter.invalid_link_request, "link", "request", True)
 
     if linter.error_type != "":
-        click.secho()
         click.secho("\n Validation Errors: ", fg="white", bold=True, bg="black")
+        click.secho()
         click.secho("Validation error type: ", fg="red")
         click.secho(f"    {linter.error_type}")
         click.secho()
@@ -193,12 +207,10 @@ def cli_message(linter: Linter) -> None:
 
     if linter.error_msg != "" and linter.verbose_error_msg == "":
         click.secho("Refer to --verbose for more details.", fg="blue")
-        click.secho()
 
     if linter.verbose_error_msg:
+        click.secho("\n Verbose Validation Output: ", fg="white", bg="cyan")
         click.secho()
-        click.secho("\n Verbose Validation Output: ", fg="white", bg="red")
-
         if isinstance(linter.verbose_error_msg, dict):
             formatted_error = format_verbose_error(linter.verbose_error_msg)
         else:
@@ -207,9 +219,15 @@ def cli_message(linter: Linter) -> None:
         click.secho(formatted_error)
 
     click.secho()
-    click.secho()
     click.secho("\n Additional Information: ", bg="green", fg="white")
+    click.secho()
     click.secho(f"This object has {len(linter.data['links'])} links", bold=True)
+
+    if not using_pydantic:
+        click.secho()
+        click.secho(
+            "Disclaimer: Schema-based STAC validation may be incomplete and should only be considered as a first indicator of validity.\nSee: https://github.com/radiantearth/stac-spec/discussions/1242"
+        )
 
     click.secho()
 

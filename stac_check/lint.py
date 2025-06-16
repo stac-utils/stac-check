@@ -161,18 +161,38 @@ class Linter:
         self.data = self.load_data(self.item)
         self.message = self.validate_file(self.item)
         self.config = self.parse_config(self.config_file)
-        self.asset_type = (
-            self.message["asset_type"] if "asset_type" in self.message else ""
-        )
-        self.version = self.message["version"] if "version" in self.message else ""
+
+        # Set message fields using the get_message_field method
+        self.asset_type = self.get_message_field("asset_type")
+
+        # If asset_type is not in message, try to determine it from the data
+        if self.asset_type == "" and isinstance(self.data, dict):
+            if self.data.get("type") == "Feature":
+                self.asset_type = "ITEM"
+            elif self.data.get("type") == "FeatureCollection":
+                self.asset_type = "FEATURECOLLECTION"
+            elif self.data.get("type") == "Collection":
+                self.asset_type = "COLLECTION"
+            elif "stac_version" in self.data and "id" in self.data:
+                # This is likely a STAC Catalog or Collection
+                self.asset_type = (
+                    "CATALOG" if "extent" not in self.data else "COLLECTION"
+                )
+
+        self.version = self.get_message_field("version")
+        self.valid_stac = self.get_message_field("valid_stac")
+
         self.validator_version = importlib.metadata.distribution(
             "stac-validator"
         ).version
         self.validate_all = self.recursive_validation(self.item)
-        self.valid_stac = self.message["valid_stac"]
-        self.error_type = self.check_error_type()
-        self.error_msg = self.check_error_message()
-        self.verbose_error_msg = self.check_verbose_error_message()
+
+        # Set error and info fields
+        self.error_type = self.get_message_field("error_type")
+        self.error_msg = self.get_message_field("error_message")
+        self.failed_schema = self.get_message_field("failed_schema")
+        self.recommendation = self.get_message_field("recommendation")
+        self.verbose_error_msg = self.get_message_field("error_verbose")
         self.invalid_asset_format = (
             self.check_links_assets(10, "assets", "format") if self.assets else None
         )
@@ -325,8 +345,7 @@ class Linter:
         else:
             raise ValueError("Input must be a file path or STAC dictionary.")
 
-        message = stac.message[0]
-        return message
+        return stac.message[0]
 
     def recursive_validation(self, file: Union[str, Dict[str, Any]]) -> str:
         """Recursively validate a STAC item or catalog file and its child items.
@@ -401,40 +420,37 @@ class Linter:
                     return links
         return links
 
-    def check_error_type(self) -> str:
-        """Returns the error type of a STAC validation if it exists in the validation message,
-        and an empty string otherwise.
+    def get_message_field(self, field_name: str) -> str:
+        """Get a field from the validation message.
+
+        Args:
+            field_name: The name of the field to retrieve (e.g., 'error_type', 'error_message')
 
         Returns:
-            str: A string containing the error type of a STAC validation if it exists in the validation message, and an
-            empty string otherwise.
+            The value of the field if it exists, otherwise an empty string.
         """
-        if "error_type" in self.message:
-            return self.message["error_type"]
-        else:
-            return ""
+        return self.message.get(field_name, "")
+
+    # Backward compatibility methods
+    def check_error_type(self) -> str:
+        """Returns the error type from the validation message."""
+        return self.get_message_field("error_type")
 
     def check_error_message(self) -> str:
-        """Checks whether the `message` attribute contains an `error_message` field.
+        """Returns the error message from the validation message."""
+        return self.get_message_field("error_message")
 
-        Returns:
-            A string containing the value of the `error_message` field, or an empty string if the field is not present.
-        """
-        if "error_message" in self.message:
-            return self.message["error_message"]
-        else:
-            return ""
+    def check_failed_schema(self) -> str:
+        """Returns the failed schema from the validation message."""
+        return self.get_message_field("failed_schema")
+
+    def check_recommendation(self) -> str:
+        """Returns the recommendation from the validation message."""
+        return self.get_message_field("recommendation")
 
     def check_verbose_error_message(self) -> str:
-        """Checks whether the `message` attribute contains an `verbose_error_message` field.
-
-        Returns:
-            A string containing the value of the `verbose_error_message` field, or an empty string if the field is not present.
-        """
-        if "error_verbose" in self.message:
-            return self.message["error_verbose"]
-        else:
-            return ""
+        """Returns the verbose error message from the validation message."""
+        return self.get_message_field("error_verbose")
 
     def check_summaries(self) -> bool:
         """Check if a Collection asset has a "summaries" property.
@@ -1080,7 +1096,7 @@ class Linter:
 
         for _, v in filtered_dict.items():
             for value in v:
-                best_practices.extend(["    " + value])
+                best_practices.extend([value])
             best_practices.extend([""])
 
         return best_practices
@@ -1124,7 +1140,7 @@ class Linter:
 
         for _, v in geometry_dict.items():
             for value in v:
-                geometry_errors.extend(["    " + value])
+                geometry_errors.extend([value])
             geometry_errors.extend([""])
 
         return geometry_errors

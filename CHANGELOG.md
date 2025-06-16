@@ -6,6 +6,15 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 
 ## Unreleased
 
+### Added
+
+- Added display of failed schema information in the validation output
+- Added recommendation messages to guide users when validation fails
+- Added disclaimer about schema-based STAC validation being an initial indicator of validity only
+
+### Changed
+
+- Updated validation output to show "Passed" instead of "Valid" for accuracy
 
 ## [v1.9.0] - 2025-06-13
 
