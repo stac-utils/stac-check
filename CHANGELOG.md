@@ -8,6 +8,7 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 
 ### Changed
 
+- Refactored display messages into a dedicated module for better code organization and maintainability ([#136](https://github.com/stac-utils/stac-check/pull/136))
 - Organized test files, added v1.0.0 recursion test ([#136](https://github.com/stac-utils/stac-check/pull/136))
 
 ## [v1.9.1] - 2025-06-16
