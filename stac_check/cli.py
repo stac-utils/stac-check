@@ -232,6 +232,11 @@ def cli_message(linter: Linter) -> None:
 
 
 @click.option(
+    "--item-collection",
+    is_flag=True,
+    help="Validate the input as a STAC Item Collection.",
+)
+@click.option(
     "--recursive",
     "-r",
     is_flag=True,
@@ -275,7 +280,16 @@ def cli_message(linter: Linter) -> None:
 @click.argument("file")
 @click.version_option(version=importlib.metadata.distribution("stac-check").version)
 def main(
-    file, recursive, max_depth, assets, links, no_assets_urls, header, pydantic, verbose
+    file,
+    item_collection,
+    recursive,
+    max_depth,
+    assets,
+    links,
+    no_assets_urls,
+    header,
+    pydantic,
+    verbose,
 ):
     # Check if pydantic validation is requested but not installed
     if pydantic:
@@ -299,6 +313,7 @@ def main(
         headers=dict(header),
         pydantic=pydantic,
         verbose=verbose,
+        item_collection=item_collection,
     )
     intro_message(linter)
     if recursive > 0:

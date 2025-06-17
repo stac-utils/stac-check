@@ -141,6 +141,7 @@ class Linter:
     headers: Dict = field(default_factory=dict)
     pydantic: bool = False
     verbose: bool = False
+    item_collection: bool = False
 
     def __post_init__(self):
         # Check if pydantic validation is requested but not installed
@@ -315,6 +316,7 @@ class Linter:
                 headers=self.headers,
                 pydantic=self.pydantic,
                 verbose=self.verbose,
+                item_collection=self.item_collection,
             )
             stac.run()
         elif isinstance(file, str):
@@ -325,6 +327,7 @@ class Linter:
                 assets_open_urls=self.assets_open_urls,
                 headers=self.headers,
                 pydantic=self.pydantic,
+                item_collection=self.item_collection,
             )
             stac.run()
         elif isinstance(file, dict):
@@ -332,6 +335,7 @@ class Linter:
                 assets_open_urls=self.assets_open_urls,
                 headers=self.headers,
                 pydantic=self.pydantic,
+                item_collection=self.item_collection,
             )
             stac.validate_dict(file)
         else:
