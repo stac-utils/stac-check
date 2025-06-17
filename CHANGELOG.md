@@ -6,6 +6,10 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 
 ## Unreleased
 
+### Changed
+
+- Organized test files, added v1.0.0 recursion test ([#136](https://github.com/stac-utils/stac-check/pull/136))
+
 ## [v1.9.1] - 2025-06-16
 
 ### Added

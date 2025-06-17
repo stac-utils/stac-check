@@ -43,9 +43,7 @@ def recursive_message(linter: Linter) -> None:
     click.secho(f"Max-depth = {linter.max_depth}")
     click.secho("-------------------------")
     for count, msg in enumerate(linter.validate_all):
-        click.secho(
-            f"Asset {count + 1} Validated: {msg['path']}", bg="white", fg="black"
-        )
+        click.secho(f"Asset {count + 1}: {msg['path']}", bg="white", fg="black")
         click.secho()
         if msg["valid_stac"] == True:
             recursive_linter = Linter(msg["path"], recursive=True)
