@@ -209,6 +209,7 @@ def _display_disclaimer() -> None:
         "Disclaimer: Schema-based STAC validation may be incomplete and should only be considered as a first indicator of validity.\n"
         "See: https://github.com/radiantearth/stac-spec/discussions/1242"
     )
+    click.secho()
 
 
 def recursive_message(linter: Linter, cli_message_func=None) -> None:
@@ -281,7 +282,7 @@ def intro_message(linter: Linter) -> None:
     Returns:
         None.
     """
-    click.secho(logo, bold=True, fg="bright_green")
+    click.secho(logo, fg="white")
 
     click.secho("stac-check: STAC spec validation and linting tool", bold=True)
 
