@@ -10,7 +10,13 @@ from stac_check.lint import Linter
 @click.option(
     "--item-collection",
     is_flag=True,
-    help="Validate the input as a STAC Item Collection.",
+    help="Validate item collection response. Can be combined with --pages. Defaults to one page.",
+)
+@click.option(
+    "--pages",
+    "-p",
+    type=int,
+    help="Maximum number of pages to validate via --item-collection. Defaults to one page.",
 )
 @click.option(
     "--recursive",
@@ -58,6 +64,7 @@ from stac_check.lint import Linter
 def main(
     file,
     item_collection,
+    pages,
     recursive,
     max_depth,
     assets,
@@ -90,6 +97,7 @@ def main(
         pydantic=pydantic,
         verbose=verbose,
         item_collection=item_collection,
+        pages=pages,
     )
 
     # Display the intro message
@@ -99,6 +107,8 @@ def main(
     if recursive:
         # Pass the cli_message function to avoid circular imports
         recursive_message(linter, cli_message_func=cli_message)
+    # elif item_collection:
+    #     item_collection_message(linter)
     else:
         # Otherwise, just display the standard CLI message
         cli_message(linter)

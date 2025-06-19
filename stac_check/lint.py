@@ -29,6 +29,8 @@ class Linter:
         headers (dict): HTTP headers to include in the requests.
         pydantic (bool, optional): A boolean value indicating whether to use pydantic validation. Defaults to False.
         verbose (bool, optional): A boolean value indicating whether to enable verbose output. Defaults to False.
+        item_collection (bool, optional): A boolean value indicating whether to validate an item collection. Defaults to False.
+        pages (Optional[int], optional): An optional integer indicating the maximum number of item collection pages to validate. Defaults to one.
 
     Attributes:
         data (dict): A dictionary representing the STAC JSON file.
@@ -142,6 +144,7 @@ class Linter:
     pydantic: bool = False
     verbose: bool = False
     item_collection: bool = False
+    pages: Optional[int] = 1
 
     def __post_init__(self):
         # Check if pydantic validation is requested but not installed
@@ -307,29 +310,22 @@ class Linter:
         Raises:
             ValueError: If `file` is not a valid file path or STAC dictionary.
         """
-        if isinstance(file, str) and self.verbose:
+        if isinstance(file, str):
             stac = StacValidate(
                 file,
                 links=self.links,
                 assets=self.assets,
                 assets_open_urls=self.assets_open_urls,
                 headers=self.headers,
+                pages=self.pages,
                 pydantic=self.pydantic,
                 verbose=self.verbose,
                 item_collection=self.item_collection,
             )
-            stac.run()
-        elif isinstance(file, str):
-            stac = StacValidate(
-                file,
-                links=self.links,
-                assets=self.assets,
-                assets_open_urls=self.assets_open_urls,
-                headers=self.headers,
-                pydantic=self.pydantic,
-                item_collection=self.item_collection,
-            )
-            stac.run()
+            if self.item_collection:
+                stac.validate_item_collection()
+            else:
+                stac.run()
         elif isinstance(file, dict):
             stac = StacValidate(
                 assets_open_urls=self.assets_open_urls,
