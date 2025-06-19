@@ -6,6 +6,7 @@ import click
 from stac_check.api_lint import ApiLinter
 from stac_check.display_messages import (
     cli_message,
+    collections_message,
     intro_message,
     item_collection_message,
     recursive_message,
@@ -13,6 +14,11 @@ from stac_check.display_messages import (
 from stac_check.lint import Linter
 
 
+@click.option(
+    "--collections",
+    is_flag=True,
+    help="Validate collections endpoint response. Can be combined with --pages. Defaults to one page.",
+)
 @click.option(
     "--item-collection",
     is_flag=True,
@@ -69,6 +75,7 @@ from stac_check.lint import Linter
 @click.version_option(version=importlib.metadata.distribution("stac-check").version)
 def main(
     file,
+    collections,
     item_collection,
     pages,
     recursive,
@@ -102,7 +109,6 @@ def main(
         headers=dict(header),
         pydantic=pydantic,
         verbose=verbose,
-        item_collection=item_collection,
         pages=pages,
     )
 
@@ -113,7 +119,22 @@ def main(
     if recursive:
         # Pass the cli_message function to avoid circular imports
         recursive_message(linter, cli_message_func=cli_message)
+    elif collections:
+        # Create an ApiLinter for collections endpoint
+        linter = ApiLinter(
+            source=file,
+            object_list_key="collections",  # Collections endpoint uses 'collections' key
+            id_key="id",
+            pages=pages,
+            headers=dict(header),
+        )
+        results = linter.lint_all()
+        collections_message(linter, results=results, cli_message_func=cli_message)
+        # Exit code: 0 if all collections valid, 1 if any invalid
+        all_valid = all(msg.get("valid_stac") is True for msg in results)
+        sys.exit(0 if all_valid else 1)
     elif item_collection:
+        # Create an ApiLinter for item collection endpoint
         linter = ApiLinter(
             source=file,
             object_list_key="features",

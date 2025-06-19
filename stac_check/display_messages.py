@@ -12,6 +12,7 @@ __all__ = [
     "intro_message",
     "recursive_message",
     "item_collection_message",
+    "collections_message",
     "link_asset_message",
 ]
 
@@ -384,6 +385,49 @@ def _display_fallback_message(
                 click.secho(error, fg="black")
 
     click.secho("-------------------------")
+
+
+def collections_message(
+    linter: ApiLinter,
+    results: Optional[List[Dict[str, Any]]] = None,
+    cli_message_func: Optional[Callable[[Linter], None]] = None,
+) -> None:
+    """Displays messages related to the validation of STAC collections from a collections endpoint.
+
+    This function processes validation results from an ApiLinter targeting a collections endpoint
+    and displays them in a consistent format. For each collection, it attempts to create a Linter
+    instance from the original object data and use cli_message_func for display. If that fails, it
+    falls back to a simpler display using _display_fallback_message.
+
+    The function handles both valid and invalid STAC collections consistently, ensuring that
+    error information, best practices, and other details are displayed appropriately.
+
+    Args:
+        linter: An instance of the ApiLinter class that performed the validation.
+        results: Optional pre-computed lint results. If None, will call linter.lint_all().
+        cli_message_func: The cli_message function to use for collection validation.
+                         If None, will use the default cli_message from this module.
+
+    Returns:
+        None.
+    """
+    if results is None:
+        results = linter.lint_all()
+
+    # Define a function to create Linter instances from API results
+    def create_collection_linter(msg):
+        if msg.get("original_object"):
+            return Linter(msg.get("original_object"))
+        raise ValueError("No original object available")
+
+    # Display the results using the shared helper
+    _display_validation_results(
+        results=results,
+        title="Collections: Validate all collections in a STAC API",
+        metadata={"Pages": linter.pages},
+        cli_message_func=cli_message_func,
+        create_linter_func=create_collection_linter,
+    )
 
 
 def recursive_message(
