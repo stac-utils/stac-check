@@ -1,5 +1,8 @@
+from typing import Any, Callable, Dict, List, Optional
+
 import click
 
+from stac_check.api_lint import ApiLinter
 from stac_check.lint import Linter
 from stac_check.logo import logo
 from stac_check.utilities import format_verbose_error
@@ -8,6 +11,7 @@ __all__ = [
     "cli_message",
     "intro_message",
     "recursive_message",
+    "item_collection_message",
     "link_asset_message",
 ]
 
@@ -212,46 +216,222 @@ def _display_disclaimer() -> None:
     click.secho()
 
 
-def recursive_message(linter: Linter, cli_message_func=None) -> None:
-    """Displays messages related to the recursive validation of assets in a collection or catalog.
+def _display_validation_results(
+    results: List[Dict[str, Any]],
+    title: str,
+    metadata: Optional[Dict[str, Any]] = None,
+    cli_message_func: Optional[Callable[[Linter], None]] = None,
+    create_linter_func: Optional[Callable[[Dict[str, Any]], Linter]] = None,
+) -> None:
+    """Shared helper function to display validation results consistently.
+
+    This function handles the common logic for displaying validation results from
+    different sources (item collections, recursive validation, collections, etc.).
+    It displays a header with metadata, iterates through results, and attempts to
+    create Linter instances for consistent display.
 
     Args:
-        linter: An instance of the Linter class.
+        results: List of validation result dictionaries to display
+        title: Title to display at the top of the results
+        metadata: Optional dictionary of metadata to display (e.g., pages, max-depth)
+        cli_message_func: Function to use for displaying validation messages
+        create_linter_func: Function to create a Linter instance from a result item
+                           Should take a result dict and return a Linter instance
+
+    Returns:
+        None
+    """
+    if cli_message_func is None:
+        cli_message_func = cli_message
+
+    click.secho()
+    click.secho(title, bold=True)
+
+    # Display any metadata provided
+    if metadata:
+        for key, value in metadata.items():
+            click.secho(f"{key} = {value}")
+
+    click.secho("-------------------------")
+
+    for count, msg in enumerate(results):
+        # Get the path or use a fallback
+        path = msg.get("path", f"(unknown-{count + 1})")
+        click.secho(f"\n Asset {count + 1}: {path}", bg="white", fg="black")
+        click.secho()
+
+        try:
+            # Try to create a Linter instance using the provided function
+            if create_linter_func:
+                item_linter = create_linter_func(msg)
+
+                # Set validation status and error info for invalid items
+                if not msg.get("valid_stac", True):
+                    item_linter.valid_stac = False
+                    item_linter.error_type = msg.get("error_type")
+                    item_linter.error_msg = msg.get("error_message")
+
+                # Display using the provided message function
+                cli_message_func(item_linter)
+            else:
+                # No linter creation function provided, use fallback
+                _display_fallback_message(msg)
+        except Exception as e:
+            # Fall back to basic display if creating the Linter fails
+            _display_fallback_message(msg, e)
+
+        click.secho("-------------------------")
+
+
+def item_collection_message(
+    linter: ApiLinter,
+    results: Optional[List[Dict[str, Any]]] = None,
+    cli_message_func: Optional[Callable[[Linter], None]] = None,
+) -> None:
+    """Displays messages related to the validation of assets in a feature collection.
+
+    This function processes validation results from an ApiLinter and displays them in a
+    consistent format. For each item in the collection, it attempts to create a Linter
+    instance from the original object data and use cli_message_func for display. If that
+    fails, it falls back to a simpler display using _display_fallback_message.
+
+    The function handles both valid and invalid STAC items consistently, ensuring that
+    error information, best practices, and geometry errors are displayed appropriately.
+
+    Args:
+        linter: An instance of the ApiLinter class that performed the validation.
+        results: Optional pre-computed lint results. If None, will call linter.lint_all().
+        cli_message_func: The cli_message function to use for item validation.
+                         If None, will use the default cli_message from this module.
+
+    Returns:
+        None.
+    """
+    if results is None:
+        results = linter.lint_all()
+
+    # Define a function to create Linter instances from API results
+    def create_api_linter(msg):
+        if msg.get("original_object"):
+            return Linter(msg.get("original_object"))
+        raise ValueError("No original object available")
+
+    # Display the results using the shared helper
+    _display_validation_results(
+        results=results,
+        title="Item Collection: Validate all assets in a feature collection",
+        metadata={"Pages": linter.pages},
+        cli_message_func=cli_message_func,
+        create_linter_func=create_api_linter,
+    )
+
+
+def _display_fallback_message(
+    msg: Dict[str, Any], error: Optional[Exception] = None
+) -> None:
+    """Display a fallback message when a Linter instance cannot be created.
+
+    This function provides a consistent way to display validation results when
+    a proper Linter instance cannot be created. It shows validation status,
+    schemas checked, error information, best practices, and geometry errors
+    directly from the message dictionary.
+
+    Args:
+        msg: The message dictionary from ApiLinter results containing validation info
+        error: Optional exception that occurred when trying to create a Linter
+    """
+    status_color = "green" if msg.get("valid_stac") else "red"
+    click.secho(f"Valid: {msg.get('valid_stac')}", fg=status_color)
+
+    click.secho("Schemas checked: ", fg="blue")
+    for schema in msg.get("schema", []):
+        click.secho(f"    {schema}")
+
+    if not msg.get("valid_stac"):
+        if msg.get("error_type"):
+            click.secho("\nValidation error type: ", fg="red")
+            click.secho(f"    {msg.get('error_type')}")
+
+        if msg.get("error_message"):
+            click.secho("\nValidation error message: ", fg="red")
+            click.secho(f"    {msg.get('error_message')}")
+
+    # Display error information if provided
+    if error:
+        click.secho(
+            f"\nNote: Could not display detailed information. Error: {str(error)}",
+            fg="yellow",
+        )
+
+    # Display best practices
+    bp = msg.get("best_practices", [])
+    if bp and len(bp) > 0:
+        click.secho()
+        click.secho("\n STAC Best Practices: ", bg="blue")
+        click.secho()
+        for practice in bp:
+            if practice:  # Skip empty strings
+                click.secho(practice, fg="black")
+
+    # Display geometry errors
+    geo = msg.get("geometry_errors", [])
+    if geo and len(geo) > 0:
+        click.secho()
+        click.secho("\n Geometry Validation Errors [BETA]: ", bg="magenta", fg="black")
+        click.secho()
+        for error in geo:
+            if error:  # Skip empty strings
+                click.secho(error, fg="black")
+
+    click.secho("-------------------------")
+
+
+def recursive_message(
+    linter: Linter, cli_message_func: Optional[Callable[[Linter], None]] = None
+) -> None:
+    """Displays messages related to the recursive validation of assets in a collection or catalog.
+
+    This function processes recursive validation results from a Linter and displays them in a
+    consistent format. For each asset in the collection or catalog, it attempts to create a new
+    Linter instance and use cli_message_func for display. If that fails, it falls back to a
+    simpler display using _display_fallback_message.
+
+    The function handles both valid and invalid STAC objects consistently, ensuring that
+    error information is displayed appropriately for invalid items.
+
+    Args:
+        linter: An instance of the Linter class with recursive validation results.
         cli_message_func: The cli_message function to use for recursive validation.
                          If None, will use the default cli_message from this module.
 
     Returns:
         None.
     """
-    if cli_message_func is None:
-        cli_message_func = cli_message
 
-    click.secho()
-    click.secho("Recursive: Validate all assets in a collection or catalog", bold=True)
-    click.secho(f"Max-depth = {linter.max_depth}")
-    click.secho("-------------------------")
-    for count, msg in enumerate(linter.validate_all):
-        click.secho(f"Asset {count + 1}: {msg['path']}", bg="white", fg="black")
-        click.secho()
-        if msg["valid_stac"] == True:
-            recursive_linter = Linter(msg["path"], recursive=True)
-            cli_message_func(recursive_linter)
-        else:
-            click.secho(f"Valid: {msg['valid_stac']}", fg="red")
-            click.secho("Schemas checked: ", fg="blue")
-            for schema in msg["schema"]:
-                click.secho(f"    {schema}")
-            click.secho(f"Error Type: {msg['error_type']}", fg="red")
-            click.secho(f"Error Message: {msg['error_message']}", fg="red")
-        click.secho("-------------------------")
+    # Define a function to create Linter instances from recursive results
+    def create_recursive_linter(msg):
+        return Linter(msg["path"], recursive=True)
+
+    # Display the results using the shared helper
+    _display_validation_results(
+        results=linter.validate_all,
+        title="Recursive: Validate all assets in a collection or catalog",
+        metadata={"Max-depth": linter.max_depth},
+        cli_message_func=cli_message_func,
+        create_linter_func=create_recursive_linter,
+    )
 
 
 def cli_message(linter: Linter) -> None:
     """Prints various messages about the STAC object being validated.
 
+    This function orchestrates the display of all validation information by calling
+    multiple helper display functions in sequence. It shows validation status,
+    schemas checked, errors, best practices, geometry errors, and other information.
+
     Args:
         linter: The `Linter` object containing information about
-        the STAC object to be validated.
+            the STAC object to be validated.
     """
     _display_validation_status(linter)
     _display_schemas(linter)

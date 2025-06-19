@@ -3,7 +3,13 @@ import sys
 
 import click
 
-from stac_check.display_messages import cli_message, intro_message, recursive_message
+from stac_check.api_lint import ApiLinter
+from stac_check.display_messages import (
+    cli_message,
+    intro_message,
+    item_collection_message,
+    recursive_message,
+)
 from stac_check.lint import Linter
 
 
@@ -107,11 +113,20 @@ def main(
     if recursive:
         # Pass the cli_message function to avoid circular imports
         recursive_message(linter, cli_message_func=cli_message)
-    # elif item_collection:
-    #     item_collection_message(linter)
+    elif item_collection:
+        linter = ApiLinter(
+            source=file,
+            object_list_key="features",
+            id_key="id",
+            pages=pages,
+            headers=dict(header),
+        )
+        results = linter.lint_all()
+        item_collection_message(linter, results=results, cli_message_func=cli_message)
+        # Exit code: 0 if all items valid, 1 if any invalid
+        all_valid = all(msg.get("valid_stac") is True for msg in results)
+        sys.exit(0 if all_valid else 1)
     else:
         # Otherwise, just display the standard CLI message
         cli_message(linter)
-
-    # Exit with appropriate status code
-    sys.exit(0 if linter.valid_stac else 1)
+        sys.exit(0 if linter.valid_stac else 1)

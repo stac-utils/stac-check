@@ -1089,7 +1089,7 @@ class Linter:
             return []  # Geometry validation is disabled
 
         geometry_errors = list()
-        base_string = "Geometry Validation Errors [BETA]: "
+        base_string = "Geometry Validation [BETA]: "
         geometry_errors.append(base_string)
 
         best_practices_dict = self.create_best_practices_dict()
