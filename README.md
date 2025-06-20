@@ -35,6 +35,7 @@ The intent of this project is to provide a validation tool that also follows the
   - [Link and Asset Validation](#link-and-asset-validation)
   - [Invalid STAC](#invalid-stac)
   - [Using HTTP Headers](#using-http-headers)
+  - [STAC API Validation](#stac-api-validation)
 - [Development](#development)
 - [Sponsors and Supporters](#sponsors-and-supporters)
 - [Contributing](#contributing)
@@ -110,6 +111,12 @@ Options:
                            multiple times.
   --pydantic               Use stac-pydantic for enhanced validation with Pydantic models.
   --verbose                Show verbose error messages.
+  --item-collection        Validate item collection response. Can be combined with
+                           --pages. Defaults to one page.
+  --collections            Validate collections endpoint response. Can be combined with
+                           --pages. Defaults to one page.
+  -p, --pages INTEGER      Maximum number of pages to validate via --item-collection
+                           or --collections. Defaults to one page.
   --help                   Show this message and exit.
 ```
 
@@ -221,7 +228,7 @@ stac-check sample_files/0.9.0/landsat8-sample.json
 
 Please upgrade from version 0.9.0 to version 1.1.0!
 
-Validator: stac-validator 3.5.0
+Validator: stac-validator 3.9.1
 
 Valid ITEM: True
 
@@ -253,7 +260,7 @@ stac-check https://raw.githubusercontent.com/stac-utils/pystac/main/tests/data-f
 
 Please upgrade from version 0.9.0 to version 1.1.0!
 
-Validator: stac-validator 3.5.0
+Validator: stac-validator 3.9.1
 
 
 Recursive: Validate all assets in a collection or catalog
@@ -299,7 +306,7 @@ stac-check sample_files/1.0.0/core-item.json --assets
 
 Please upgrade from version 1.0.0 to version 1.1.0!
 
-Validator: stac-validator 3.5.0
+Validator: stac-validator 3.9.1
 
 Valid ITEM: True
 
@@ -337,7 +344,7 @@ stac-check sample_files/1.0.0/core-item-bad-links.json --links --assets
 
 Please upgrade from version 1.0.0 to version 1.1.0!
 
-Validator: stac-validator 3.5.0
+Validator: stac-validator 3.9.1
 
 Valid ITEM: True
 
@@ -384,7 +391,7 @@ stac-check sample_files/0.9.0/bad-item.json
 
 Please upgrade from version 0.9.0 to version 1.1.0!
 
-Validator: stac-validator 3.5.0
+Validator: stac-validator 3.9.1
 
 Valid : False
 
@@ -413,7 +420,7 @@ stac-check https://stac-catalog.eu/collections/sentinel-s2-l2a/items/item1 --ass
 
 Please upgrade from version 1.0.0 to version 1.1.0!
 
-Validator: stac-validator 3.5.0
+Validator: stac-validator 3.9.1
 
 Valid ITEM: True
 
@@ -429,6 +436,73 @@ STAC Best Practices:
 No ASSET format errors!
 
 This object has 4 links
+</pre>
+
+### STAC API Validation
+
+stac-check can validate STAC API endpoints, including item collections and collections endpoints. It supports pagination and can validate multiple pages of results.
+
+**Validating an Item Collection Endpoint:**
+
+```bash
+stac-check https://stac.geobon.org/collections/chelsa-clim/items --item-collection
+```
+
+<pre><b>stac-check: STAC spec validation and linting tool</b>
+
+Validator: stac-validator 3.9.1
+
+Item Collection: Validate all assets in a feature collection
+Pages = 1
+
+Valid ITEM: True
+
+Schemas validated:
+    https://schemas.stacspec.org/v1.0.0/item-spec/json-schema/item.json
+
+This object has 10 items
+</pre>
+
+**Validating Multiple Pages of an Item Collection:**
+
+```bash
+stac-check https://stac.geobon.org/collections/chelsa-clim/items --item-collection --pages 3
+```
+
+<pre><b>stac-check: STAC spec validation and linting tool</b>
+
+Validator: stac-validator 3.9.1
+
+Item Collection: Validate all assets in a feature collection
+Pages = 3
+
+Valid ITEM: True
+
+Schemas validated:
+    https://schemas.stacspec.org/v1.0.0/item-spec/json-schema/item.json
+
+This object has 30 items
+</pre>
+
+**Validating a Collections Endpoint:**
+
+```bash
+stac-check https://stac.geobon.org/collections --collections
+```
+
+<pre><b>stac-check: STAC spec validation and linting tool</b>
+
+Validator: stac-validator 3.9.1
+
+Collections: Validate all collections in a STAC API
+Pages = 1
+
+Valid COLLECTION: True
+
+Schemas validated:
+    https://schemas.stacspec.org/v1.0.0/collection-spec/json-schema/collection.json
+
+This object has 5 collections
 </pre>
 
 ## Development
