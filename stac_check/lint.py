@@ -375,7 +375,9 @@ class Linter:
         Returns:
             A string containing a message for users to update their STAC version.
         """
-        if self.version != "1.1.0":
+        if not self.version:
+            return "Please upgrade to STAC version 1.1.0!"
+        elif self.version != "1.1.0":
             return f"Please upgrade from version {self.version} to version 1.1.0!"
         else:
             return "Thanks for using STAC version 1.1.0!"

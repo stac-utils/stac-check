@@ -6,6 +6,14 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 
 ## Unreleased
 
+### Added
+
+- Created api_lint.py module to handle API linting ([#136](https://github.com/stac-utils/stac-check/pull/136))
+- Added support for --item-collection flag to validate item collection responses ([#136](https://github.com/stac-utils/stac-check/pull/136))
+- Added support for --collections flag to validate collections responses ([#136](https://github.com/stac-utils/stac-check/pull/136))
+- Added support for --pages flag to limit the number of pages to validate ([#136](https://github.com/stac-utils/stac-check/pull/136))
+
+
 ### Changed
 
 - Refactored display messages into a dedicated module for better code organization and maintainability ([#136](https://github.com/stac-utils/stac-check/pull/136))

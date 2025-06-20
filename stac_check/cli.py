@@ -28,7 +28,7 @@ from stac_check.lint import Linter
     "--pages",
     "-p",
     type=int,
-    help="Maximum number of pages to validate via --item-collection. Defaults to one page.",
+    help="Maximum number of pages to validate via --item-collection or --collections. Defaults to one page.",
 )
 @click.option(
     "--recursive",
@@ -99,55 +99,51 @@ def main(
             )
             pydantic = False
 
-    linter = Linter(
-        file,
-        assets=assets,
-        links=links,
-        recursive=recursive,
-        max_depth=max_depth,
-        assets_open_urls=not no_assets_urls,
-        headers=dict(header),
-        pydantic=pydantic,
-        verbose=verbose,
-        pages=pages,
-    )
-
-    # Display the intro message
-    intro_message(linter)
-
-    # If recursive validation is enabled, use recursive_message
-    if recursive:
-        # Pass the cli_message function to avoid circular imports
-        recursive_message(linter, cli_message_func=cli_message)
-    elif collections:
-        # Create an ApiLinter for collections endpoint
-        linter = ApiLinter(
-            source=file,
-            object_list_key="collections",  # Collections endpoint uses 'collections' key
-            id_key="id",
-            pages=pages,
+    if not collections and not item_collection:
+        # Create a standard Linter for single file or recursive validation
+        linter = Linter(
+            file,
+            assets=assets,
+            links=links,
+            recursive=recursive,
+            max_depth=max_depth,
+            assets_open_urls=not no_assets_urls,
             headers=dict(header),
-        )
-        results = linter.lint_all()
-        collections_message(linter, results=results, cli_message_func=cli_message)
-        # Exit code: 0 if all collections valid, 1 if any invalid
-        all_valid = all(msg.get("valid_stac") is True for msg in results)
-        sys.exit(0 if all_valid else 1)
-    elif item_collection:
-        # Create an ApiLinter for item collection endpoint
-        linter = ApiLinter(
-            source=file,
-            object_list_key="features",
-            id_key="id",
+            pydantic=pydantic,
+            verbose=verbose,
             pages=pages,
-            headers=dict(header),
         )
-        results = linter.lint_all()
-        item_collection_message(linter, results=results, cli_message_func=cli_message)
-        # Exit code: 0 if all items valid, 1 if any invalid
-        all_valid = all(msg.get("valid_stac") is True for msg in results)
-        sys.exit(0 if all_valid else 1)
-    else:
-        # Otherwise, just display the standard CLI message
-        cli_message(linter)
+        intro_message(linter)
+        # If recursive validation is enabled, use recursive_message
+        if recursive:
+            # Pass the cli_message function to avoid circular imports
+            recursive_message(linter, cli_message_func=cli_message)
+        else:
+            # Otherwise, just display the standard CLI message
+            cli_message(linter)
+
         sys.exit(0 if linter.valid_stac else 1)
+    else:
+        if item_collection:
+            object_list_key = "features"
+            id_key = "id"
+        elif collections:
+            object_list_key = "collections"
+            id_key = "id"
+
+        linter = ApiLinter(
+            source=file,
+            object_list_key=object_list_key,
+            id_key=id_key,
+            pages=pages,
+            headers=dict(header),
+        )
+        results = linter.lint_all()
+        intro_message(linter)
+        if collections:
+            collections_message(linter, results=results, cli_message_func=cli_message)
+        elif item_collection:
+            item_collection_message(
+                linter, results=results, cli_message_func=cli_message
+            )
+        sys.exit(0 if all(msg.get("valid_stac") is True for msg in results) else 1)

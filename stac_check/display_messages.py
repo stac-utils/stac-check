@@ -99,7 +99,6 @@ def _display_best_practices(linter: Linter) -> None:
         linter: The Linter object containing best practices information
     """
     if linter.best_practices_msg:
-        click.secho()
         click.secho("\n " + linter.best_practices_msg[0], bg="blue")
         click.secho()
         for message in linter.best_practices_msg[1:]:
