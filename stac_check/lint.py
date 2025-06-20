@@ -29,7 +29,6 @@ class Linter:
         headers (dict): HTTP headers to include in the requests.
         pydantic (bool, optional): A boolean value indicating whether to use pydantic validation. Defaults to False.
         verbose (bool, optional): A boolean value indicating whether to enable verbose output. Defaults to False.
-        pages (Optional[int], optional): An optional integer indicating the maximum number of item collection pages to validate. Defaults to one.
 
     Attributes:
         data (dict): A dictionary representing the STAC JSON file.
@@ -142,7 +141,6 @@ class Linter:
     headers: Dict = field(default_factory=dict)
     pydantic: bool = False
     verbose: bool = False
-    pages: Optional[int] = 1
 
     def __post_init__(self):
         # Check if pydantic validation is requested but not installed
@@ -315,7 +313,6 @@ class Linter:
                 assets=self.assets,
                 assets_open_urls=self.assets_open_urls,
                 headers=self.headers,
-                pages=self.pages,
                 pydantic=self.pydantic,
                 verbose=self.verbose,
             )
