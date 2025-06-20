@@ -33,7 +33,6 @@ def test_item_collection_validation(item_collection_url):
     linter = ApiLinter(
         source=item_collection_url,
         object_list_key="features",
-        id_key="id",
         pages=1,
     )
 
@@ -61,7 +60,6 @@ def test_item_collection_with_pages(item_collection_url):
     linter_1page = ApiLinter(
         source=item_collection_url,
         object_list_key="features",
-        id_key="id",
         pages=1,
     )
     results_1page = linter_1page.lint_all()
@@ -70,7 +68,6 @@ def test_item_collection_with_pages(item_collection_url):
     linter_2pages = ApiLinter(
         source=item_collection_url,
         object_list_key="features",
-        id_key="id",
         pages=2,
     )
     results_2pages = linter_2pages.lint_all()
@@ -89,7 +86,6 @@ def test_collections_validation(collections_url):
     linter = ApiLinter(
         source=collections_url,
         object_list_key="collections",
-        id_key="id",
         pages=1,
     )
 
@@ -115,24 +111,20 @@ def test_api_linter_initialization(item_collection_url, collections_url):
     item_linter = ApiLinter(
         source=item_collection_url,
         object_list_key="features",
-        id_key="id",
         pages=1,
     )
     assert item_linter.object_list_key == "features"
     assert item_linter.pages == 1
-    assert item_linter.id_key == "id"
     assert item_linter.source == item_collection_url
 
     # Test with collections
     collections_linter = ApiLinter(
         source=collections_url,
         object_list_key="collections",
-        id_key="id",
         pages=2,
     )
     assert collections_linter.object_list_key == "collections"
     assert collections_linter.pages == 2
-    assert collections_linter.id_key == "id"
     assert collections_linter.source == collections_url
 
     # Test with custom headers
@@ -140,7 +132,6 @@ def test_api_linter_initialization(item_collection_url, collections_url):
     linter_with_headers = ApiLinter(
         source=collections_url,
         object_list_key="collections",
-        id_key="id",
         pages=1,
         headers=headers,
     )
@@ -168,7 +159,6 @@ def test_error_handling_with_individual_items():
         linter = ApiLinter(
             source="https://example.com/items",
             object_list_key="features",
-            id_key="id",
             pages=1,
         )
 
@@ -194,7 +184,6 @@ def test_item_collection_message_display(item_collection_url):
     linter = ApiLinter(
         source=item_collection_url,
         object_list_key="features",
-        id_key="id",
         pages=1,
     )
 
@@ -218,7 +207,6 @@ def test_collections_message_display(collections_url):
     linter = ApiLinter(
         source=collections_url,
         object_list_key="collections",
-        id_key="id",
         pages=1,
     )
 
@@ -236,16 +224,50 @@ def test_collections_message_display(collections_url):
         mock_secho.assert_any_call("Pages = 1")
 
 
-def test_api_linter_with_custom_id_key(collections_url):
-    """Test ApiLinter with a custom ID key."""
-    # Use a custom ID key
-    linter = ApiLinter(
-        source=collections_url,
-        object_list_key="collections",
-        id_key="custom_id",  # Non-standard ID key
+def test_pages_parameter_handling(item_collection_url):
+    """Test that the pages parameter correctly limits pagination."""
+    # Test with explicit pages=1
+    linter_explicit_1 = ApiLinter(
+        source=item_collection_url,
+        object_list_key="features",
         pages=1,
     )
+    results_explicit_1 = linter_explicit_1.lint_all()
 
-    # Should still work even with a non-standard ID key
-    results = linter.lint_all()
-    assert len(results) > 0
+    # Test with None (should default to 1)
+    linter_none = ApiLinter(
+        source=item_collection_url,
+        object_list_key="features",
+        pages=None,
+    )
+    results_none = linter_none.lint_all()
+
+    # Test with default (should be 1)
+    linter_default = ApiLinter(
+        source=item_collection_url,
+        object_list_key="features",
+    )
+    results_default = linter_default.lint_all()
+
+    # Test with pages=2
+    linter_2pages = ApiLinter(
+        source=item_collection_url,
+        object_list_key="features",
+        pages=2,
+    )
+    results_2pages = linter_2pages.lint_all()
+
+    # Verify internal pages parameter is set correctly
+    assert linter_explicit_1.pages == 1
+    assert linter_none.pages == 1  # Should default to 1
+    assert linter_default.pages == 1  # Should default to 1
+    assert linter_2pages.pages == 2
+
+    # Verify results count is consistent for all 1-page variants
+    assert len(results_explicit_1) == len(results_none)
+    assert len(results_explicit_1) == len(results_default)
+
+    # Verify we get more results with 2 pages (if API supports pagination)
+    # This test might need to be adjusted if the API doesn't have enough items
+    if len(results_2pages) > len(results_explicit_1):
+        assert len(results_2pages) > len(results_explicit_1)

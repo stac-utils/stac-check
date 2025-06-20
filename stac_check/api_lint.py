@@ -19,14 +19,12 @@ class ApiLinter:
             (e.g. /items, /collections, or local JSON).
         object_list_key (str): Key in response containing list of objects
             (e.g. "features", "collections").
-        id_key (str): Key in each object for unique ID. Defaults to "id".
         pages (int): Number of pages to fetch. Defaults to 1.
         headers (Optional[Dict], optional): Optional headers for HTTP requests. Defaults to None.
 
     Attributes:
         source (str): The source URL or file path.
         object_list_key (str): The key for the list of objects in the response.
-        id_key (str): The key for object IDs.
         pages (int): Maximum number of pages to process.
         headers (Dict): HTTP headers for requests.
         version (Optional[str]): STAC version detected from validated objects.
@@ -37,14 +35,12 @@ class ApiLinter:
         self,
         source: str,
         object_list_key: str,
-        id_key: str = "id",
-        pages: int = 1,
+        pages: Optional[int] = 1,
         headers: Optional[Dict] = None,
     ):
         self.source = source
         self.object_list_key = object_list_key
-        self.id_key = id_key
-        self.pages = pages
+        self.pages = pages if pages is not None else 1
         self.headers = headers or {}
         self.version = None
         self.validator_version = self._get_validator_version()
@@ -117,7 +113,7 @@ class ApiLinter:
             response = self._fetch_and_parse(stac_file)
             objects = response.get(self.object_list_key, [])
             for obj in objects:
-                obj_id = obj.get(self.id_key)
+                obj_id = obj.get("id")
                 base_url = get_base_url(stac_file)
                 obj_url = f"{base_url}/{obj_id}" if obj_id else base_url
                 # Only yield if not seen before (protects against duplicates from bad APIs)
@@ -130,7 +126,8 @@ class ApiLinter:
                 if link.get("rel") == "next":
                     next_link = link.get("href")
                     break
-            if next_link and next_link != stac_file:
+            # Check if we should continue to the next page
+            if next_link and next_link != stac_file and page < self.pages:
                 stac_file = next_link
                 page += 1
             else:

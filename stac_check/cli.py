@@ -126,15 +126,12 @@ def main(
     else:
         if item_collection:
             object_list_key = "features"
-            id_key = "id"
         elif collections:
             object_list_key = "collections"
-            id_key = "id"
 
         linter = ApiLinter(
             source=file,
             object_list_key=object_list_key,
-            id_key=id_key,
             pages=pages,
             headers=dict(header),
         )
