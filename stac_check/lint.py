@@ -306,7 +306,7 @@ class Linter:
         Raises:
             ValueError: If `file` is not a valid file path or STAC dictionary.
         """
-        if isinstance(file, str) and self.verbose:
+        if isinstance(file, str):
             stac = StacValidate(
                 file,
                 links=self.links,
@@ -315,16 +315,6 @@ class Linter:
                 headers=self.headers,
                 pydantic=self.pydantic,
                 verbose=self.verbose,
-            )
-            stac.run()
-        elif isinstance(file, str):
-            stac = StacValidate(
-                file,
-                links=self.links,
-                assets=self.assets,
-                assets_open_urls=self.assets_open_urls,
-                headers=self.headers,
-                pydantic=self.pydantic,
             )
             stac.run()
         elif isinstance(file, dict):
@@ -382,7 +372,9 @@ class Linter:
         Returns:
             A string containing a message for users to update their STAC version.
         """
-        if self.version != "1.1.0":
+        if not self.version:
+            return "Please upgrade to STAC version 1.1.0!"
+        elif self.version != "1.1.0":
             return f"Please upgrade from version {self.version} to version 1.1.0!"
         else:
             return "Thanks for using STAC version 1.1.0!"
@@ -1089,7 +1081,7 @@ class Linter:
             return []  # Geometry validation is disabled
 
         geometry_errors = list()
-        base_string = "Geometry Validation Errors [BETA]: "
+        base_string = "Geometry Validation [BETA]: "
         geometry_errors.append(base_string)
 
         best_practices_dict = self.create_best_practices_dict()
