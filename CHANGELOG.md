@@ -6,18 +6,20 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 
 ## Unreleased
 
+## [v1.10.0] - 2025-06-20
+
 ### Added
 
-- Created api_lint.py module to handle API linting ([#136](https://github.com/stac-utils/stac-check/pull/136))
-- Added support for --item-collection flag to validate item collection responses ([#136](https://github.com/stac-utils/stac-check/pull/136))
-- Added support for --collections flag to validate collections responses ([#136](https://github.com/stac-utils/stac-check/pull/136))
-- Added support for --pages flag to limit the number of pages to validate ([#136](https://github.com/stac-utils/stac-check/pull/136))
+- Created api_lint.py module to handle API linting ([#135](https://github.com/stac-utils/stac-check/pull/135))
+- Added support for --item-collection flag to validate item collection responses ([#135](https://github.com/stac-utils/stac-check/pull/135))
+- Added support for --collections flag to validate collections responses ([#135](https://github.com/stac-utils/stac-check/pull/135))
+- Added support for --pages flag to limit the number of pages to validate ([#135](https://github.com/stac-utils/stac-check/pull/135))
 
 
 ### Changed
 
-- Refactored display messages into a dedicated module for better code organization and maintainability ([#136](https://github.com/stac-utils/stac-check/pull/136))
-- Organized test files, added v1.0.0 recursion test ([#136](https://github.com/stac-utils/stac-check/pull/136))
+- Refactored display messages into a dedicated module for better code organization and maintainability ([#135](https://github.com/stac-utils/stac-check/pull/135))
+- Organized test files, added v1.0.0 recursion test ([#135](https://github.com/stac-utils/stac-check/pull/135))
 
 ## [v1.9.1] - 2025-06-16
 
@@ -277,7 +279,8 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 - Validation from stac-validator 2.3.0
 - Links and assets validation checks
 
-[Unreleased]: https://github.com/stac-utils/stac-check/compare/v1.9.1...main
+[Unreleased]: https://github.com/stac-utils/stac-check/compare/v1.10.0...main
+[v1.10.0]: https://github.com/stac-utils/stac-check/compare/v1.9.1...v1.10.0
 [v1.9.1]: https://github.com/stac-utils/stac-check/compare/v1.9.0...v1.9.1
 [v1.9.0]: https://github.com/stac-utils/stac-check/compare/v1.8.0...v1.9.0
 [v1.8.0]: https://github.com/stac-utils/stac-check/compare/v1.7.0...v1.8.0
