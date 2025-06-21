@@ -6,6 +6,12 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 
 ## Unreleased
 
+## [v1.10.1] - 2025-06-21
+
+### Fixed
+
+- Fixed issue where pages parameter was being added to the wrong Linter ([#137](https://github.com/stac-utils/stac-check/pull/137))
+
 ## [v1.10.0] - 2025-06-20
 
 ### Added
