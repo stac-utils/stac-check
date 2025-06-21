@@ -111,7 +111,6 @@ def main(
             headers=dict(header),
             pydantic=pydantic,
             verbose=verbose,
-            pages=pages,
         )
         intro_message(linter)
         # If recursive validation is enabled, use recursive_message
