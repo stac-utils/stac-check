@@ -216,6 +216,42 @@ def _display_disclaimer() -> None:
     click.secho()
 
 
+def _display_validation_summary(results: List[Dict[str, Any]]) -> None:
+    """Display a summary of validation results.
+
+    Args:
+        results: List of validation result dictionaries
+    """
+    passed = 0
+    failed = []
+    all_paths = []
+
+    for result in results:
+        path = result.get("path", "unknown")
+        all_paths.append(path)
+        if result.get("valid_stac"):
+            passed += 1
+        else:
+            failed.append(path)
+
+    click.secho("\n" + "=" * 50)
+    click.secho("VALIDATION SUMMARY", bold=True)
+    click.secho(f"Total assets checked: {len(all_paths)}")
+    click.secho(f"✅ Passed: {passed}")
+
+    if failed:
+        click.secho(f"❌ Failed: {len(failed)}", fg="red")
+        click.secho("\nFailed Assets:", fg="red")
+        for path in failed:
+            click.secho(f"  - {path}")
+
+    click.secho("\nAll Assets Checked:")
+    for path in all_paths:
+        click.secho(f"  - {path}")
+
+    click.secho("\n" + "=" * 50)
+
+
 def _display_validation_results(
     results: List[Dict[str, Any]],
     title: str,
@@ -253,7 +289,6 @@ def _display_validation_results(
             click.secho(f"{key} = {value}")
 
     click.secho("-------------------------")
-
     for count, msg in enumerate(results):
         # Get the path or use a fallback
         path = msg.get("path", f"(unknown-{count + 1})")
@@ -265,14 +300,18 @@ def _display_validation_results(
             if create_linter_func:
                 item_linter = create_linter_func(msg)
 
-                # Set validation status and error info for invalid items
-                if not msg.get("valid_stac", True):
-                    item_linter.valid_stac = False
-                    item_linter.error_type = msg.get("error_type")
-                    item_linter.error_msg = msg.get("error_message")
+                # If create_linter_func returns None (for recursive validation), use fallback
+                if item_linter is None:
+                    _display_fallback_message(msg)
+                else:
+                    # Set validation status and error info for invalid items
+                    if not msg.get("valid_stac", True):
+                        item_linter.valid_stac = False
+                        item_linter.error_type = msg.get("error_type")
+                        item_linter.error_msg = msg.get("error_message")
 
-                # Display using the provided message function
-                cli_message_func(item_linter)
+                    # Display using the provided message function
+                    cli_message_func(item_linter)
             else:
                 # No linter creation function provided, use fallback
                 _display_fallback_message(msg)
@@ -281,6 +320,9 @@ def _display_validation_results(
             _display_fallback_message(msg, e)
 
         click.secho("-------------------------")
+
+    # Display summary at the end for better visibility with many items
+    _display_validation_summary(results)
 
 
 def item_collection_message(
