@@ -279,7 +279,8 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 - Validation from stac-validator 2.3.0
 - Links and assets validation checks
 
-[Unreleased]: https://github.com/stac-utils/stac-check/compare/v1.10.0...main
+[Unreleased]: https://github.com/stac-utils/stac-check/compare/v1.10.1...main
+[v1.10.1]: https://github.com/stac-utils/stac-check/compare/v1.10.0...v1.10.1
 [v1.10.0]: https://github.com/stac-utils/stac-check/compare/v1.9.1...v1.10.0
 [v1.9.1]: https://github.com/stac-utils/stac-check/compare/v1.9.0...v1.9.1
 [v1.9.0]: https://github.com/stac-utils/stac-check/compare/v1.8.0...v1.9.0
