@@ -13,6 +13,7 @@ from stac_check.display_messages import (
     recursive_message,
 )
 from stac_check.lint import Linter
+from stac_check.utilities import handle_output
 
 
 @click.option(
@@ -152,32 +153,11 @@ def main(
             verbose=verbose,
         )
 
-        # Handle output to file if specified
-        if output:
-            original_stdout = sys.stdout
-            try:
-                with open(output, "w") as f:
-                    sys.stdout = f
-                    intro_message(display_linter)
-                    if collections:
-                        collections_message(
-                            api_linter,
-                            results=results,
-                            cli_message_func=cli_message,
-                            verbose=verbose,
-                        )
-                    elif item_collection:
-                        item_collection_message(
-                            api_linter,
-                            results=results,
-                            cli_message_func=cli_message,
-                            verbose=verbose,
-                        )
-            finally:
-                sys.stdout = original_stdout
-            click.echo(f"Output written to {output}", err=True)
-        else:
-            intro_message(display_linter)
+        # Show intro message in the terminal
+        intro_message(display_linter)
+
+        # Define output generation function (without intro message since we already showed it)
+        def generate_output():
             if collections:
                 collections_message(
                     api_linter,
@@ -192,6 +172,9 @@ def main(
                     cli_message_func=cli_message,
                     verbose=verbose,
                 )
+
+        # Handle output (without duplicating the intro message)
+        handle_output(output, generate_output)
         sys.exit(0 if all(msg.get("valid_stac") is True for msg in results) else 1)
     else:
         # Handle file-based validation (single file or recursive)
@@ -209,23 +192,17 @@ def main(
 
         intro_message(linter)
 
-        # Handle output to file if specified and recursive
-        if output and recursive:
-            original_stdout = sys.stdout
-            try:
-                with open(output, "w") as f:
-                    sys.stdout = f
-                    recursive_message(
-                        linter, cli_message_func=cli_message, verbose=verbose
-                    )
-            finally:
-                sys.stdout = original_stdout
-            click.echo(f"Output written to {output}", err=True)
-        # Handle recursive validation without output file
-        elif recursive:
-            recursive_message(linter, cli_message_func=cli_message, verbose=verbose)
-        # Handle single file validation
-        else:
-            cli_message(linter)
+        # Show intro message in the terminal
+        intro_message(linter)
+
+        # Define output generation function (without intro message since we already showed it)
+        def generate_output():
+            if recursive:
+                recursive_message(linter, cli_message_func=cli_message, verbose=verbose)
+            else:
+                cli_message(linter)
+
+        # Handle output (without duplicating the intro message)
+        handle_output(output if recursive else None, generate_output)
 
         sys.exit(0 if linter.valid_stac else 1)

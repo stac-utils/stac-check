@@ -1,3 +1,9 @@
+import contextlib
+from typing import Callable
+
+import click
+
+
 def determine_asset_type(data):
     """Determine the STAC asset type from the given data dictionary.
 
@@ -33,6 +39,32 @@ def determine_asset_type(data):
 
     # If we can't determine the type
     return ""
+
+
+def handle_output(
+    output_file: str, callback: Callable[[], None], output_path: str = None
+) -> None:
+    """Helper function to handle output redirection to a file or stdout.
+
+    Args:
+        output_file: Path to the output file, or None to use stdout
+        callback: Function that performs the actual output generation
+        output_path: Optional path to display in the success message
+    """
+
+    if output_file:
+        with open(output_file, "w") as f:
+            with contextlib.redirect_stdout(f):
+                callback()
+        click.secho(
+            f"Output written to {output_path or output_file}",
+            fg="green",
+            err=True,
+            bold=True,
+        )
+        click.secho()
+    else:
+        callback()
 
 
 def format_verbose_error(error_data):

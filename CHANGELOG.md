@@ -12,7 +12,8 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 
 - Results summary for options that produce numerous results, ie. --collections, --item-collection, --recursive ([#138](https://github.com/stac-utils/stac-check/pull/138))
 - Support for --verbose flag to show verbose results summary ([#138](https://github.com/stac-utils/stac-check/pull/138))
-- Added `--output`/`-o` option to save validation results to a file ([#139](https://github.com/stac-utils/stac-check/pull/139))
+- Added `--output`/`-o` option to save validation results to a file ([#138](https://github.com/stac-utils/stac-check/pull/138))
+- Tests for CLI options ([#138](https://github.com/stac-utils/stac-check/pull/138))
 
 ## [v1.10.1] - 2025-06-21
 
