@@ -1,5 +1,6 @@
 import importlib.metadata
 import sys
+from typing import Optional
 
 import click
 
@@ -49,6 +50,12 @@ from stac_check.lint import Linter
     "-l", "--links", is_flag=True, help="Validate links for format and response."
 )
 @click.option(
+    "--output",
+    "-o",
+    type=click.Path(dir_okay=False, writable=True),
+    help="Save output to the specified file. Only works with --collections, --item-collection, or --recursive.",
+)
+@click.option(
     "--no-assets-urls",
     is_flag=True,
     help="Disables the opening of href links when validating assets (enabled by default).",
@@ -74,19 +81,44 @@ from stac_check.lint import Linter
 @click.argument("file")
 @click.version_option(version=importlib.metadata.distribution("stac-check").version)
 def main(
-    file,
-    collections,
-    item_collection,
-    pages,
-    recursive,
-    max_depth,
-    assets,
-    links,
-    no_assets_urls,
-    header,
-    pydantic,
-    verbose,
-):
+    file: str,
+    collections: bool,
+    item_collection: bool,
+    pages: Optional[int],
+    recursive: bool,
+    max_depth: Optional[int],
+    assets: bool,
+    links: bool,
+    no_assets_urls: bool,
+    header: tuple[tuple[str, str], ...],
+    pydantic: bool,
+    verbose: bool,
+    output: Optional[str],
+) -> None:
+    """Main entry point for the stac-check CLI.
+
+    Args:
+        file: The STAC file or URL to validate
+        collections: Validate a collections endpoint
+        item_collection: Validate an item collection
+        pages: Number of pages to validate (for API endpoints)
+        recursive: Recursively validate linked STAC objects
+        max_depth: Maximum depth for recursive validation
+        assets: Validate assets
+        links: Validate links
+        no_assets_urls: Disable URL validation for assets
+        header: Additional HTTP headers
+        pydantic: Use stac-pydantic for validation
+        verbose: Show verbose output
+        output: Save output to file (only with --collections, --item-collection, or --recursive)
+    """
+    # Check if output is used without --collections, --item-collection, or --recursive
+    if output and not any([collections, item_collection, recursive]):
+        click.echo(
+            "Error: --output can only be used with --collections, --item-collection, or --recursive",
+            err=True,
+        )
+        sys.exit(1)
     # Check if pydantic validation is requested but not installed
     if pydantic:
         try:
@@ -99,8 +131,70 @@ def main(
             )
             pydantic = False
 
-    if not collections and not item_collection:
-        # Create a standard Linter for single file or recursive validation
+    if collections or item_collection:
+        # Handle API-based validation (collections or item collections)
+        api_linter = ApiLinter(
+            source=file,
+            object_list_key="collections" if collections else "features",
+            pages=pages if pages else 1,
+            headers=dict(header),
+            verbose=verbose,
+        )
+        results = api_linter.lint_all()
+
+        # Create a dummy Linter instance for display purposes
+        display_linter = Linter(
+            file,
+            assets=assets,
+            links=links,
+            headers=dict(header),
+            pydantic=pydantic,
+            verbose=verbose,
+        )
+
+        # Handle output to file if specified
+        if output:
+            original_stdout = sys.stdout
+            try:
+                with open(output, "w") as f:
+                    sys.stdout = f
+                    intro_message(display_linter)
+                    if collections:
+                        collections_message(
+                            api_linter,
+                            results=results,
+                            cli_message_func=cli_message,
+                            verbose=verbose,
+                        )
+                    elif item_collection:
+                        item_collection_message(
+                            api_linter,
+                            results=results,
+                            cli_message_func=cli_message,
+                            verbose=verbose,
+                        )
+            finally:
+                sys.stdout = original_stdout
+            click.echo(f"Output written to {output}", err=True)
+        else:
+            intro_message(display_linter)
+            if collections:
+                collections_message(
+                    api_linter,
+                    results=results,
+                    cli_message_func=cli_message,
+                    verbose=verbose,
+                )
+            elif item_collection:
+                item_collection_message(
+                    api_linter,
+                    results=results,
+                    cli_message_func=cli_message,
+                    verbose=verbose,
+                )
+        sys.exit(0 if all(msg.get("valid_stac") is True for msg in results) else 1)
+    else:
+        # Handle file-based validation (single file or recursive)
         linter = Linter(
             file,
             assets=assets,
@@ -112,37 +206,26 @@ def main(
             pydantic=pydantic,
             verbose=verbose,
         )
+
         intro_message(linter)
-        # If recursive validation is enabled, use recursive_message
-        if recursive:
-            # Pass the cli_message function to avoid circular imports
+
+        # Handle output to file if specified and recursive
+        if output and recursive:
+            original_stdout = sys.stdout
+            try:
+                with open(output, "w") as f:
+                    sys.stdout = f
+                    recursive_message(
+                        linter, cli_message_func=cli_message, verbose=verbose
+                    )
+            finally:
+                sys.stdout = original_stdout
+            click.echo(f"Output written to {output}", err=True)
+        # Handle recursive validation without output file
+        elif recursive:
             recursive_message(linter, cli_message_func=cli_message, verbose=verbose)
+        # Handle single file validation
         else:
-            # Otherwise, just display the standard CLI message
             cli_message(linter)
 
         sys.exit(0 if linter.valid_stac else 1)
-    else:
-        if item_collection:
-            object_list_key = "features"
-        elif collections:
-            object_list_key = "collections"
-
-        linter = ApiLinter(
-            source=file,
-            object_list_key=object_list_key,
-            pages=pages,
-            headers=dict(header),
-            verbose=verbose,
-        )
-        results = linter.lint_all()
-        intro_message(linter)
-        if collections:
-            collections_message(
-                linter, results=results, cli_message_func=cli_message, verbose=verbose
-            )
-        elif item_collection:
-            item_collection_message(
-                linter, results=results, cli_message_func=cli_message, verbose=verbose
-            )
-        sys.exit(0 if all(msg.get("valid_stac") is True for msg in results) else 1)
