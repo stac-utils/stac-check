@@ -216,40 +216,84 @@ def _display_disclaimer() -> None:
     click.secho()
 
 
-def _display_validation_summary(results: List[Dict[str, Any]]) -> None:
-    """Display a summary of validation results.
+def _display_validation_summary(
+    results: List[Dict[str, Any]], verbose: bool = False
+) -> None:
+    """Display a summary of validation results, including warnings and best practice issues.
 
     Args:
         results: List of validation result dictionaries
+        verbose: Whether to show detailed output
     """
     passed = 0
     failed = []
+    warnings = []
     all_paths = []
 
     for result in results:
         path = result.get("path", "unknown")
         all_paths.append(path)
+
+        # Check for validation status
         if result.get("valid_stac"):
             passed += 1
         else:
             failed.append(path)
 
-    click.secho("\n" + "=" * 50)
-    click.secho("VALIDATION SUMMARY", bold=True)
-    click.secho(f"Total assets checked: {len(all_paths)}")
-    click.secho(f"✅ Passed: {passed}")
+        # Check for best practice warnings in the result
+        best_practices = []
+        if result.get("best_practices"):
+            best_practices = [
+                p
+                for p in result["best_practices"]
+                if p and p.strip() and p != "STAC Best Practices: "
+            ]
+        # Also check for best practices in the message if it exists
+        elif (
+            result.get("message")
+            and isinstance(result["message"], dict)
+            and result["message"].get("best_practices")
+        ):
+            best_practices = [
+                p
+                for p in result["message"]["best_practices"]
+                if p and p.strip() and p != "STAC Best Practices: "
+            ]
+
+        # Only add to warnings if there are actual messages
+        if best_practices:
+            warnings.append((path, best_practices))
+
+    click.secho("\n Validation Summary", bold=True, bg="black", fg="white")
+    click.secho()
+    click.secho(f"✅ Passed: {passed}/{len(all_paths)}")
 
     if failed:
-        click.secho(f"❌ Failed: {len(failed)}", fg="red")
+        click.secho(f"❌ Failed: {len(failed)}/{len(all_paths)}", fg="red")
         click.secho("\nFailed Assets:", fg="red")
         for path in failed:
             click.secho(f"  - {path}")
 
-    click.secho("\nAll Assets Checked:")
-    for path in all_paths:
-        click.secho(f"  - {path}")
+    if warnings:
+        click.secho(
+            f"\n⚠️  Best Practice Warnings ({len(warnings)} assets)", fg="yellow"
+        )
+        if verbose or len(warnings) <= 12:
+            for path, msgs in warnings:
+                click.secho(f"\n  {path}:", fg="yellow")
+                for msg in msgs:
+                    click.secho(f"    • {msg}", fg="yellow")
+        else:
+            click.secho("  (Use --verbose to see details)", fg="yellow")
 
-    click.secho("\n" + "=" * 50)
+    click.secho(f"\n🔍 All {len(all_paths)} Assets Checked")
+    if verbose or len(all_paths) <= 12:
+        for path in all_paths:
+            click.secho(f"  - {path}")
+    else:
+        click.secho("  (Use --verbose to see all assets)", fg="yellow")
+
+    click.secho()
 
 
 def _display_validation_results(
@@ -258,6 +302,7 @@ def _display_validation_results(
     metadata: Optional[Dict[str, Any]] = None,
     cli_message_func: Optional[Callable[[Linter], None]] = None,
     create_linter_func: Optional[Callable[[Dict[str, Any]], Linter]] = None,
+    verbose: bool = False,
 ) -> None:
     """Shared helper function to display validation results consistently.
 
@@ -310,6 +355,20 @@ def _display_validation_results(
                         item_linter.error_type = msg.get("error_type")
                         item_linter.error_msg = msg.get("error_message")
 
+                    # Ensure best practices are included in the result
+                    if (
+                        hasattr(item_linter, "best_practices_msg")
+                        and item_linter.best_practices_msg
+                    ):
+                        # Skip the first line which is just the header
+                        bp_msgs = [
+                            msg
+                            for msg in item_linter.best_practices_msg[1:]
+                            if msg.strip()
+                        ]
+                        if bp_msgs:
+                            msg["best_practices"] = bp_msgs
+
                     # Display using the provided message function
                     cli_message_func(item_linter)
             else:
@@ -322,13 +381,14 @@ def _display_validation_results(
         click.secho("-------------------------")
 
     # Display summary at the end for better visibility with many items
-    _display_validation_summary(results)
+    _display_validation_summary(results, verbose=verbose)
 
 
 def item_collection_message(
     linter: ApiLinter,
     results: Optional[List[Dict[str, Any]]] = None,
     cli_message_func: Optional[Callable[[Linter], None]] = None,
+    verbose: bool = False,
 ) -> None:
     """Displays messages related to the validation of assets in a feature collection.
 
@@ -365,6 +425,7 @@ def item_collection_message(
         metadata={"Pages": linter.pages},
         cli_message_func=cli_message_func,
         create_linter_func=create_api_linter,
+        verbose=verbose,
     )
 
 
@@ -407,13 +468,17 @@ def _display_fallback_message(
 
     # Display best practices
     bp = msg.get("best_practices", [])
-    if bp and len(bp) > 0:
-        click.secho()
-        click.secho("\n STAC Best Practices: ", bg="blue")
-        click.secho()
+    # Filter out empty strings and the default "STAC Best Practices: " message
+    bp = [p for p in bp if p and p.strip() and p != "STAC Best Practices: "]
+
+    if bp:
+        click.echo()
+        click.secho("\nSTAC Best Practices: ", bg="blue")
+        click.echo()
         for practice in bp:
-            if practice:  # Skip empty strings
-                click.secho(practice, fg="black")
+            click.echo(f"    • {practice}", fg="black")
+        # Update the best_practices in the message for the summary
+        msg["best_practices"] = bp
 
     # Display geometry errors
     geo = msg.get("geometry_errors", [])
@@ -432,6 +497,7 @@ def collections_message(
     linter: ApiLinter,
     results: Optional[List[Dict[str, Any]]] = None,
     cli_message_func: Optional[Callable[[Linter], None]] = None,
+    verbose: bool = False,
 ) -> None:
     """Displays messages related to the validation of STAC collections from a collections endpoint.
 
@@ -468,11 +534,14 @@ def collections_message(
         metadata={"Pages": linter.pages},
         cli_message_func=cli_message_func,
         create_linter_func=create_collection_linter,
+        verbose=verbose,
     )
 
 
 def recursive_message(
-    linter: Linter, cli_message_func: Optional[Callable[[Linter], None]] = None
+    linter: Linter,
+    cli_message_func: Optional[Callable[[Linter], None]] = None,
+    verbose: bool = False,
 ) -> None:
     """Displays messages related to the recursive validation of assets in a collection or catalog.
 
@@ -504,6 +573,7 @@ def recursive_message(
         metadata={"Max-depth": linter.max_depth},
         cli_message_func=cli_message_func,
         create_linter_func=create_recursive_linter,
+        verbose=verbose,
     )
 
 

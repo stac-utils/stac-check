@@ -116,7 +116,7 @@ def main(
         # If recursive validation is enabled, use recursive_message
         if recursive:
             # Pass the cli_message function to avoid circular imports
-            recursive_message(linter, cli_message_func=cli_message)
+            recursive_message(linter, cli_message_func=cli_message, verbose=verbose)
         else:
             # Otherwise, just display the standard CLI message
             cli_message(linter)
@@ -133,13 +133,16 @@ def main(
             object_list_key=object_list_key,
             pages=pages,
             headers=dict(header),
+            verbose=verbose,
         )
         results = linter.lint_all()
         intro_message(linter)
         if collections:
-            collections_message(linter, results=results, cli_message_func=cli_message)
+            collections_message(
+                linter, results=results, cli_message_func=cli_message, verbose=verbose
+            )
         elif item_collection:
             item_collection_message(
-                linter, results=results, cli_message_func=cli_message
+                linter, results=results, cli_message_func=cli_message, verbose=verbose
             )
         sys.exit(0 if all(msg.get("valid_stac") is True for msg in results) else 1)
