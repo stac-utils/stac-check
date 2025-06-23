@@ -1,0 +1,666 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>stac-check documentation &mdash; stac-check 1.7.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css?v=7dc6ce7e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=030dc6f6"></script>
+      <script src="_static/doctools.js?v=9a2dae69"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="CLI Reference" href="cli.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="#" class="icon icon-home">
+            stac-check
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">CLI Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">stac-check</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">stac-check</span></code> documentation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="stac-check-documentation">
+<h1><code class="docutils literal notranslate"><span class="pre">stac-check</span></code> documentation<a class="headerlink" href="#stac-check-documentation" title="Link to this heading"></a></h1>
+<!-- markdownlint-disable MD033 MD041 -->
+<p align="left">
+  <img src="https://raw.githubusercontent.com/stac-utils/stac-check/main/assets/stac-check.png" width=560>
+</p>
+<p><a class="reference external" href="https://pepy.tech/project/stac-check"><img alt="Downloads" src="https://static.pepy.tech/badge/stac-check?color=blue" /></a>
+<a class="reference external" href="https://github.com/stac-utils/stac-check/graphs/contributors"><img alt="GitHub contributors" src="https://img.shields.io/github/contributors/stac-utils/stac-check?color=blue" /></a>
+<a class="reference external" href="https://github.com/stac-utils/stac-check/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/stac-utils/stac-check.svg?color=blue" /></a>
+<a class="reference external" href="https://github.com/stac-utils/stac-check/network/members"><img alt="GitHub forks" src="https://img.shields.io/github/forks/stac-utils/stac-check.svg?color=blue" /></a>
+<a class="reference external" href="https://pypi.org/project/stac-check/"><img alt="PyPI version" src="https://img.shields.io/pypi/v/stac-check.svg?color=blue" /></a>
+<a class="reference external" href="https://github.com/radiantearth/stac-spec/tree/v1.1.0"><img alt="STAC" src="https://img.shields.io/badge/STAC-1.1.0-blue.svg" /></a></p>
+<section id="a-linting-and-validation-tool-for-stac-assets">
+<h2>A linting and validation tool for STAC assets<a class="headerlink" href="#a-linting-and-validation-tool-for-stac-assets" title="Link to this heading"></a></h2>
+<p>The intent of this project is to provide a validation tool that also follows the official <a class="reference external" href="https://github.com/radiantearth/stac-spec/blob/master/best-practices.md">STAC Best Practices document</a></p>
+</section>
+<section id="table-of-contents">
+<h2>Table of Contents<a class="headerlink" href="#table-of-contents" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="#documentation">Documentation</a></p></li>
+<li><p><a class="reference internal" href="#installation">Installation</a></p>
+<ul>
+<li><p><a class="reference internal" href="#pip">Pip</a></p></li>
+<li><p><a class="reference internal" href="#docker">Docker</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#usage">Usage</a></p>
+<ul>
+<li><p><a class="reference internal" href="#cli-usage">CLI Usage</a></p></li>
+<li><p><a class="reference internal" href="#configuration">Configuration</a></p></li>
+<li><p><a class="reference internal" href="#geometry-validation">Geometry Validation</a></p></li>
+<li><p><a class="reference internal" href="#python-api-usage">Python API Usage</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#examples">Examples</a></p>
+<ul>
+<li><p><a class="reference internal" href="#basic-validation">Basic Validation</a></p></li>
+<li><p><a class="reference internal" href="#recursive-validation">Recursive Validation</a></p></li>
+<li><p><a class="reference internal" href="#asset-validation">Asset Validation</a></p></li>
+<li><p><a class="reference internal" href="#link-and-asset-validation">Link and Asset Validation</a></p></li>
+<li><p><a class="reference internal" href="#invalid-stac">Invalid STAC</a></p></li>
+<li><p><a class="reference internal" href="#using-http-headers">Using HTTP Headers</a></p></li>
+<li><p><a class="reference internal" href="#stac-api-validation">STAC API Validation</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#development">Development</a></p></li>
+<li><p><a class="reference internal" href="#sponsors-and-supporters">Sponsors and Supporters</a></p></li>
+<li><p><a class="reference internal" href="#contributing">Contributing</a></p>
+<ul>
+<li><p><a class="reference internal" href="#how-to-contribute">How to Contribute</a></p></li>
+<li><p><a class="reference internal" href="#development-guidelines">Development Guidelines</a></p></li>
+<li><p><a class="reference internal" href="#reporting-issues">Reporting Issues</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#license"><span class="xref myst">License</span></a></p></li>
+</ul>
+</section>
+<section id="documentation">
+<h2>Documentation<a class="headerlink" href="#documentation" title="Link to this heading"></a></h2>
+<p>The documentation is hosted on GitHub Pages at <a class="reference external" href="https://stac-utils.github.io/stac-check/">stac-utils.github.io/stac-check</a>.</p>
+<section id="building-documentation-locally">
+<h3>Building Documentation Locally<a class="headerlink" href="#building-documentation-locally" title="Link to this heading"></a></h3>
+<p>To build the documentation locally:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Install the package with documentation dependencies</span>
+pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[docs]&quot;</span>
+
+<span class="c1"># Build the documentation</span>
+make<span class="w"> </span>docs
+</pre></div>
+</div>
+<p>The built documentation will be available in the <code class="docutils literal notranslate"><span class="pre">docs/_build/html</span></code> directory.</p>
+<p>Alternatively, you can build the documentation using Docker:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Build the Docker image and documentation</span>
+make<span class="w"> </span>docker-docs
+</pre></div>
+</div>
+</section>
+</section>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h2>
+<section id="pip">
+<h3>Pip<a class="headerlink" href="#pip" title="Link to this heading"></a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>stac-check
+</pre></div>
+</div>
+<p>For local development:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s1">&#39;.[dev]&#39;</span>
+</pre></div>
+</div>
+</section>
+<section id="docker">
+<h3>Docker<a class="headerlink" href="#docker" title="Link to this heading"></a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>make<span class="w"> </span>build
+$<span class="w"> </span>make<span class="w"> </span>shell
+</pre></div>
+</div>
+</section>
+</section>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Link to this heading"></a></h2>
+<section id="cli-usage">
+<h3>CLI Usage<a class="headerlink" href="#cli-usage" title="Link to this heading"></a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Usage: stac-check [OPTIONS] FILE
+
+Options:
+  --version                Show the version and exit.
+  -l, --links              Validate links for format and response.
+  -a, --assets             Validate assets for format and response.
+  -m, --max-depth INTEGER  Maximum depth to traverse when recursing. Omit this
+                           argument to get full recursion. Ignored if
+                           `recursive == False`.
+  -r, --recursive          Recursively validate all related stac objects.
+  --no-assets-urls         Disables the opening of href links when validating assets
+                           (enabled by default).
+  --header KEY VALUE       HTTP header to include in the requests. Can be used
+                           multiple times.
+  --pydantic               Use stac-pydantic for enhanced validation with Pydantic models.
+  --verbose                Show verbose error messages.
+  -o, --output FILE        Save output to the specified file.
+  --item-collection        Validate item collection response. Can be combined with
+                           --pages. Defaults to one page.
+  --collections            Validate collections endpoint response. Can be combined with
+                           --pages. Defaults to one page.
+  -p, --pages INTEGER      Maximum number of pages to validate via --item-collection
+                           or --collections. Defaults to one page.
+  --help                   Show this message and exit.
+</pre></div>
+</div>
+</section>
+<section id="configuration">
+<h3>Configuration<a class="headerlink" href="#configuration" title="Link to this heading"></a></h3>
+<p>stac-check uses a configuration file to control which validation checks are performed. By default, it uses the built-in configuration at <code class="docutils literal notranslate"><span class="pre">stac_check/stac-check.config.yml</span></code>. You can customize the validation behavior by creating your own configuration file.</p>
+<p>The configuration file has three main sections:</p>
+<ol class="arabic simple">
+<li><p><strong>linting</strong>: Controls which general best practices checks are enabled</p></li>
+<li><p><strong>geometry_validation</strong>: Controls geometry-specific validation checks [BETA]</p></li>
+<li><p><strong>settings</strong>: Configures thresholds for certain checks</p></li>
+</ol>
+<p>Here’s an example of the configuration options:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">linting</span><span class="p">:</span>
+<span class="w">  </span><span class="c1"># Identifiers should consist of only lowercase characters, numbers, &#39;_&#39;, and &#39;-&#39;</span>
+<span class="w">  </span><span class="nt">searchable_identifiers</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="c1"># Item name &#39;{self.object_id}&#39; should not contain &#39;:&#39; or &#39;/&#39;</span>
+<span class="w">  </span><span class="nt">percent_encoded</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="c1"># Item file names should match their ids</span>
+<span class="w">  </span><span class="nt">item_id_file_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="c1"># Collections and catalogs should be named collection.json and catalog.json</span>
+<span class="w">  </span><span class="nt">catalog_id_file_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="c1"># A STAC collection should contain a summaries field</span>
+<span class="w">  </span><span class="nt">check_summaries</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="c1"># Datetime fields should not be set to null</span>
+<span class="w">  </span><span class="nt">null_datetime</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="c1"># best practices - check unlocated items to make sure bbox field is not set</span>
+<span class="w">  </span><span class="nt">check_unlocated</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="c1"># best practices - recommend items have a geometry</span>
+<span class="w">  </span><span class="nt">check_geometry</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="c1"># check to see if there are too many links</span>
+<span class="w">  </span><span class="nt">bloated_links</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="c1"># best practices - check for bloated metadata in properties</span>
+<span class="w">  </span><span class="nt">bloated_metadata</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="c1"># best practices - ensure thumbnail is a small file size [&quot;png&quot;, &quot;jpeg&quot;, &quot;jpg&quot;, &quot;webp&quot;]</span>
+<span class="w">  </span><span class="nt">check_thumbnail</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="c1"># best practices - ensure that links in catalogs and collections include a title field</span>
+<span class="w">  </span><span class="nt">links_title</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="c1"># best practices - ensure that links in catalogs and collections include self link</span>
+<span class="w">  </span><span class="nt">links_self</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+
+<span class="nt">geometry_validation</span><span class="p">:</span>
+<span class="w">  </span><span class="c1"># Master switch to enable/disable all geometry validation checks</span>
+<span class="w">  </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="c1"># check if geometry coordinates are potentially ordered incorrectly (longitude, latitude)</span>
+<span class="w">  </span><span class="nt">geometry_coordinates_order</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="c1"># check if geometry coordinates contain definite errors (latitude &gt; ±90°, longitude &gt; ±180°)</span>
+<span class="w">  </span><span class="nt">geometry_coordinates_definite_errors</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="c1"># check if bbox matches the bounds of the geometry</span>
+<span class="w">  </span><span class="nt">bbox_geometry_match</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="c1"># check if a bbox that crosses the antimeridian is correctly formatted</span>
+<span class="w">  </span><span class="nt">bbox_antimeridian</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+
+<span class="nt">settings</span><span class="p">:</span>
+<span class="w">  </span><span class="c1"># number of links before the bloated links warning is shown</span>
+<span class="w">  </span><span class="nt">max_links</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20</span>
+<span class="w">  </span><span class="c1"># number of properties before the bloated metadata warning is shown</span>
+<span class="w">  </span><span class="nt">max_properties</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20</span>
+</pre></div>
+</div>
+<p>To use a custom configuration file, set the <code class="docutils literal notranslate"><span class="pre">STAC_CHECK_CONFIG</span></code> environment variable to the path of your configuration file:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">STAC_CHECK_CONFIG</span><span class="o">=</span>/path/to/your/config.yml
+stac-check<span class="w"> </span>sample_files/1.0.0/core-item.json
+</pre></div>
+</div>
+</section>
+<section id="geometry-validation">
+<h3>Geometry Validation<a class="headerlink" href="#geometry-validation" title="Link to this heading"></a></h3>
+<p>Geometry validation is a feature of stac-check that allows you to validate the geometry of your STAC items. This feature is enabled by default, but can be disabled by setting <code class="docutils literal notranslate"><span class="pre">geometry_validation.enabled</span></code> to <code class="docutils literal notranslate"><span class="pre">false</span></code> in your configuration file.</p>
+<p>The geometry validation feature checks for the following:</p>
+<ul class="simple">
+<li><p>Geometry coordinates are potentially ordered incorrectly (longitude, latitude)</p></li>
+<li><p>Geometry coordinates contain definite errors (latitude &gt; ±90°, longitude &gt; ±180°)</p></li>
+<li><p>Bbox matches the bounds of the geometry</p></li>
+<li><p>Bbox that crosses the antimeridian is correctly formatted</p></li>
+</ul>
+<p>You can customize the geometry validation behavior by setting the following options in your configuration file:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">geometry_validation.geometry_coordinates_order</span></code>: Check if geometry coordinates are potentially ordered incorrectly (longitude, latitude)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">geometry_validation.geometry_coordinates_definite_errors</span></code>: Check if geometry coordinates contain definite errors (latitude &gt; ±90°, longitude &gt; ±180°)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">geometry_validation.bbox_geometry_match</span></code>: Check if bbox matches the bounds of the geometry</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">geometry_validation.bbox_antimeridian</span></code>: Check if a bbox that crosses the antimeridian is correctly formatted</p></li>
+</ul>
+</section>
+<section id="python-api-usage">
+<h3>Python API Usage<a class="headerlink" href="#python-api-usage" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">stac_check.lint</span><span class="w"> </span><span class="kn">import</span> <span class="n">Linter</span>
+
+<span class="n">linter</span> <span class="o">=</span> <span class="n">Linter</span><span class="p">(</span><span class="s1">&#39;&lt;json_path&gt;&#39;</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">linter</span><span class="o">.</span><span class="n">create_best_practices_dict</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h2>
+<section id="basic-validation">
+<h3>Basic Validation<a class="headerlink" href="#basic-validation" title="Link to this heading"></a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>stac-check<span class="w"> </span>sample_files/0.9.0/landsat8-sample.json
+</pre></div>
+</div>
+<pre><b>stac-check: STAC spec validation and linting tool</b>
+
+Please upgrade from version 0.9.0 to version 1.1.0!
+
+Validator: stac-validator 3.9.1
+
+Valid ITEM: True
+
+Schemas validated:
+    https://cdn.staclint.com/v0.9.0/extension/eo.json
+    https://cdn.staclint.com/v0.9.0/extension/view.json
+    https://cdn.staclint.com/v0.9.0/item.json
+
+STAC Best Practices:
+    Item name 'LC81530252014153LGN00' should only contain Searchable identifiers
+    Identifiers should consist of only lowercase characters, numbers, '_', and '-'
+    https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#searchable-identifiers
+
+    Item file names should match their ids: 'landsat8-sample' not equal to 'LC81530252014153LGN00
+
+    A link to 'self' in links is strongly recommended
+
+
+This object has 4 links
+</pre>
+</section>
+<section id="recursive-validation">
+<h3>Recursive Validation<a class="headerlink" href="#recursive-validation" title="Link to this heading"></a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>stac-check<span class="w"> </span>https://raw.githubusercontent.com/stac-utils/pystac/main/tests/data-files/examples/0.9.0/collection-spec/examples/landsat-collection.json<span class="w"> </span>--recursive
+</pre></div>
+</div>
+<pre><b>stac-check: STAC spec validation and linting tool</b>
+
+Please upgrade from version 0.9.0 to version 1.1.0!
+
+Validator: stac-validator 3.9.1
+
+
+Recursive: Validate all assets in a collection or catalog
+Max-depth = None
+-------------------------
+Asset 1 Validated: https://raw.githubusercontent.com/stac-utils/pystac/main/tests/data-files/examples/0.9.0/collection-spec/examples/landsat-collection.json
+
+Valid COLLECTION: True
+
+Schemas validated:
+    https://cdn.staclint.com/v0.9.0/collection.json
+
+STAC Best Practices:
+    Object should be called 'collection.json' not 'landsat-collection.json'
+
+    A STAC collection should contain a summaries field
+    It is recommended to store information like eo:bands in summaries
+
+    Links in catalogs and collections should always have a 'title' field
+
+This object has 4 links
+
+-------------------------
+Asset 2 Validated: https://landsat-stac.s3.amazonaws.com/landsat-8-l1/paths/catalog.json
+
+Valid: False
+Schemas validated:
+    https://cdn.staclint.com/v0.9.0/collection.json
+Error Type: JSONDecodeError
+Error Message: Expecting value: line 1 column 1 (char 0)
+-------------------------
+</pre>
+</section>
+<section id="asset-validation">
+<h3>Asset Validation<a class="headerlink" href="#asset-validation" title="Link to this heading"></a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>stac-check<span class="w"> </span>sample_files/1.0.0/core-item.json<span class="w"> </span>--assets
+</pre></div>
+</div>
+<pre>
+<b>stac-check: STAC spec validation and linting tool</b>
+
+Please upgrade from version 1.0.0 to version 1.1.0!
+
+Validator: stac-validator 3.9.1
+
+Valid ITEM: True
+
+Schemas validated:
+    https://schemas.stacspec.org/v1.0.0/item-spec/json-schema/item.json
+
+STAC Best Practices:
+    Item name '20201211_223832_CS2' should only contain Searchable identifiers
+    Identifiers should consist of only lowercase characters, numbers, '_', and '-'
+    https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#searchable-identifiers
+
+    Item file names should match their ids: 'core-item' not equal to '20201211_223832_CS2
+
+    Please avoid setting the datetime field to null, many clients search on this field
+
+    A link to 'self' in links is strongly recommended
+
+
+No ASSET format errors!
+
+ASSET request errors:
+    http://cool-sat.com/catalog/20201211_223832_CS2/20201211_223832_CS2.EPH
+
+This object has 4 links
+</pre>
+</section>
+<section id="link-and-asset-validation">
+<h3>Link and Asset Validation<a class="headerlink" href="#link-and-asset-validation" title="Link to this heading"></a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>stac-check<span class="w"> </span>sample_files/1.0.0/core-item-bad-links.json<span class="w"> </span>--links<span class="w"> </span>--assets
+</pre></div>
+</div>
+<pre>
+<b>stac-check: STAC spec validation and linting tool</b>
+
+Please upgrade from version 1.0.0 to version 1.1.0!
+
+Validator: stac-validator 3.9.1
+
+Valid ITEM: True
+
+Schemas validated:
+    https://schemas.stacspec.org/v1.0.0/item-spec/json-schema/item.json
+
+STAC Best Practices:
+    Item name '20201211_223832_CS2' should only contain Searchable identifiers
+    Identifiers should consist of only lowercase characters, numbers, '_', and '-'
+    https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#searchable-identifiers
+
+    Item file names should match their ids: 'core-item-bad-links' not equal to '20201211_223832_CS2
+
+    Please avoid setting the datetime field to null, many clients search on this field
+
+    A link to 'self' in links is strongly recommended
+
+
+ASSET format errors:
+    https:/storage.googleapis.com/open-cogs/stac-examples/20201211_223832_CS2.jpg
+
+ASSET request errors:
+    https:/storage.googleapis.com/open-cogs/stac-examples/20201211_223832_CS2.jpg
+    http://cool-sat.com/catalog/20201211_223832_CS2/20201211_223832_CS2.EPH
+
+LINK format errors:
+    http:/remotdata.io/catalog/20201211_223832_CS2/index.html
+
+LINK request errors:
+    http://catalog/collection.json
+    http:/remotdata.io/catalog/20201211_223832_CS2/index.html
+
+This object has 4 links
+</pre>
+</section>
+<section id="invalid-stac">
+<h3>Invalid STAC<a class="headerlink" href="#invalid-stac" title="Link to this heading"></a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>stac-check<span class="w"> </span>sample_files/0.9.0/bad-item.json
+</pre></div>
+</div>
+<pre>
+<b>stac-check: STAC spec validation and linting tool</b>
+
+Please upgrade from version 0.9.0 to version 1.1.0!
+
+Validator: stac-validator 3.9.1
+
+Valid : False
+
+Schemas validated:
+    https://cdn.staclint.com/v0.9.0/item.json
+
+STAC Best Practices:
+    A link to 'self' in links is strongly recommended
+
+Validation error type:
+    ValidationError
+Validation error message:
+    'id' is a required property of the root of the STAC object
+
+This object has 5 links
+</pre>
+</section>
+<section id="using-http-headers">
+<h3>Using HTTP Headers<a class="headerlink" href="#using-http-headers" title="Link to this heading"></a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>stac-check<span class="w"> </span>https://stac-catalog.eu/collections/sentinel-s2-l2a/items/item1<span class="w"> </span>--assets<span class="w"> </span>--no-assets-urls<span class="w"> </span>--header<span class="w"> </span>x-api-key<span class="w"> </span><span class="nv">$MY_API_KEY</span><span class="w"> </span>--header<span class="w"> </span>foo<span class="w"> </span>bar
+</pre></div>
+</div>
+<pre>
+<b>stac-check: STAC spec validation and linting tool</b>
+
+Please upgrade from version 1.0.0 to version 1.1.0!
+
+Validator: stac-validator 3.9.1
+
+Valid ITEM: True
+
+Schemas validated:
+    https://stac-extensions.github.io/timestamps/v1.1.0/schema.json
+    https://schemas.stacspec.org/v1.0.0/item-spec/json-schema/item.json
+
+STAC Best Practices:
+    A STAC collection should contain a summaries field
+    It is recommended to store information like eo:bands in summaries
+
+
+No ASSET format errors!
+
+This object has 4 links
+</pre>
+</section>
+<section id="stac-api-validation">
+<h3>STAC API Validation<a class="headerlink" href="#stac-api-validation" title="Link to this heading"></a></h3>
+<p>stac-check can validate STAC API endpoints, including item collections and collections endpoints. It supports pagination and can validate multiple pages of results.</p>
+<p><strong>Validating an Item Collection Endpoint:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>stac-check<span class="w"> </span>https://stac.geobon.org/collections/chelsa-clim/items<span class="w"> </span>--item-collection
+</pre></div>
+</div>
+<pre><b>stac-check: STAC spec validation and linting tool</b>
+
+Validator: stac-validator 3.9.1
+
+Item Collection: Validate all assets in a feature collection
+Pages = 1
+
+Valid ITEM: True
+
+Schemas validated:
+    https://schemas.stacspec.org/v1.0.0/item-spec/json-schema/item.json
+
+This object has 10 items
+</pre>
+<p><strong>Validating Multiple Pages of an Item Collection:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>stac-check<span class="w"> </span>https://stac.geobon.org/collections/chelsa-clim/items<span class="w"> </span>--item-collection<span class="w"> </span>--pages<span class="w"> </span><span class="m">3</span>
+</pre></div>
+</div>
+<pre><b>stac-check: STAC spec validation and linting tool</b>
+
+Validator: stac-validator 3.9.1
+
+Item Collection: Validate all assets in a feature collection
+Pages = 3
+
+Valid ITEM: True
+
+Schemas validated:
+    https://schemas.stacspec.org/v1.0.0/item-spec/json-schema/item.json
+
+This object has 30 items
+</pre>
+<p><strong>Validating a Collections Endpoint:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>stac-check<span class="w"> </span>https://stac.geobon.org/collections<span class="w"> </span>--collections
+</pre></div>
+</div>
+<pre><b>stac-check: STAC spec validation and linting tool</b>
+
+Validator: stac-validator 3.9.1
+
+Collections: Validate all collections in a STAC API
+Pages = 1
+
+Valid COLLECTION: True
+
+Schemas validated:
+    https://schemas.stacspec.org/v1.0.0/collection-spec/json-schema/collection.json
+
+This object has 5 collections
+</pre>
+</section>
+</section>
+<section id="development">
+<h2>Development<a class="headerlink" href="#development" title="Link to this heading"></a></h2>
+<p>Create local docs in the /docs folder:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pdoc<span class="w"> </span>--output-dir<span class="w"> </span>pdoc<span class="w"> </span>./stac_check
+</pre></div>
+</div>
+</section>
+<section id="sponsors-and-supporters">
+<h2>Sponsors and Supporters<a class="headerlink" href="#sponsors-and-supporters" title="Link to this heading"></a></h2>
+<p>The following organizations have contributed time and/or funding to support the development of this project:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://healy-hyperspatial.github.io/">Healy Hyperspatial</a></p></li>
+<li><p><a class="reference external" href="https://radiant.earth/">Radiant Earth Foundation</a></p></li>
+</ul>
+<p align="left">
+  <a href="https://healy-hyperspatial.github.io/"><img src="https://raw.githubusercontent.com/stac-utils/stac-fastapi-elasticsearch-opensearch/refs/heads/main/assets/hh-logo-blue.png" alt="Healy Hyperspatial" height="100" hspace="20"></a>
+  <a href="https://radiant.earth/"><img src="assets/radiant-earth.webp" alt="Radiant Earth Foundation" height="100" hspace="20"></a>
+</p>
+<p>We are grateful for the support of our sponsors who help make this project possible. If your organization uses stac-check and would like to become a sponsor, please reach out to us!</p>
+</section>
+<section id="contributing">
+<h2>Contributing<a class="headerlink" href="#contributing" title="Link to this heading"></a></h2>
+<p>Contributions are welcome! Please feel free to submit a Pull Request.</p>
+<section id="how-to-contribute">
+<h3>How to Contribute<a class="headerlink" href="#how-to-contribute" title="Link to this heading"></a></h3>
+<ol class="arabic simple">
+<li><p><strong>Fork the repository</strong> - Create your own fork of the project</p></li>
+<li><p><strong>Create a feature branch</strong> - <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">checkout</span> <span class="pre">-b</span> <span class="pre">feature/your-feature-name</span></code></p></li>
+<li><p><strong>Commit your changes</strong> - Make sure to write clear, concise commit messages</p></li>
+<li><p><strong>Push to your branch</strong> - <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">push</span> <span class="pre">origin</span> <span class="pre">feature/your-feature-name</span></code></p></li>
+<li><p><strong>Open a Pull Request</strong> - Describe your changes in detail</p></li>
+</ol>
+</section>
+<section id="development-guidelines">
+<h3>Development Guidelines<a class="headerlink" href="#development-guidelines" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Follow the existing code style</p></li>
+<li><p>Add tests for new features</p></li>
+<li><p>Update documentation as needed</p></li>
+<li><p>Make sure all tests pass before submitting a PR</p></li>
+</ul>
+</section>
+<section id="reporting-issues">
+<h3>Reporting Issues<a class="headerlink" href="#reporting-issues" title="Link to this heading"></a></h3>
+<p>If you find a bug or have a feature request, please open an issue on the <a class="reference external" href="https://github.com/stac-utils/stac-check/issues">GitHub repository</a>.</p>
+</section>
+</section>
+<p>For more detailed documentation, please see the following pages:</p>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">CLI Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
+</ul>
+</div>
+<section id="indices-and-tables">
+<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="cli.html" class="btn btn-neutral float-right" title="CLI Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Jonathan Healy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
