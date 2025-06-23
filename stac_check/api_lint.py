@@ -37,11 +37,13 @@ class ApiLinter:
         object_list_key: str,
         pages: Optional[int] = 1,
         headers: Optional[Dict] = None,
+        verbose: bool = False,
     ):
         self.source = source
         self.object_list_key = object_list_key
         self.pages = pages if pages is not None else 1
         self.headers = headers or {}
+        self.verbose = verbose
         self.version = None
         self.validator_version = self._get_validator_version()
 
@@ -148,7 +150,7 @@ class ApiLinter:
         results_by_url = {}
         for obj, obj_url in self.iterate_objects():
             try:
-                linter = Linter(obj)
+                linter = Linter(obj, verbose=self.verbose)
                 msg = dict(linter.message)
                 msg["path"] = obj_url
                 msg["best_practices"] = linter.best_practices_msg

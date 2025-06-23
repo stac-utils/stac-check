@@ -111,6 +111,7 @@ Options:
                            multiple times.
   --pydantic               Use stac-pydantic for enhanced validation with Pydantic models.
   --verbose                Show verbose error messages.
+  -o, --output FILE        Save output to the specified file.
   --item-collection        Validate item collection response. Can be combined with
                            --pages. Defaults to one page.
   --collections            Validate collections endpoint response. Can be combined with

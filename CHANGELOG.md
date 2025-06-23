@@ -6,6 +6,15 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 
 ## Unreleased
 
+## [v1.11.0] - 2025-06-22
+
+### Added
+
+- Results summary for options that produce numerous results, ie. --collections, --item-collection, --recursive ([#138](https://github.com/stac-utils/stac-check/pull/138))
+- Support for --verbose flag to show verbose results summary ([#138](https://github.com/stac-utils/stac-check/pull/138))
+- Added `--output`/`-o` option to save validation results to a file ([#138](https://github.com/stac-utils/stac-check/pull/138))
+- Tests for CLI options ([#138](https://github.com/stac-utils/stac-check/pull/138))
+
 ## [v1.10.1] - 2025-06-21
 
 ### Fixed
@@ -285,7 +294,8 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 - Validation from stac-validator 2.3.0
 - Links and assets validation checks
 
-[Unreleased]: https://github.com/stac-utils/stac-check/compare/v1.10.1...main
+[Unreleased]: https://github.com/stac-utils/stac-check/compare/v1.11.0...main
+[v1.11.0]: https://github.com/stac-utils/stac-check/compare/v1.10.1...v1.11.0
 [v1.10.1]: https://github.com/stac-utils/stac-check/compare/v1.10.0...v1.10.1
 [v1.10.0]: https://github.com/stac-utils/stac-check/compare/v1.9.1...v1.10.0
 [v1.9.1]: https://github.com/stac-utils/stac-check/compare/v1.9.0...v1.9.1
