@@ -13,7 +13,7 @@ import shutil
 project = "stac-check"
 copyright = "2025, Jonathan Healy"
 author = "Jonathan Healy"
-release = "1.7.0"
+release = "1.11.0"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -54,6 +54,7 @@ if os.path.exists(assets_dir):
 html_static_path = ["_static"]
 
 myst_heading_anchors = 3  # Generate anchors for h1, h2, and h3
+suppress_warnings = ["myst.header", "myst.xref_missing"]
 
 # Configure myst-parser to handle images
 myst_url_schemes = ("http", "https", "mailto", "ftp")
