@@ -27,6 +27,7 @@ def test_linter_recursive_max_depth_1():
             "schema": ["https://cdn.staclint.com/v0.7.0/catalog.json"],
             "asset_type": "CATALOG",
             "validation_method": "recursive",
+            "validator_engine": "jsonschema",
             "valid_stac": True,
         }
     ]
@@ -42,6 +43,7 @@ def test_linter_recursive_max_depth_4():
             "schema": ["https://cdn.staclint.com/v0.7.0/catalog.json"],
             "asset_type": "CATALOG",
             "validation_method": "recursive",
+            "validator_engine": "jsonschema",
             "valid_stac": True,
         },
         {
@@ -50,6 +52,7 @@ def test_linter_recursive_max_depth_4():
             "schema": ["https://cdn.staclint.com/v0.7.0/collection.json"],
             "asset_type": "COLLECTION",
             "validation_method": "recursive",
+            "validator_engine": "jsonschema",
             "valid_stac": True,
         },
         {
@@ -58,6 +61,7 @@ def test_linter_recursive_max_depth_4():
             "schema": ["https://cdn.staclint.com/v0.7.0/catalog.json"],
             "asset_type": "CATALOG",
             "validation_method": "recursive",
+            "validator_engine": "jsonschema",
             "valid_stac": True,
         },
         {
@@ -66,6 +70,7 @@ def test_linter_recursive_max_depth_4():
             "schema": ["https://cdn.staclint.com/v0.7.0/item.json"],
             "asset_type": "ITEM",
             "validation_method": "recursive",
+            "validator_engine": "jsonschema",
             "valid_stac": True,
         },
         {
@@ -74,6 +79,7 @@ def test_linter_recursive_max_depth_4():
             "schema": ["https://cdn.staclint.com/v0.7.0/item.json"],
             "asset_type": "ITEM",
             "validation_method": "recursive",
+            "validator_engine": "jsonschema",
             "valid_stac": True,
         },
         {
@@ -82,6 +88,7 @@ def test_linter_recursive_max_depth_4():
             "schema": ["https://cdn.staclint.com/v0.7.0/item.json"],
             "asset_type": "ITEM",
             "validation_method": "recursive",
+            "validator_engine": "jsonschema",
             "valid_stac": True,
         },
         {
@@ -90,6 +97,7 @@ def test_linter_recursive_max_depth_4():
             "schema": ["https://cdn.staclint.com/v0.7.0/item.json"],
             "asset_type": "ITEM",
             "validation_method": "recursive",
+            "validator_engine": "jsonschema",
             "valid_stac": True,
         },
         {
@@ -98,6 +106,7 @@ def test_linter_recursive_max_depth_4():
             "schema": ["https://cdn.staclint.com/v0.7.0/item.json"],
             "asset_type": "ITEM",
             "validation_method": "recursive",
+            "validator_engine": "jsonschema",
             "valid_stac": True,
         },
         {
@@ -106,6 +115,7 @@ def test_linter_recursive_max_depth_4():
             "schema": ["https://cdn.staclint.com/v0.7.0/catalog.json"],
             "asset_type": "CATALOG",
             "validation_method": "recursive",
+            "validator_engine": "jsonschema",
             "valid_stac": True,
         },
         {
@@ -114,6 +124,7 @@ def test_linter_recursive_max_depth_4():
             "schema": ["https://cdn.staclint.com/v0.7.0/item.json"],
             "asset_type": "ITEM",
             "validation_method": "recursive",
+            "validator_engine": "jsonschema",
             "valid_stac": True,
         },
     ]
@@ -132,6 +143,7 @@ def test_linter_recursive_100():
             ],
             "valid_stac": True,
             "validation_method": "recursive",
+            "validator_engine": "jsonschema",
             "version": "1.0.0",
         },
         {
@@ -145,6 +157,7 @@ def test_linter_recursive_100():
             ],
             "valid_stac": True,
             "validation_method": "recursive",
+            "validator_engine": "jsonschema",
             "version": "1.0.0",
         },
         {
@@ -158,6 +171,7 @@ def test_linter_recursive_100():
             ],
             "valid_stac": True,
             "validation_method": "recursive",
+            "validator_engine": "jsonschema",
             "version": "1.0.0",
         },
         {
@@ -170,6 +184,7 @@ def test_linter_recursive_100():
             ],
             "valid_stac": True,
             "validation_method": "recursive",
+            "validator_engine": "jsonschema",
             "version": "1.0.0",
         },
     ]
