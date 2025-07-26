@@ -192,9 +192,6 @@ def main(
 
         intro_message(linter)
 
-        # Show intro message in the terminal
-        intro_message(linter)
-
         # Define output generation function (without intro message since we already showed it)
         def generate_output():
             if recursive:
