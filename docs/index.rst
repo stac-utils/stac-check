@@ -16,7 +16,7 @@ For more detailed documentation, please see the following pages:
    api
 
 Indices and tables
-=================
+==================
 
 * :ref:`genindex`
 * :ref:`modindex`

@@ -13,5 +13,5 @@ COPY . .
 
 # Install the package in development mode with dev and docs extras
 RUN pip install -e ".[dev,docs]"
-    
+
 CMD ["stac_check"]
