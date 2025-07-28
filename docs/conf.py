@@ -13,7 +13,7 @@ import shutil
 project = "stac-check"
 copyright = "2025, Jonathan Healy"
 author = "Jonathan Healy"
-release = "1.11.0"
+release = "1.11.1"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
