@@ -32,6 +32,7 @@ setup(
         ],
         "docs": [
             "sphinx>=8.2.3",
+            "sphinx-click>=6.0.0",
             "sphinx_rtd_theme>=3.0.2",
             "myst-parser>=4.0.1",
             "sphinx-autodoc-typehints>=3.2.0",

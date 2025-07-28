@@ -6,6 +6,14 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 
 ## Unreleased
 
+### Updated
+
+- Updated stac-validator dependency to v3.10.1 ([#140](https://github.com/stac-utils/stac-check/pull/140))
+
+### Removed
+
+- Removed pdoc-generated documentation files and references as the project now uses Sphinx exclusively for documentation. ([#141](https://github.com/stac-utils/stac-check/pull/141))
+
 ## [v1.11.0] - 2025-06-22
 
 ### Added

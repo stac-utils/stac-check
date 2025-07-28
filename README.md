@@ -37,6 +37,7 @@ The intent of this project is to provide a validation tool that also follows the
   - [Using HTTP Headers](#using-http-headers)
   - [STAC API Validation](#stac-api-validation)
 - [Development](#development)
+  - [Building Documentation](#building-documentation)
 - [Sponsors and Supporters](#sponsors-and-supporters)
 - [Contributing](#contributing)
   - [How to Contribute](#how-to-contribute)
@@ -48,26 +49,7 @@ The intent of this project is to provide a validation tool that also follows the
 
 The documentation is hosted on GitHub Pages at [stac-utils.github.io/stac-check](https://stac-utils.github.io/stac-check/).
 
-### Building Documentation Locally
-
-To build the documentation locally:
-
-```bash
-# Install the package with documentation dependencies
-pip install -e ".[docs]"
-
-# Build the documentation
-make docs
-```
-
-The built documentation will be available in the `docs/_build/html` directory.
-
-Alternatively, you can build the documentation using Docker:
-
-```bash
-# Build the Docker image and documentation
-make docker-docs
-```
+For development and building the documentation locally, see the [Development](#development) section below.
 
 ## Installation
 
@@ -508,11 +490,37 @@ This object has 5 collections
 
 ## Development
 
-Create local docs in the /docs folder:
+### Building Documentation
+
+Documentation is automatically built and published to GitHub Pages on every push to the `main` branch. You can view the latest version at [stac-utils.github.io/stac-check](https://stac-utils.github.io/stac-check/).
+
+To build the documentation locally (for development or testing), you'll need to install the development dependencies first:
 
 ```bash
-$ pdoc --output-dir pdoc ./stac_check
+# Install the package with documentation dependencies
+pip install -e ".[docs]"
+
+# Build the documentation
+make docs
+
+# Open the built documentation
+xdg-open docs/_build/html/index.html  # On Linux
+open docs/_build/html/index.html    # On macOS
+start docs/_build/html/index.html   # On Windows
 ```
+
+Or using Docker:
+
+```bash
+# Build the Docker image and documentation
+make docker-docs
+```
+
+The documentation is built using Sphinx with the following extensions:
+- `sphinx.ext.autodoc` for API documentation
+- `sphinx_click` for CLI documentation
+- `sphinx_rtd_theme` for the ReadTheDocs theme
+- `myst_parser` for Markdown support
 
 ## Sponsors and Supporters
 

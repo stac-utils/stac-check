@@ -25,6 +25,7 @@ extensions = [
     "sphinx_rtd_theme",
     "sphinx.ext.intersphinx",
     "myst_parser",
+    "sphinx_click",
 ]
 
 templates_path = ["_templates"]
