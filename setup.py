@@ -1,5 +1,4 @@
-"""stac-check setup.py
-"""
+"""stac-check setup.py"""
 
 from setuptools import find_packages, setup
 
@@ -17,8 +16,8 @@ setup(
     include_package_data=True,
     setup_requires=["setuptools"],
     install_requires=[
-        "requests>=2.32.3",
-        "jsonschema>=4.23.0",
+        "requests>=2.32.4",
+        "jsonschema>=4.25.0",
         "click>=8.1.8",
         "stac-validator~=3.10.1",
         "PyYAML",
@@ -32,11 +31,11 @@ setup(
             "stac-validator[pydantic]~=3.10.1",
         ],
         "docs": [
-            "sphinx>=4.0.0",
+            "sphinx>=8.2.3",
             "sphinx-click>=6.0.0",
-            "sphinx_rtd_theme>=1.0.0",
-            "myst-parser>=0.18.0",
-            "sphinx-autodoc-typehints>=1.18.0",
+            "sphinx_rtd_theme>=3.0.2",
+            "myst-parser>=4.0.1",
+            "sphinx-autodoc-typehints>=3.2.0",
         ],
         "pydantic": ["stac-validator[pydantic]~=3.10.1"],
     },
