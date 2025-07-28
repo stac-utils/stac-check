@@ -9,6 +9,7 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 ### Updated
 
 - Updated stac-validator dependency to v3.10.1 ([#140](https://github.com/stac-utils/stac-check/pull/140))
+- Updated Github Actions and documentation dependencies ([#139](https://github.com/stac-utils/stac-check/pull/139))
 
 ### Removed
 
