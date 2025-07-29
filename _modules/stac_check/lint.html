@@ -1,0 +1,1299 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>stac_check.lint &mdash; stac-check 1.11.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=7dc6ce7e" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=c8897f99"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            stac-check
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../cli.html">CLI Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">stac-check</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">stac_check.lint</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for stac_check.lint</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">importlib.metadata</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">importlib.resources</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dotenv</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_dotenv</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">stac_validator.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_valid_url</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">stac_validator.validate</span><span class="w"> </span><span class="kn">import</span> <span class="n">StacValidate</span>
+
+<span class="n">load_dotenv</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="Linter">
+<a class="viewcode-back" href="../../api.html#stac_check.lint.Linter">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Linter</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A class for linting STAC JSON files and generating validation messages.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        item (Union[str, dict]): A URL, file name, or dictionary representing a STAC JSON file.</span>
+<span class="sd">        config_file (Optional[str], optional): A path to a YAML configuration file. Defaults to None.</span>
+<span class="sd">        assets (bool, optional): A boolean value indicating whether to validate assets. Defaults to False.</span>
+<span class="sd">        links (bool, optional): A boolean value indicating whether to validate links. Defaults to False.</span>
+<span class="sd">        recursive (bool, optional): A boolean value indicating whether to perform recursive validation. Defaults to False.</span>
+<span class="sd">        max_depth (Optional[int], optional): An optional integer indicating the maximum depth to validate recursively. Defaults to None.</span>
+<span class="sd">        assets_open_urls (bool): Whether to open assets URLs when validating assets. Defaults to True.</span>
+<span class="sd">        headers (dict): HTTP headers to include in the requests.</span>
+<span class="sd">        pydantic (bool, optional): A boolean value indicating whether to use pydantic validation. Defaults to False.</span>
+<span class="sd">        verbose (bool, optional): A boolean value indicating whether to enable verbose output. Defaults to False.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        data (dict): A dictionary representing the STAC JSON file.</span>
+<span class="sd">        message (dict): A dictionary containing the validation message for the STAC JSON file.</span>
+<span class="sd">        config (dict): A dictionary containing the configuration settings.</span>
+<span class="sd">        asset_type (str): A string representing the asset type, if one is specified.</span>
+<span class="sd">        version (str): A string representing the version of the STAC standard used in the STAC JSON file.</span>
+<span class="sd">        validator_version (str): A string representing the version of the STAC validator used to validate the STAC JSON file.</span>
+<span class="sd">        validate_all (dict): A dictionary containing the validation message for all STAC JSON files found recursively, if recursive validation was performed.</span>
+<span class="sd">        valid_stac (bool): A boolean value indicating whether the STAC JSON file is valid.</span>
+<span class="sd">        error_type (str): A string representing the type of error in the STAC JSON file, if one exists.</span>
+<span class="sd">        error_msg (str): A string representing the error message in the STAC JSON file, if one exists.</span>
+<span class="sd">        invalid_asset_format (List[str]): A list of URLs with invalid asset formats, if assets were validated.</span>
+<span class="sd">        invalid_asset_request (List[str]): A list of URLs with invalid asset requests, if assets were validated.</span>
+<span class="sd">        invalid_link_format (List[str]): A list of URLs with invalid link formats, if links were validated.</span>
+<span class="sd">        invalid_link_request (List[str]): A list of URLs with invalid link requests, if links were validated.</span>
+<span class="sd">        schema (List[str]): A list of the STAC JSON file&#39;s JSON schema files.</span>
+<span class="sd">        object_id (str): A string representing the STAC JSON file&#39;s ID.</span>
+<span class="sd">        file_name (str): A string representing the name of the file containing the STAC JSON data.</span>
+<span class="sd">        best_practices_msg (str): A string representing best practices messages for the STAC JSON file.</span>
+<span class="sd">        geometry_errors_msg (str): A string representing geometry-related error messages for the STAC JSON file.</span>
+
+<span class="sd">    Methods:</span>
+<span class="sd">        parse_config(config_file: Optional[str] = None) -&gt; Dict:</span>
+<span class="sd">            Parses a YAML configuration file and returns a dictionary with the configuration settings.</span>
+
+<span class="sd">        def get_asset_name(self, file: Union[str, Dict] = None) -&gt; str:</span>
+<span class="sd">            Returns the name of a file.</span>
+
+<span class="sd">        load_data(self, file: Union[str, Dict]) -&gt; Dict:</span>
+<span class="sd">            Loads a STAC JSON file from a URL or file path and returns a dictionary representation.</span>
+
+<span class="sd">        validate_file(self, file: Union[str, dict]) -&gt; Dict[str, Any]:</span>
+<span class="sd">            Validates a STAC JSON file and returns a dictionary with the validation message.</span>
+
+<span class="sd">        recursive_validation(self, file: Union[str, Dict[str, Any]]) -&gt; str:</span>
+<span class="sd">            Validates a STAC JSON file recursively and returns a dictionary with the validation message.</span>
+
+<span class="sd">        set_update_message(self) -&gt; str:</span>
+<span class="sd">            Sets a message regarding the recommended version of the STAC JSON file standard.</span>
+
+<span class="sd">        check_links_assets(self, num_links: int, url_type: str, format_type: str) -&gt; List[str]:</span>
+<span class="sd">            Checks whether the STAC JSON file has links or assets with invalid formats or requests.</span>
+
+<span class="sd">        check_error_type(self) -&gt; str:</span>
+<span class="sd">            Checks whether the STAC JSON file has an error type.</span>
+
+<span class="sd">        check_error_message(self) -&gt; str:</span>
+<span class="sd">            Checks whether the STAC JSON file has an error message.</span>
+
+<span class="sd">        def check_summaries(self) -&gt; bool:</span>
+<span class="sd">            Checks whether the STAC JSON file has summaries.</span>
+
+<span class="sd">        check_bloated_links(self, max_links: Optional[int] = 20) -&gt; bool:</span>
+<span class="sd">            Checks whether the STAC JSON file has bloated links.</span>
+
+<span class="sd">        check_bloated_metadata(self, max_properties: Optional[int] = 20) -&gt; bool:</span>
+<span class="sd">            Checks whether the STAC JSON file has bloated metadata.</span>
+
+<span class="sd">        check_datetime_null(self) -&gt; bool:</span>
+<span class="sd">            Checks whether the STAC JSON file has a null datetime.</span>
+
+<span class="sd">        check_unlocated(self) -&gt; bool:</span>
+<span class="sd">            Checks whether the STAC JSON file has unlocated items.</span>
+
+<span class="sd">        check_geometry_null(self) -&gt; bool:</span>
+<span class="sd">            Checks whether the STAC JSON file has a null geometry.</span>
+
+<span class="sd">        check_searchable_identifiers(self) -&gt; bool:</span>
+<span class="sd">            Checks whether the STAC JSON file has searchable identifiers.</span>
+
+<span class="sd">        check_bbox_antimeridian(self) -&gt; bool:</span>
+<span class="sd">            Checks if a bbox that crosses the antimeridian is correctly formatted.</span>
+
+<span class="sd">        check_percent_encoded(self) -&gt; bool:</span>
+<span class="sd">            Checks whether the STAC JSON file has percent-encoded characters.</span>
+
+<span class="sd">        check_thumbnail(self) -&gt; bool:</span>
+<span class="sd">            Checks whether the STAC JSON file has a thumbnail.</span>
+
+<span class="sd">        check_links_title_field(self) -&gt; bool:</span>
+<span class="sd">            Checks whether the STAC JSON file has a title field in its links.</span>
+
+<span class="sd">        check_links_self(self) -&gt; bool:</span>
+<span class="sd">            Checks whether the STAC JSON file has a self link.</span>
+
+<span class="sd">        check_item_id_file_name(self) -&gt; bool:</span>
+<span class="sd">            Checks whether the filename of an Item conforms to the STAC specification.</span>
+
+<span class="sd">        check_catalog_file_name(self) -&gt; str:</span>
+<span class="sd">            Checks whether the filename of a Catalog or Collection conforms to the STAC specification.</span>
+
+<span class="sd">        create_best_practices_dict(self) -&gt; Dict[str, Any]:</span>
+<span class="sd">            Creates a dictionary with best practices recommendations for the STAC JSON file.</span>
+
+<span class="sd">        create_best_practices_msg(self) -&gt; List[str]:</span>
+<span class="sd">            Creates a message with best practices recommendations for the STAC JSON file.</span>
+
+<span class="sd">        create_geometry_errors_msg(self) -&gt; List[str]:</span>
+<span class="sd">            Creates a message with geometry-related error messages for the STAC JSON file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">item</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">]</span>
+    <span class="n">config_file</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">assets</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">links</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">recursive</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">max_depth</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">assets_open_urls</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">headers</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="n">pydantic</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Check if pydantic validation is requested but not installed</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pydantic</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="s2">&quot;stac_pydantic&quot;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+                <span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                    <span class="s2">&quot;stac-pydantic is not installed. Pydantic validation will be disabled. &quot;</span>
+                    <span class="s2">&quot;Install it with: pip install stac-check[pydantic]&quot;</span><span class="p">,</span>
+                    <span class="ne">UserWarning</span><span class="p">,</span>
+                    <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">pydantic</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">item</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">validate_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">item</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_config</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config_file</span><span class="p">)</span>
+
+        <span class="kn">from</span><span class="w"> </span><span class="nn">.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">determine_asset_type</span>
+
+        <span class="c1"># Set message fields using the get_message_field method</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">asset_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_message_field</span><span class="p">(</span><span class="s2">&quot;asset_type&quot;</span><span class="p">)</span>
+
+        <span class="c1"># If asset_type is not in message, determine it from the data</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">asset_type</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">asset_type</span> <span class="o">=</span> <span class="n">determine_asset_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_message_field</span><span class="p">(</span><span class="s2">&quot;version&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">valid_stac</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_message_field</span><span class="p">(</span><span class="s2">&quot;valid_stac&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">validator_version</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">distribution</span><span class="p">(</span>
+            <span class="s2">&quot;stac-validator&quot;</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">version</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">validate_all</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">recursive_validation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">item</span><span class="p">)</span>
+
+        <span class="c1"># Set error and info fields</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">error_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_message_field</span><span class="p">(</span><span class="s2">&quot;error_type&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">error_msg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_message_field</span><span class="p">(</span><span class="s2">&quot;error_message&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">failed_schema</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_message_field</span><span class="p">(</span><span class="s2">&quot;failed_schema&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">recommendation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_message_field</span><span class="p">(</span><span class="s2">&quot;recommendation&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose_error_msg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_message_field</span><span class="p">(</span><span class="s2">&quot;error_verbose&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">invalid_asset_format</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">check_links_assets</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="s2">&quot;assets&quot;</span><span class="p">,</span> <span class="s2">&quot;format&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">assets</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">invalid_asset_request</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">check_links_assets</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="s2">&quot;assets&quot;</span><span class="p">,</span> <span class="s2">&quot;request&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">assets</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">invalid_link_format</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">check_links_assets</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="s2">&quot;links&quot;</span><span class="p">,</span> <span class="s2">&quot;format&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">links</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">invalid_link_request</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">check_links_assets</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="s2">&quot;links&quot;</span><span class="p">,</span> <span class="s2">&quot;request&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">links</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">schema</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">[</span><span class="s2">&quot;schema&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="s2">&quot;schema&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="k">else</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">object_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="s2">&quot;id&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">file_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_asset_name</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">item</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">best_practices_msg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_best_practices_msg</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">geometry_errors_msg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_geometry_errors_msg</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Linter.parse_config">
+<a class="viewcode-back" href="../../api.html#stac_check.lint.Linter.parse_config">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">parse_config</span><span class="p">(</span><span class="n">config_file</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse the configuration file for STAC checks.</span>
+
+<span class="sd">        The method first looks for a file path specified in the `STAC_CHECK_CONFIG`</span>
+<span class="sd">        environment variable. If the variable is defined, the method loads the</span>
+<span class="sd">        YAML configuration file located at that path. Otherwise, it loads the default</span>
+<span class="sd">        configuration file packaged with the `stac-check` module.</span>
+
+<span class="sd">        If `config_file` is specified, the method also loads the YAML configuration</span>
+<span class="sd">        file located at that path and merges its contents with the default or</span>
+<span class="sd">        environment-based configuration.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            config_file (str): The path to the YAML configuration file.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A dictionary containing the parsed configuration values.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            IOError: If `config_file` is specified but cannot be read.</span>
+<span class="sd">            yaml.YAMLError: If any YAML syntax errors occur while parsing the</span>
+<span class="sd">                configuration file(s).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">default_config_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;STAC_CHECK_CONFIG&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">default_config_file</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">default_config_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">default_config</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">Loader</span><span class="o">=</span><span class="n">yaml</span><span class="o">.</span><span class="n">FullLoader</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">config_file_path</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">resources</span><span class="o">.</span><span class="n">files</span><span class="p">(</span><span class="s2">&quot;stac_check&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span>
+                <span class="s2">&quot;stac-check.config.yml&quot;</span>
+            <span class="p">)</span>
+            <span class="k">with</span> <span class="n">importlib</span><span class="o">.</span><span class="n">resources</span><span class="o">.</span><span class="n">as_file</span><span class="p">(</span><span class="n">config_file_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">path</span><span class="p">:</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="n">default_config</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">Loader</span><span class="o">=</span><span class="n">yaml</span><span class="o">.</span><span class="n">FullLoader</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">config_file</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">config_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">config</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">Loader</span><span class="o">=</span><span class="n">yaml</span><span class="o">.</span><span class="n">FullLoader</span><span class="p">)</span>
+            <span class="n">default_config</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">default_config</span></div>
+
+
+<div class="viewcode-block" id="Linter.get_asset_name">
+<a class="viewcode-back" href="../../api.html#stac_check.lint.Linter.get_asset_name">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_asset_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Extracts the name of an asset from its file path or from a STAC item asset dictionary.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            file (Union[str, dict], optional): A string representing the file path to the asset or a dictionary representing the</span>
+<span class="sd">                asset as specified in a STAC item&#39;s `assets` property.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A string containing the name of the asset.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            TypeError: If the input `file` is not a string or a dictionary.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">file</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">file</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="Linter.load_data">
+<a class="viewcode-back" href="../../api.html#stac_check.lint.Linter.load_data">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Loads JSON data from a file or URL.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            file (Union[str, Dict]): A string representing the path to a JSON file or a dictionary containing the JSON data.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A dictionary containing the loaded JSON data.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            TypeError: If the input `file` is not a string or dictionary.</span>
+<span class="sd">            ValueError: If `file` is a string that doesn&#39;t represent a valid URL or file path.</span>
+<span class="sd">            requests.exceptions.RequestException: If there is an error making a request to a URL.</span>
+<span class="sd">            JSONDecodeError: If the JSON data cannot be decoded.</span>
+<span class="sd">            FileNotFoundError: If the specified file cannot be found.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">is_valid_url</span><span class="p">(</span><span class="n">file</span><span class="p">):</span>
+                <span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">)</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>
+                    <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">data</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">file</span></div>
+
+
+<div class="viewcode-block" id="Linter.validate_file">
+<a class="viewcode-back" href="../../api.html#stac_check.lint.Linter.validate_file">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validates the given file path or STAC dictionary against the validation schema.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            file (Union[str, dict]): A string representing the file path to the STAC file or a dictionary representing the STAC</span>
+<span class="sd">                item.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A dictionary containing the results of the validation, including the status of the validation and any errors</span>
+<span class="sd">            encountered.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If `file` is not a valid file path or STAC dictionary.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">stac</span> <span class="o">=</span> <span class="n">StacValidate</span><span class="p">(</span>
+                <span class="n">file</span><span class="p">,</span>
+                <span class="n">links</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">links</span><span class="p">,</span>
+                <span class="n">assets</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">assets</span><span class="p">,</span>
+                <span class="n">assets_open_urls</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">assets_open_urls</span><span class="p">,</span>
+                <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">,</span>
+                <span class="n">pydantic</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pydantic</span><span class="p">,</span>
+                <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">stac</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">stac</span> <span class="o">=</span> <span class="n">StacValidate</span><span class="p">(</span>
+                <span class="n">assets_open_urls</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">assets_open_urls</span><span class="p">,</span>
+                <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">,</span>
+                <span class="n">pydantic</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pydantic</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">stac</span><span class="o">.</span><span class="n">validate_dict</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Input must be a file path or STAC dictionary.&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">stac</span><span class="o">.</span><span class="n">message</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="Linter.recursive_validation">
+<a class="viewcode-back" href="../../api.html#stac_check.lint.Linter.recursive_validation">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">recursive_validation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Recursively validate a STAC item or catalog file and its child items.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            file (Union[str, Dict[str, Any]]): A string representing the file path to the STAC item or catalog, or a</span>
+<span class="sd">                dictionary representing the STAC item or catalog.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A string containing the validation message.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            TypeError: If the input `file` is not a string or a dictionary.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">recursive</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">stac</span> <span class="o">=</span> <span class="n">StacValidate</span><span class="p">(</span>
+                    <span class="n">file</span><span class="p">,</span>
+                    <span class="n">recursive</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">max_depth</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_depth</span><span class="p">,</span>
+                    <span class="n">assets_open_urls</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">assets_open_urls</span><span class="p">,</span>
+                    <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">,</span>
+                    <span class="n">pydantic</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pydantic</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">stac</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">stac</span> <span class="o">=</span> <span class="n">StacValidate</span><span class="p">(</span>
+                    <span class="n">recursive</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">max_depth</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_depth</span><span class="p">,</span>
+                    <span class="n">assets_open_urls</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">assets_open_urls</span><span class="p">,</span>
+                    <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">,</span>
+                    <span class="n">pydantic</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pydantic</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">stac</span><span class="o">.</span><span class="n">validate_dict</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">stac</span><span class="o">.</span><span class="n">message</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;Recursive validation is disabled.&quot;</span></div>
+
+
+<div class="viewcode-block" id="Linter.set_update_message">
+<a class="viewcode-back" href="../../api.html#stac_check.lint.Linter.set_update_message">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_update_message</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a message for users to update their STAC version.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A string containing a message for users to update their STAC version.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;Please upgrade to STAC version 1.1.0!&quot;</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">!=</span> <span class="s2">&quot;1.1.0&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Please upgrade from version </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">version</span><span class="si">}</span><span class="s2"> to version 1.1.0!&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;Thanks for using STAC version 1.1.0!&quot;</span></div>
+
+
+<div class="viewcode-block" id="Linter.check_links_assets">
+<a class="viewcode-back" href="../../api.html#stac_check.lint.Linter.check_links_assets">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check_links_assets</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">num_links</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">url_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">format_type</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Checks the links and assets in the STAC catalog and returns a list of invalid links of a specified type and format.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            num_links (int): The maximum number of invalid links to return.</span>
+<span class="sd">            url_type (str): The type of URL to check, which can be either &#39;self&#39; or &#39;external&#39;.</span>
+<span class="sd">            format_type (str): The format of the URL to check, which can be either &#39;html&#39; or &#39;json&#39;.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A list of invalid links of the specified type and format. If there are no invalid links, an empty list is returned.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">links</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">url_type</span><span class="si">}</span><span class="s2">_validated&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">invalid_request_url</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">url_type</span><span class="si">}</span><span class="s2">_validated&quot;</span><span class="p">][</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">format_type</span><span class="si">}</span><span class="s2">_invalid&quot;</span>
+            <span class="p">]:</span>
+                <span class="k">if</span> <span class="n">invalid_request_url</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">links</span> <span class="ow">and</span> <span class="s2">&quot;http&quot;</span> <span class="ow">in</span> <span class="n">invalid_request_url</span><span class="p">:</span>
+                    <span class="n">links</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">invalid_request_url</span><span class="p">)</span>
+                <span class="n">num_links</span> <span class="o">=</span> <span class="n">num_links</span> <span class="o">-</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="n">num_links</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">links</span>
+        <span class="k">return</span> <span class="n">links</span></div>
+
+
+<div class="viewcode-block" id="Linter.get_message_field">
+<a class="viewcode-back" href="../../api.html#stac_check.lint.Linter.get_message_field">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_message_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get a field from the validation message.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            field_name: The name of the field to retrieve (e.g., &#39;error_type&#39;, &#39;error_message&#39;)</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The value of the field if it exists, otherwise an empty string.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">field_name</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Linter.check_summaries">
+<a class="viewcode-back" href="../../api.html#stac_check.lint.Linter.check_summaries">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check_summaries</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if a Collection asset has a &quot;summaries&quot; property.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A boolean indicating whether the Collection asset has a &quot;summaries&quot; property.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">asset_type</span> <span class="o">==</span> <span class="s2">&quot;COLLECTION&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;summaries&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="Linter.check_bloated_links">
+<a class="viewcode-back" href="../../api.html#stac_check.lint.Linter.check_bloated_links">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check_bloated_links</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_links</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">20</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Checks if the number of links in the STAC data exceeds a certain maximum.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            max_links (Optional[int]): The maximum number of links that the STAC data is allowed to have. Default is 20.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: A boolean indicating if the number of links in the STAC data exceeds the specified maximum.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s2">&quot;links&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;links&quot;</span><span class="p">])</span> <span class="o">&gt;</span> <span class="n">max_links</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="Linter.check_bloated_metadata">
+<a class="viewcode-back" href="../../api.html#stac_check.lint.Linter.check_bloated_metadata">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check_bloated_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_properties</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">20</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Checks whether a STAC item&#39;s metadata contains too many properties.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            max_properties (int, optional): The maximum number of properties that the metadata can contain before it is</span>
+<span class="sd">                considered too bloated. Defaults to 20.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: True if the number of properties in the metadata exceeds the maximum number of properties specified by</span>
+<span class="sd">                `max_properties`, False otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s2">&quot;properties&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;properties&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">&gt;</span> <span class="n">max_properties</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="Linter.check_datetime_null">
+<a class="viewcode-back" href="../../api.html#stac_check.lint.Linter.check_datetime_null">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check_datetime_null</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Checks if the STAC item has a null datetime property.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: A boolean indicating whether the datetime property is null (True) or not (False).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s2">&quot;properties&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;datetime&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;properties&quot;</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;properties&quot;</span><span class="p">][</span><span class="s2">&quot;datetime&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="Linter.check_unlocated">
+<a class="viewcode-back" href="../../api.html#stac_check.lint.Linter.check_unlocated">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check_unlocated</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Checks if a STAC item is unlocated, i.e., has no geometry but has a bounding box.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: True if the STAC item is unlocated, False otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s2">&quot;geometry&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;geometry&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bbox&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="Linter.check_geometry_null">
+<a class="viewcode-back" href="../../api.html#stac_check.lint.Linter.check_geometry_null">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check_geometry_null</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Checks if a STAC item has a null geometry property.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: A boolean indicating whether the geometry property is null (True) or not (False).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s2">&quot;geometry&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;geometry&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="Linter.check_bbox_matches_geometry">
+<a class="viewcode-back" href="../../api.html#stac_check.lint.Linter.check_bbox_matches_geometry">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check_bbox_matches_geometry</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Checks if the bbox of a STAC item matches its geometry.</span>
+
+<span class="sd">        This function verifies that the bounding box (bbox) accurately represents</span>
+<span class="sd">        the minimum bounding rectangle of the item&#39;s geometry. It only applies to</span>
+<span class="sd">        items with non-null geometry of type Polygon or MultiPolygon.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Union[bool, Tuple[bool, List[float], List[float], List[float]]]:</span>
+<span class="sd">                - True if the bbox matches the geometry or if the check is not applicable</span>
+<span class="sd">                  (e.g., null geometry or non-polygon type).</span>
+<span class="sd">                - When there&#39;s a mismatch: a tuple containing (False, calculated_bbox, actual_bbox, differences)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Skip check if geometry is null or bbox is not present</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="s2">&quot;geometry&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span>
+            <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;geometry&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="ow">or</span> <span class="s2">&quot;bbox&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span>
+            <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bbox&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="n">geometry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;geometry&quot;</span><span class="p">)</span>
+        <span class="n">bbox</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bbox&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Only process Polygon and MultiPolygon geometries</span>
+        <span class="n">geom_type</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">geom_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;Polygon&quot;</span><span class="p">,</span> <span class="s2">&quot;MultiPolygon&quot;</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="c1"># Extract coordinates based on geometry type</span>
+        <span class="n">coordinates</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">geom_type</span> <span class="o">==</span> <span class="s2">&quot;Polygon&quot;</span><span class="p">:</span>
+            <span class="c1"># For Polygon, use the exterior ring (first element)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">geometry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;coordinates&quot;</span><span class="p">,</span> <span class="p">[]))</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">coordinates</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;coordinates&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">geom_type</span> <span class="o">==</span> <span class="s2">&quot;MultiPolygon&quot;</span><span class="p">:</span>
+            <span class="c1"># For MultiPolygon, collect all coordinates from all polygons</span>
+            <span class="k">for</span> <span class="n">polygon</span> <span class="ow">in</span> <span class="n">geometry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;coordinates&quot;</span><span class="p">,</span> <span class="p">[]):</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">polygon</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">coordinates</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">polygon</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="c1"># If no valid coordinates, skip check</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">coordinates</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="c1"># Calculate min/max from coordinates</span>
+        <span class="n">lons</span> <span class="o">=</span> <span class="p">[</span><span class="n">coord</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">coord</span> <span class="ow">in</span> <span class="n">coordinates</span><span class="p">]</span>
+        <span class="n">lats</span> <span class="o">=</span> <span class="p">[</span><span class="n">coord</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">coord</span> <span class="ow">in</span> <span class="n">coordinates</span><span class="p">]</span>
+
+        <span class="n">calc_bbox</span> <span class="o">=</span> <span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="n">lons</span><span class="p">),</span> <span class="nb">min</span><span class="p">(</span><span class="n">lats</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">lons</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">lats</span><span class="p">)]</span>
+
+        <span class="c1"># Allow for differences that would be invisible when rounded to 6 decimal places</span>
+        <span class="c1"># 1e-6 would be exactly at the 6th decimal place, so use 5e-7 to be just under that threshold</span>
+        <span class="n">epsilon</span> <span class="o">=</span> <span class="mf">5e-7</span>
+        <span class="n">differences</span> <span class="o">=</span> <span class="p">[</span><span class="nb">abs</span><span class="p">(</span><span class="n">bbox</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">calc_bbox</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)]</span>
+
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">diff</span> <span class="o">&gt;</span> <span class="n">epsilon</span> <span class="k">for</span> <span class="n">diff</span> <span class="ow">in</span> <span class="n">differences</span><span class="p">):</span>
+            <span class="c1"># Return False along with the calculated bbox, actual bbox, and the differences</span>
+            <span class="k">return</span> <span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="n">calc_bbox</span><span class="p">,</span> <span class="n">bbox</span><span class="p">,</span> <span class="n">differences</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="Linter.check_searchable_identifiers">
+<a class="viewcode-back" href="../../api.html#stac_check.lint.Linter.check_searchable_identifiers">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check_searchable_identifiers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Checks if the identifiers of a STAC item are searchable, i.e.,</span>
+<span class="sd">        they only contain lowercase letters, numbers, hyphens, and underscores.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: True if the identifiers are searchable, False otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">asset_type</span> <span class="o">==</span> <span class="s2">&quot;ITEM&quot;</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">letter</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">object_id</span><span class="p">:</span>
+                <span class="k">if</span> <span class="p">(</span>
+                    <span class="n">letter</span><span class="o">.</span><span class="n">islower</span><span class="p">()</span>
+                    <span class="ow">or</span> <span class="n">letter</span><span class="o">.</span><span class="n">isnumeric</span><span class="p">()</span>
+                    <span class="ow">or</span> <span class="n">letter</span> <span class="o">==</span> <span class="s2">&quot;-&quot;</span>
+                    <span class="ow">or</span> <span class="n">letter</span> <span class="o">==</span> <span class="s2">&quot;_&quot;</span>
+                <span class="p">):</span>
+                    <span class="k">pass</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="Linter.check_percent_encoded">
+<a class="viewcode-back" href="../../api.html#stac_check.lint.Linter.check_percent_encoded">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check_percent_encoded</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Checks if the identifiers of a STAC item are percent-encoded, i.e.,</span>
+<span class="sd">        they only contain lowercase letters, numbers, hyphens, and underscores.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: True if the identifiers are percent-encoded, False otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">asset_type</span> <span class="o">==</span> <span class="s2">&quot;ITEM&quot;</span> <span class="ow">and</span> <span class="s2">&quot;/&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">object_id</span> <span class="ow">or</span> <span class="s2">&quot;:&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">object_id</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Linter.check_thumbnail">
+<a class="viewcode-back" href="../../api.html#stac_check.lint.Linter.check_thumbnail">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check_thumbnail</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Checks if the thumbnail of a STAC item is valid, i.e., it has a valid format.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: True if the thumbnail is valid, False otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s2">&quot;assets&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;thumbnail&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;assets&quot;</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="s2">&quot;type&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;assets&quot;</span><span class="p">][</span><span class="s2">&quot;thumbnail&quot;</span><span class="p">]:</span>
+                    <span class="k">if</span> <span class="p">(</span>
+                        <span class="s2">&quot;png&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;assets&quot;</span><span class="p">][</span><span class="s2">&quot;thumbnail&quot;</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
+                        <span class="ow">or</span> <span class="s2">&quot;jpeg&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;assets&quot;</span><span class="p">][</span><span class="s2">&quot;thumbnail&quot;</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
+                        <span class="ow">or</span> <span class="s2">&quot;jpg&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;assets&quot;</span><span class="p">][</span><span class="s2">&quot;thumbnail&quot;</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
+                        <span class="ow">or</span> <span class="s2">&quot;webp&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;assets&quot;</span><span class="p">][</span><span class="s2">&quot;thumbnail&quot;</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
+                    <span class="p">):</span>
+                        <span class="k">return</span> <span class="kc">True</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="Linter.check_links_title_field">
+<a class="viewcode-back" href="../../api.html#stac_check.lint.Linter.check_links_title_field">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check_links_title_field</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Checks if all links in a STAC collection or catalog have a &#39;title&#39; field.</span>
+<span class="sd">        The &#39;title&#39; field is not required for the &#39;self&#39; link.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: True if all links have a &#39;title&#39; field, False otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">asset_type</span> <span class="o">==</span> <span class="s2">&quot;COLLECTION&quot;</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">asset_type</span> <span class="o">==</span> <span class="s2">&quot;CATALOG&quot;</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;links&quot;</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="s2">&quot;title&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">link</span> <span class="ow">and</span> <span class="n">link</span><span class="p">[</span><span class="s2">&quot;rel&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;self&quot;</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="Linter.check_links_self">
+<a class="viewcode-back" href="../../api.html#stac_check.lint.Linter.check_links_self">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check_links_self</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Checks whether the &quot;self&quot; link is present in the STAC collection or catalog or absent in STAC item.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: True if the &quot;self&quot; link is present in STAC collection or catalog or absent in STAC item, False otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">asset_type</span> <span class="o">==</span> <span class="s2">&quot;ITEM&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">asset_type</span> <span class="o">==</span> <span class="s2">&quot;COLLECTION&quot;</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">asset_type</span> <span class="o">==</span> <span class="s2">&quot;CATALOG&quot;</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;links&quot;</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="s2">&quot;self&quot;</span> <span class="ow">in</span> <span class="n">link</span><span class="p">[</span><span class="s2">&quot;rel&quot;</span><span class="p">]:</span>
+                    <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="Linter.check_item_id_file_name">
+<a class="viewcode-back" href="../../api.html#stac_check.lint.Linter.check_item_id_file_name">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check_item_id_file_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">asset_type</span> <span class="o">==</span> <span class="s2">&quot;ITEM&quot;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">object_id</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_name</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="Linter.check_catalog_file_name">
+<a class="viewcode-back" href="../../api.html#stac_check.lint.Linter.check_catalog_file_name">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check_catalog_file_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Checks whether the filename of a Catalog or Collection conforms to the STAC specification.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: True if the filename is valid, False otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">item</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">&quot;.json&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">item</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">asset_type</span> <span class="o">==</span> <span class="s2">&quot;CATALOG&quot;</span> <span class="ow">and</span> <span class="s2">&quot;catalog.json&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">item</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">asset_type</span> <span class="o">==</span> <span class="s2">&quot;COLLECTION&quot;</span> <span class="ow">and</span> <span class="s2">&quot;collection.json&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">item</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="Linter.check_geometry_coordinates_definite_errors">
+<a class="viewcode-back" href="../../api.html#stac_check.lint.Linter.check_geometry_coordinates_definite_errors">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check_geometry_coordinates_definite_errors</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">List</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Checks if the coordinates in a geometry contain definite errors.</span>
+
+<span class="sd">        This function checks for coordinates that definitely violate the GeoJSON specification:</span>
+
+<span class="sd">        1. Latitude values (second element) exceed ±90 degrees</span>
+<span class="sd">        2. Longitude values (first element) exceed ±180 degrees</span>
+
+<span class="sd">        This check focuses on definite errors rather than potential/likely errors.</span>
+<span class="sd">        For checking potential errors (likely reversed coordinates), use check_geometry_coordinates_order().</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Union[bool, Tuple[bool, List]]:</span>
+<span class="sd">                - If no errors: True</span>
+<span class="sd">                - If errors found: (False, list_of_invalid_coordinates)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s2">&quot;geometry&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;geometry&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="n">geometry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;geometry&quot;</span><span class="p">)</span>
+        <span class="n">invalid_coords</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Function to check a single coordinate pair for definite errors</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">is_within_valid_ranges</span><span class="p">(</span><span class="n">coord</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">coord</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">True</span>  <span class="c1"># Not enough elements to check</span>
+
+            <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span> <span class="o">=</span> <span class="n">coord</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">coord</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+            <span class="c1"># Check if latitude (second value) is outside the valid range</span>
+            <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">lat</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">90</span><span class="p">:</span>
+                <span class="n">invalid_coords</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="s2">&quot;latitude &gt; ±90°&quot;</span><span class="p">))</span>
+                <span class="k">return</span> <span class="kc">False</span>
+
+            <span class="c1"># Check if longitude (first value) is outside the valid range</span>
+            <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">lon</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">180</span><span class="p">:</span>
+                <span class="n">invalid_coords</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="s2">&quot;longitude &gt; ±180°&quot;</span><span class="p">))</span>
+                <span class="k">return</span> <span class="kc">False</span>
+
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="c1"># Function to recursively check all coordinates in a geometry</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">check_coordinates</span><span class="p">(</span><span class="n">coords</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">coords</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">coords</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">coords</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+                    <span class="c1"># This is a single coordinate</span>
+                    <span class="k">return</span> <span class="n">is_within_valid_ranges</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># This is a list of coordinates or a list of lists of coordinates</span>
+                    <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">check_coordinates</span><span class="p">(</span><span class="n">coord</span><span class="p">)</span> <span class="k">for</span> <span class="n">coord</span> <span class="ow">in</span> <span class="n">coords</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">check_coordinates</span><span class="p">(</span><span class="n">geometry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;coordinates&quot;</span><span class="p">,</span> <span class="p">[]))</span>
+
+        <span class="k">if</span> <span class="n">result</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="n">invalid_coords</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Linter.check_geometry_coordinates_order">
+<a class="viewcode-back" href="../../api.html#stac_check.lint.Linter.check_geometry_coordinates_order">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check_geometry_coordinates_order</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Checks if the coordinates in a geometry may be in the incorrect order.</span>
+
+<span class="sd">        This function uses a heuristic to detect coordinates that are likely in the wrong order</span>
+<span class="sd">        (latitude, longitude instead of longitude, latitude). It looks for cases where:</span>
+<span class="sd">        - The first value (supposed to be longitude) is &gt; 90 degrees</span>
+<span class="sd">        - The second value (supposed to be latitude) is &lt; 90 degrees</span>
+<span class="sd">        - The first value is more than twice the second value</span>
+
+<span class="sd">        For checking definite errors (values outside valid ranges), use check_geometry_coordinates_definite_errors().</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: True if coordinates appear to be in the correct order, False if they may be reversed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s2">&quot;geometry&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;geometry&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="n">geometry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;geometry&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Function to check if a single coordinate pair is likely in the correct order</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">is_likely_correct_order</span><span class="p">(</span><span class="n">coord</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">coord</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">True</span>  <span class="c1"># Not enough elements to check</span>
+
+            <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span> <span class="o">=</span> <span class="n">coord</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">coord</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+            <span class="c1"># Heuristic: If the supposed longitude is &gt; 90 and the supposed latitude is &lt; 90,</span>
+            <span class="c1"># and the longitude is more than twice the latitude, it&#39;s likely in the correct order</span>
+            <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">lon</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">90</span> <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="n">lat</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">90</span> <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="n">lon</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">abs</span><span class="p">(</span><span class="n">lat</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="c1"># Function to recursively check all coordinates in a geometry</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">check_coordinates</span><span class="p">(</span><span class="n">coords</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">coords</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">coords</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">coords</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+                    <span class="c1"># This is a single coordinate</span>
+                    <span class="k">return</span> <span class="n">is_likely_correct_order</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># This is a list of coordinates or a list of lists of coordinates</span>
+                    <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">check_coordinates</span><span class="p">(</span><span class="n">coord</span><span class="p">)</span> <span class="k">for</span> <span class="n">coord</span> <span class="ow">in</span> <span class="n">coords</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">return</span> <span class="n">check_coordinates</span><span class="p">(</span><span class="n">geometry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;coordinates&quot;</span><span class="p">,</span> <span class="p">[]))</span></div>
+
+
+<div class="viewcode-block" id="Linter.check_bbox_antimeridian">
+<a class="viewcode-back" href="../../api.html#stac_check.lint.Linter.check_bbox_antimeridian">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check_bbox_antimeridian</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks if a bbox that crosses the antimeridian is correctly formatted.</span>
+
+<span class="sd">        According to the GeoJSON spec, when a bbox crosses the antimeridian (180°/-180° longitude),</span>
+<span class="sd">        the minimum longitude (bbox[0]) should be greater than the maximum longitude (bbox[2]).</span>
+<span class="sd">        This method checks if this convention is followed correctly.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: True if the bbox is valid (either doesn&#39;t cross antimeridian or crosses it correctly),</span>
+<span class="sd">                  False if it incorrectly crosses the antimeridian.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s2">&quot;bbox&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="n">bbox</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bbox&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Extract the 2D part of the bbox (ignoring elevation if present)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">bbox</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>  <span class="c1"># 2D bbox [west, south, east, north]</span>
+            <span class="n">west</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">east</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">bbox</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">bbox</span><span class="p">)</span> <span class="o">==</span> <span class="mi">6</span><span class="p">:</span>  <span class="c1"># 3D bbox [west, south, min_elev, east, north, max_elev]</span>
+            <span class="n">west</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">east</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">bbox</span>
+
+        <span class="c1"># Check if the bbox appears to cross the antimeridian</span>
+        <span class="c1"># This is the case when west &gt; east in a valid bbox that crosses the antimeridian</span>
+        <span class="c1"># For example: [170, -10, -170, 10] crosses the antimeridian correctly</span>
+        <span class="c1"># But [-170, -10, 170, 10] is incorrectly belting the globe</span>
+
+        <span class="c1"># Invalid if bbox &quot;belts the globe&quot; (too wide)</span>
+        <span class="k">if</span> <span class="n">west</span> <span class="o">&lt;</span> <span class="n">east</span> <span class="ow">and</span> <span class="p">(</span><span class="n">east</span> <span class="o">-</span> <span class="n">west</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">180</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="c1"># Otherwise, valid (normal or valid antimeridian crossing)</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="Linter.create_best_practices_dict">
+<a class="viewcode-back" href="../../api.html#stac_check.lint.Linter.create_best_practices_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">create_best_practices_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Creates a dictionary of best practices violations for the current STAC object. The violations are determined</span>
+<span class="sd">        by a set of configurable linting rules specified in the config file.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A dictionary of best practices violations for the current STAC object. The keys in the dictionary correspond</span>
+<span class="sd">            to the linting rules that were violated, and the values are lists of strings containing error messages and</span>
+<span class="sd">            recommendations for how to fix the violations.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">best_practices_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">linting_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;linting&quot;</span><span class="p">]</span>
+        <span class="n">geometry_validation_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;geometry_validation&quot;</span><span class="p">]</span>
+        <span class="n">max_links</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;settings&quot;</span><span class="p">][</span><span class="s2">&quot;max_links&quot;</span><span class="p">]</span>
+        <span class="n">max_properties</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;settings&quot;</span><span class="p">][</span><span class="s2">&quot;max_properties&quot;</span><span class="p">]</span>
+
+        <span class="c1"># best practices - item ids should only contain searchable identifiers</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">check_searchable_identifiers</span><span class="p">()</span> <span class="o">==</span> <span class="kc">False</span>
+            <span class="ow">and</span> <span class="n">linting_config</span><span class="p">[</span><span class="s2">&quot;searchable_identifiers&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="kc">True</span>
+        <span class="p">):</span>
+            <span class="n">msg_1</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Item name &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">object_id</span><span class="si">}</span><span class="s2">&#39; should only contain Searchable identifiers&quot;</span>
+            <span class="n">msg_2</span> <span class="o">=</span> <span class="s2">&quot;Identifiers should consist of only lowercase characters, numbers, &#39;_&#39;, and &#39;-&#39;&quot;</span>
+            <span class="n">best_practices_dict</span><span class="p">[</span><span class="s2">&quot;searchable_identifiers&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">msg_1</span><span class="p">,</span> <span class="n">msg_2</span><span class="p">]</span>
+
+        <span class="c1"># best practices - item ids should not contain &#39;:&#39; or &#39;/&#39; characters</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_percent_encoded</span><span class="p">()</span> <span class="ow">and</span> <span class="n">linting_config</span><span class="p">[</span><span class="s2">&quot;percent_encoded&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">msg_1</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Item name &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">object_id</span><span class="si">}</span><span class="s2">&#39; should not contain &#39;:&#39; or &#39;/&#39;&quot;</span>
+            <span class="n">msg_2</span> <span class="o">=</span> <span class="s2">&quot;https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#item-ids&quot;</span>
+            <span class="n">best_practices_dict</span><span class="p">[</span><span class="s2">&quot;percent_encoded&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">msg_1</span><span class="p">,</span> <span class="n">msg_2</span><span class="p">]</span>
+
+        <span class="c1"># best practices - item ids should match file names</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_item_id_file_name</span><span class="p">()</span>
+            <span class="ow">and</span> <span class="n">linting_config</span><span class="p">[</span><span class="s2">&quot;item_id_file_name&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="kc">True</span>
+        <span class="p">):</span>
+            <span class="n">msg_1</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Item file names should match their ids: &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">file_name</span><span class="si">}</span><span class="s2">&#39; not equal to &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">object_id</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">best_practices_dict</span><span class="p">[</span><span class="s2">&quot;check_item_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">msg_1</span><span class="p">]</span>
+
+        <span class="c1"># best practices - collection and catalog file names should be collection.json and catalog.json</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">check_catalog_file_name</span><span class="p">()</span> <span class="o">==</span> <span class="kc">False</span>
+            <span class="ow">and</span> <span class="n">linting_config</span><span class="p">[</span><span class="s2">&quot;catalog_id_file_name&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="kc">True</span>
+        <span class="p">):</span>
+            <span class="n">msg_1</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Object should be called &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">asset_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s2">.json&#39; not &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">file_name</span><span class="si">}</span><span class="s2">.json&#39;&quot;</span>
+            <span class="n">best_practices_dict</span><span class="p">[</span><span class="s2">&quot;check_catalog_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">msg_1</span><span class="p">]</span>
+
+        <span class="c1"># best practices - collections should contain summaries</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">asset_type</span> <span class="o">==</span> <span class="s2">&quot;COLLECTION&quot;</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_summaries</span><span class="p">()</span> <span class="o">==</span> <span class="kc">False</span>
+            <span class="ow">and</span> <span class="n">linting_config</span><span class="p">[</span><span class="s2">&quot;check_summaries&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="kc">True</span>
+        <span class="p">):</span>
+            <span class="n">msg_1</span> <span class="o">=</span> <span class="s2">&quot;A STAC collection should contain a summaries field&quot;</span>
+            <span class="n">msg_2</span> <span class="o">=</span> <span class="s2">&quot;It is recommended to store information like eo:bands in summaries&quot;</span>
+            <span class="n">best_practices_dict</span><span class="p">[</span><span class="s2">&quot;check_summaries&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">msg_1</span><span class="p">,</span> <span class="n">msg_2</span><span class="p">]</span>
+
+        <span class="c1"># best practices - datetime fields should not be set to null</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_datetime_null</span><span class="p">()</span> <span class="ow">and</span> <span class="n">linting_config</span><span class="p">[</span><span class="s2">&quot;null_datetime&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">msg_1</span> <span class="o">=</span> <span class="s2">&quot;Please avoid setting the datetime field to null, many clients search on this field&quot;</span>
+            <span class="n">best_practices_dict</span><span class="p">[</span><span class="s2">&quot;datetime_null&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">msg_1</span><span class="p">]</span>
+
+        <span class="c1"># best practices - check unlocated items to make sure bbox field is not set</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_unlocated</span><span class="p">()</span> <span class="ow">and</span> <span class="n">linting_config</span><span class="p">[</span><span class="s2">&quot;check_unlocated&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">msg_1</span> <span class="o">=</span> <span class="s2">&quot;Unlocated item. Please avoid setting the bbox field when geometry is set to null&quot;</span>
+            <span class="n">best_practices_dict</span><span class="p">[</span><span class="s2">&quot;check_unlocated&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">msg_1</span><span class="p">]</span>
+
+        <span class="c1"># best practices - recommend items have a geometry</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_geometry_null</span><span class="p">()</span> <span class="ow">and</span> <span class="n">linting_config</span><span class="p">[</span><span class="s2">&quot;check_geometry&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">msg_1</span> <span class="o">=</span> <span class="s2">&quot;All items should have a geometry field. STAC is not meant for non-spatial data&quot;</span>
+            <span class="n">best_practices_dict</span><span class="p">[</span><span class="s2">&quot;null_geometry&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">msg_1</span><span class="p">]</span>
+
+        <span class="c1"># best practices - check if bbox matches geometry</span>
+        <span class="n">bbox_check_result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_bbox_matches_geometry</span><span class="p">()</span>
+        <span class="n">bbox_mismatch</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bbox_check_result</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="n">bbox_mismatch</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">bbox_check_result</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">bbox_mismatch</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">bbox_check_result</span>
+
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">bbox_mismatch</span>
+            <span class="ow">and</span> <span class="n">geometry_validation_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;check_bbox_geometry_match&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+            <span class="o">==</span> <span class="kc">True</span>
+        <span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bbox_check_result</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                <span class="c1"># Unpack the result</span>
+                <span class="n">_</span><span class="p">,</span> <span class="n">calc_bbox</span><span class="p">,</span> <span class="n">actual_bbox</span><span class="p">,</span> <span class="n">differences</span> <span class="o">=</span> <span class="n">bbox_check_result</span>
+
+                <span class="c1"># Format the bbox values for display</span>
+                <span class="n">calc_bbox_str</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">v</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">calc_bbox</span><span class="p">])</span>
+                <span class="n">actual_bbox_str</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">v</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">actual_bbox</span><span class="p">])</span>
+
+                <span class="c1"># Create a more detailed message about which coordinates differ</span>
+                <span class="n">coordinate_labels</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="s2">&quot;min longitude&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;min latitude&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;max longitude&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;max latitude&quot;</span><span class="p">,</span>
+                <span class="p">]</span>
+                <span class="n">mismatch_details</span> <span class="o">=</span> <span class="p">[]</span>
+
+                <span class="c1"># Use the same epsilon threshold as in check_bbox_matches_geometry</span>
+                <span class="n">epsilon</span> <span class="o">=</span> <span class="mf">5e-7</span>
+
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">diff</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">differences</span><span class="p">,</span> <span class="n">coordinate_labels</span><span class="p">)):</span>
+                    <span class="k">if</span> <span class="n">diff</span> <span class="o">&gt;</span> <span class="n">epsilon</span><span class="p">:</span>
+                        <span class="n">mismatch_details</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">: calculated=</span><span class="si">{</span><span class="n">calc_bbox</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">, actual=</span><span class="si">{</span><span class="n">actual_bbox</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">, diff=</span><span class="si">{</span><span class="n">diff</span><span class="si">:</span><span class="s2">.7f</span><span class="si">}</span><span class="s2">&quot;</span>
+                        <span class="p">)</span>
+
+                <span class="n">msg_1</span> <span class="o">=</span> <span class="s2">&quot;The bbox field does not match the bounds of the geometry. The bbox should be the minimum bounding rectangle of the geometry.&quot;</span>
+                <span class="n">msg_2</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Calculated bbox from geometry: [</span><span class="si">{</span><span class="n">calc_bbox_str</span><span class="si">}</span><span class="s2">]&quot;</span>
+                <span class="n">msg_3</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Actual bbox in metadata: [</span><span class="si">{</span><span class="n">actual_bbox_str</span><span class="si">}</span><span class="s2">]&quot;</span>
+
+                <span class="n">messages</span> <span class="o">=</span> <span class="p">[</span><span class="n">msg_1</span><span class="p">,</span> <span class="n">msg_2</span><span class="p">,</span> <span class="n">msg_3</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">mismatch_details</span><span class="p">:</span>
+                    <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Mismatched coordinates:&quot;</span><span class="p">)</span>
+                    <span class="n">messages</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">mismatch_details</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># If we got here but there are no visible differences at 6 decimal places,</span>
+                    <span class="c1"># add a note explaining that the differences are too small to matter</span>
+                    <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="s2">&quot;Note: The differences are too small to be visible at 6 decimal places and can be ignored.&quot;</span>
+                    <span class="p">)</span>
+
+                <span class="n">best_practices_dict</span><span class="p">[</span><span class="s2">&quot;bbox_geometry_mismatch&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">messages</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">msg_1</span> <span class="o">=</span> <span class="s2">&quot;The bbox field does not match the bounds of the geometry. The bbox should be the minimum bounding rectangle of the geometry.&quot;</span>
+                <span class="n">best_practices_dict</span><span class="p">[</span><span class="s2">&quot;bbox_geometry_mismatch&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">msg_1</span><span class="p">]</span>
+
+        <span class="c1"># check to see if there are too many links</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">check_bloated_links</span><span class="p">(</span><span class="n">max_links</span><span class="o">=</span><span class="n">max_links</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="n">linting_config</span><span class="p">[</span><span class="s2">&quot;bloated_links&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="kc">True</span>
+        <span class="p">):</span>
+            <span class="n">msg_1</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;You have </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;links&#39;</span><span class="p">])</span><span class="si">}</span><span class="s2"> links. Please consider using sub-collections or sub-catalogs&quot;</span>
+            <span class="n">best_practices_dict</span><span class="p">[</span><span class="s2">&quot;bloated_links&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">msg_1</span><span class="p">]</span>
+
+        <span class="c1"># best practices - check for bloated metadata in properties</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">check_bloated_metadata</span><span class="p">(</span><span class="n">max_properties</span><span class="o">=</span><span class="n">max_properties</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="n">linting_config</span><span class="p">[</span><span class="s2">&quot;bloated_metadata&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="kc">True</span>
+        <span class="p">):</span>
+            <span class="n">msg_1</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;You have </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;properties&#39;</span><span class="p">])</span><span class="si">}</span><span class="s2"> properties. Please consider using links to avoid bloated metadata&quot;</span>
+            <span class="n">best_practices_dict</span><span class="p">[</span><span class="s2">&quot;bloated_metadata&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">msg_1</span><span class="p">]</span>
+
+        <span class="c1"># best practices - ensure thumbnail is a small file size [&quot;png&quot;, &quot;jpeg&quot;, &quot;jpg&quot;, &quot;webp&quot;]</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_thumbnail</span><span class="p">()</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">asset_type</span> <span class="o">==</span> <span class="s2">&quot;ITEM&quot;</span>
+            <span class="ow">and</span> <span class="n">linting_config</span><span class="p">[</span><span class="s2">&quot;check_thumbnail&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="kc">True</span>
+        <span class="p">):</span>
+            <span class="n">msg_1</span> <span class="o">=</span> <span class="s2">&quot;A thumbnail should have a small file size ie. png, jpeg, jpg, webp&quot;</span>
+            <span class="n">best_practices_dict</span><span class="p">[</span><span class="s2">&quot;check_thumbnail&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">msg_1</span><span class="p">]</span>
+
+        <span class="c1"># best practices - ensure that links in catalogs and collections include a title field</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_links_title_field</span><span class="p">()</span> <span class="ow">and</span> <span class="n">linting_config</span><span class="p">[</span><span class="s2">&quot;links_title&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">msg_1</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;Links in catalogs and collections should always have a &#39;title&#39; field&quot;</span>
+            <span class="p">)</span>
+            <span class="n">best_practices_dict</span><span class="p">[</span><span class="s2">&quot;check_links_title&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">msg_1</span><span class="p">]</span>
+
+        <span class="c1"># best practices - ensure that links in catalogs and collections include self link</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_links_self</span><span class="p">()</span> <span class="ow">and</span> <span class="n">linting_config</span><span class="p">[</span><span class="s2">&quot;links_self&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">msg_1</span> <span class="o">=</span> <span class="s2">&quot;A link to &#39;self&#39; in links is strongly recommended&quot;</span>
+            <span class="n">best_practices_dict</span><span class="p">[</span><span class="s2">&quot;check_links_self&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">msg_1</span><span class="p">]</span>
+
+        <span class="c1"># best practices - ensure that geometry coordinates are in the correct order</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_geometry_coordinates_order</span><span class="p">()</span>
+            <span class="ow">and</span> <span class="n">geometry_validation_config</span><span class="p">[</span><span class="s2">&quot;geometry_coordinates_order&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="kc">True</span>
+        <span class="p">):</span>
+            <span class="n">msg_1</span> <span class="o">=</span> <span class="s2">&quot;Geometry coordinates may be in the wrong order (required order: longitude, latitude)&quot;</span>
+            <span class="n">best_practices_dict</span><span class="p">[</span><span class="s2">&quot;geometry_coordinates_order&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">msg_1</span><span class="p">]</span>
+
+        <span class="c1"># best practices - check if geometry coordinates contain definite errors</span>
+        <span class="n">definite_errors_result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_geometry_coordinates_definite_errors</span><span class="p">()</span>
+
+        <span class="c1"># Check if we have a separate config entry for definite errors, otherwise use the same as order check</span>
+        <span class="n">config_key</span> <span class="o">=</span> <span class="s2">&quot;geometry_coordinates_definite_errors&quot;</span>
+        <span class="k">if</span> <span class="n">config_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">geometry_validation_config</span><span class="p">:</span>
+            <span class="n">config_key</span> <span class="o">=</span> <span class="s2">&quot;geometry_coordinates_order&quot;</span>
+
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">definite_errors_result</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="ow">not</span> <span class="n">definite_errors_result</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="ow">and</span> <span class="n">geometry_validation_config</span><span class="p">[</span><span class="n">config_key</span><span class="p">]</span>
+        <span class="p">):</span>
+            <span class="c1"># We have definite errors with invalid coordinates</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">invalid_coords</span> <span class="o">=</span> <span class="n">definite_errors_result</span>
+
+            <span class="c1"># Base message</span>
+            <span class="n">msg_1</span> <span class="o">=</span> <span class="s2">&quot;Geometry coordinates contain invalid values that violate the GeoJSON specification (latitude must be between -90 and 90, longitude between -180 and 180)&quot;</span>
+
+            <span class="c1"># Add details about invalid coordinates (limit to first 5 to avoid excessive output)</span>
+            <span class="n">messages</span> <span class="o">=</span> <span class="p">[</span><span class="n">msg_1</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">reason</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">invalid_coords</span><span class="p">[:</span><span class="mi">5</span><span class="p">]):</span>
+                <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid coordinate: [</span><span class="si">{</span><span class="n">lon</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">lat</span><span class="si">}</span><span class="s2">] - </span><span class="si">{</span><span class="n">reason</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">invalid_coords</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">5</span><span class="p">:</span>
+                <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;...and </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">invalid_coords</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">5</span><span class="si">}</span><span class="s2"> more invalid coordinates&quot;</span>
+                <span class="p">)</span>
+
+            <span class="n">best_practices_dict</span><span class="p">[</span><span class="s2">&quot;geometry_coordinates_definite_errors&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">messages</span>
+        <span class="k">elif</span> <span class="n">definite_errors_result</span> <span class="ow">is</span> <span class="kc">False</span> <span class="ow">and</span> <span class="n">geometry_validation_config</span><span class="p">[</span><span class="n">config_key</span><span class="p">]:</span>
+            <span class="c1"># Simple case (backward compatibility)</span>
+            <span class="n">msg_1</span> <span class="o">=</span> <span class="s2">&quot;Geometry coordinates contain invalid values that violate the GeoJSON specification (latitude must be between -90 and 90, longitude between -180 and 180)&quot;</span>
+            <span class="n">best_practices_dict</span><span class="p">[</span><span class="s2">&quot;geometry_coordinates_definite_errors&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">msg_1</span><span class="p">]</span>
+
+        <span class="c1"># Check if a bbox that crosses the antimeridian is correctly formatted</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_bbox_antimeridian</span><span class="p">()</span> <span class="ow">and</span> <span class="n">geometry_validation_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s2">&quot;check_bbox_antimeridian&quot;</span><span class="p">,</span> <span class="kc">True</span>
+        <span class="p">):</span>
+            <span class="c1"># Get the bbox values to include in the error message</span>
+            <span class="n">bbox</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bbox&quot;</span><span class="p">,</span> <span class="p">[])</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">bbox</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>  <span class="c1"># 2D bbox [west, south, east, north]</span>
+                <span class="n">west</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">east</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">bbox</span>
+            <span class="k">elif</span> <span class="p">(</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">bbox</span><span class="p">)</span> <span class="o">==</span> <span class="mi">6</span>
+            <span class="p">):</span>  <span class="c1"># 3D bbox [west, south, min_elev, east, north, max_elev]</span>
+                <span class="n">west</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">east</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">bbox</span>
+
+            <span class="n">msg_1</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;BBox crossing the antimeridian should have west longitude &gt; east longitude (found west=</span><span class="si">{</span><span class="n">west</span><span class="si">}</span><span class="s2">, east=</span><span class="si">{</span><span class="n">east</span><span class="si">}</span><span class="s2">)&quot;</span>
+            <span class="n">msg_2</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Current bbox format appears to be belting the globe instead of properly crossing the antimeridian. Bbox: </span><span class="si">{</span><span class="n">bbox</span><span class="si">}</span><span class="s2">&quot;</span>
+
+            <span class="n">best_practices_dict</span><span class="p">[</span><span class="s2">&quot;check_bbox_antimeridian&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">msg_1</span><span class="p">,</span> <span class="n">msg_2</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">best_practices_dict</span></div>
+
+
+<div class="viewcode-block" id="Linter.create_best_practices_msg">
+<a class="viewcode-back" href="../../api.html#stac_check.lint.Linter.create_best_practices_msg">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">create_best_practices_msg</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generates a list of best practices messages based on the results of the &#39;create_best_practices_dict&#39; method.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A list of strings, where each string contains a best practice message. Each message starts with the</span>
+<span class="sd">            &#39;STAC Best Practices:&#39; base string and is followed by a specific recommendation. Each message is indented</span>
+<span class="sd">            with four spaces, and there is an empty string between each message for readability.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">best_practices</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="n">base_string</span> <span class="o">=</span> <span class="s2">&quot;STAC Best Practices: &quot;</span>
+        <span class="n">best_practices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">base_string</span><span class="p">)</span>
+
+        <span class="n">best_practices_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_best_practices_dict</span><span class="p">()</span>
+
+        <span class="c1"># Filter out geometry-related errors as they will be displayed separately</span>
+        <span class="n">geometry_keys</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;geometry_coordinates_order&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;geometry_coordinates_definite_errors&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;check_bbox_antimeridian&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;check_bbox_geometry_match&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;bbox_geometry_mismatch&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="n">filtered_dict</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">best_practices_dict</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">geometry_keys</span>
+        <span class="p">}</span>
+
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">filtered_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">v</span><span class="p">:</span>
+                <span class="n">best_practices</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">value</span><span class="p">])</span>
+            <span class="n">best_practices</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;&quot;</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">best_practices</span></div>
+
+
+<div class="viewcode-block" id="Linter.create_geometry_errors_msg">
+<a class="viewcode-back" href="../../api.html#stac_check.lint.Linter.create_geometry_errors_msg">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">create_geometry_errors_msg</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generates a list of geometry-related error messages based on the results of the &#39;create_best_practices_dict&#39; method.</span>
+
+<span class="sd">        This separates geometry coordinate validation errors from other best practices for clearer presentation.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A list of strings, where each string contains a geometry error message. Each message starts with the</span>
+<span class="sd">            &#39;Geometry Validation Errors [BETA]:&#39; base string and is followed by specific details. Each message is indented</span>
+<span class="sd">            with four spaces, and there is an empty string between each message for readability.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Check if geometry validation is enabled</span>
+        <span class="n">geometry_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;geometry_validation&quot;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">geometry_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;enabled&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">[]</span>  <span class="c1"># Geometry validation is disabled</span>
+
+        <span class="n">geometry_errors</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="n">base_string</span> <span class="o">=</span> <span class="s2">&quot;Geometry Validation [BETA]: &quot;</span>
+        <span class="n">geometry_errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">base_string</span><span class="p">)</span>
+
+        <span class="n">best_practices_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_best_practices_dict</span><span class="p">()</span>
+
+        <span class="c1"># Extract only geometry-related errors</span>
+        <span class="n">geometry_keys</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;geometry_coordinates_order&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;geometry_coordinates_definite_errors&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;check_bbox_antimeridian&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;check_bbox_geometry_match&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;bbox_geometry_mismatch&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="n">geometry_dict</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">best_practices_dict</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">geometry_keys</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">geometry_dict</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>  <span class="c1"># No geometry errors found</span>
+
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">geometry_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">v</span><span class="p">:</span>
+                <span class="n">geometry_errors</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">value</span><span class="p">])</span>
+            <span class="n">geometry_errors</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;&quot;</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">geometry_errors</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Jonathan Healy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

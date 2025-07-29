@@ -1,0 +1,1096 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API Reference &mdash; stac-check 1.11.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css?v=7dc6ce7e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=c8897f99"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="CLI Reference" href="cli.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            stac-check
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="cli.html">CLI Reference</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#stac_check.lint.Linter"><code class="docutils literal notranslate"><span class="pre">Linter</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.data"><code class="docutils literal notranslate"><span class="pre">Linter.data</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.message"><code class="docutils literal notranslate"><span class="pre">Linter.message</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.config"><code class="docutils literal notranslate"><span class="pre">Linter.config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.asset_type"><code class="docutils literal notranslate"><span class="pre">Linter.asset_type</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.version"><code class="docutils literal notranslate"><span class="pre">Linter.version</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.validator_version"><code class="docutils literal notranslate"><span class="pre">Linter.validator_version</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.validate_all"><code class="docutils literal notranslate"><span class="pre">Linter.validate_all</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.valid_stac"><code class="docutils literal notranslate"><span class="pre">Linter.valid_stac</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.error_type"><code class="docutils literal notranslate"><span class="pre">Linter.error_type</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.error_msg"><code class="docutils literal notranslate"><span class="pre">Linter.error_msg</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.invalid_asset_format"><code class="docutils literal notranslate"><span class="pre">Linter.invalid_asset_format</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.invalid_asset_request"><code class="docutils literal notranslate"><span class="pre">Linter.invalid_asset_request</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.invalid_link_format"><code class="docutils literal notranslate"><span class="pre">Linter.invalid_link_format</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.invalid_link_request"><code class="docutils literal notranslate"><span class="pre">Linter.invalid_link_request</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.schema"><code class="docutils literal notranslate"><span class="pre">Linter.schema</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.object_id"><code class="docutils literal notranslate"><span class="pre">Linter.object_id</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.file_name"><code class="docutils literal notranslate"><span class="pre">Linter.file_name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.best_practices_msg"><code class="docutils literal notranslate"><span class="pre">Linter.best_practices_msg</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.geometry_errors_msg"><code class="docutils literal notranslate"><span class="pre">Linter.geometry_errors_msg</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.set_update_message"><code class="docutils literal notranslate"><span class="pre">Linter.set_update_message()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.check_error_type"><code class="docutils literal notranslate"><span class="pre">Linter.check_error_type()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.check_error_message"><code class="docutils literal notranslate"><span class="pre">Linter.check_error_message()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.check_datetime_null"><code class="docutils literal notranslate"><span class="pre">Linter.check_datetime_null()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.check_unlocated"><code class="docutils literal notranslate"><span class="pre">Linter.check_unlocated()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.check_geometry_null"><code class="docutils literal notranslate"><span class="pre">Linter.check_geometry_null()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.check_searchable_identifiers"><code class="docutils literal notranslate"><span class="pre">Linter.check_searchable_identifiers()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.check_bbox_antimeridian"><code class="docutils literal notranslate"><span class="pre">Linter.check_bbox_antimeridian()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.check_percent_encoded"><code class="docutils literal notranslate"><span class="pre">Linter.check_percent_encoded()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.check_thumbnail"><code class="docutils literal notranslate"><span class="pre">Linter.check_thumbnail()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.check_links_title_field"><code class="docutils literal notranslate"><span class="pre">Linter.check_links_title_field()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.check_links_self"><code class="docutils literal notranslate"><span class="pre">Linter.check_links_self()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.check_item_id_file_name"><code class="docutils literal notranslate"><span class="pre">Linter.check_item_id_file_name()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.check_catalog_file_name"><code class="docutils literal notranslate"><span class="pre">Linter.check_catalog_file_name()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.create_best_practices_dict"><code class="docutils literal notranslate"><span class="pre">Linter.create_best_practices_dict()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.create_best_practices_msg"><code class="docutils literal notranslate"><span class="pre">Linter.create_best_practices_msg()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.create_geometry_errors_msg"><code class="docutils literal notranslate"><span class="pre">Linter.create_geometry_errors_msg()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.assets"><code class="docutils literal notranslate"><span class="pre">Linter.assets</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.assets_open_urls"><code class="docutils literal notranslate"><span class="pre">Linter.assets_open_urls</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id0"><code class="docutils literal notranslate"><span class="pre">Linter.check_bbox_antimeridian()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.check_bbox_matches_geometry"><code class="docutils literal notranslate"><span class="pre">Linter.check_bbox_matches_geometry()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.check_bloated_links"><code class="docutils literal notranslate"><span class="pre">Linter.check_bloated_links()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.check_bloated_metadata"><code class="docutils literal notranslate"><span class="pre">Linter.check_bloated_metadata()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id1"><code class="docutils literal notranslate"><span class="pre">Linter.check_catalog_file_name()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id2"><code class="docutils literal notranslate"><span class="pre">Linter.check_datetime_null()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.check_geometry_coordinates_definite_errors"><code class="docutils literal notranslate"><span class="pre">Linter.check_geometry_coordinates_definite_errors()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.check_geometry_coordinates_order"><code class="docutils literal notranslate"><span class="pre">Linter.check_geometry_coordinates_order()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3"><code class="docutils literal notranslate"><span class="pre">Linter.check_geometry_null()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id4"><code class="docutils literal notranslate"><span class="pre">Linter.check_item_id_file_name()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.check_links_assets"><code class="docutils literal notranslate"><span class="pre">Linter.check_links_assets()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id5"><code class="docutils literal notranslate"><span class="pre">Linter.check_links_self()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id6"><code class="docutils literal notranslate"><span class="pre">Linter.check_links_title_field()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id7"><code class="docutils literal notranslate"><span class="pre">Linter.check_percent_encoded()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id8"><code class="docutils literal notranslate"><span class="pre">Linter.check_searchable_identifiers()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.check_summaries"><code class="docutils literal notranslate"><span class="pre">Linter.check_summaries()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id9"><code class="docutils literal notranslate"><span class="pre">Linter.check_thumbnail()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id10"><code class="docutils literal notranslate"><span class="pre">Linter.check_unlocated()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.config_file"><code class="docutils literal notranslate"><span class="pre">Linter.config_file</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id11"><code class="docutils literal notranslate"><span class="pre">Linter.create_best_practices_dict()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id12"><code class="docutils literal notranslate"><span class="pre">Linter.create_best_practices_msg()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id13"><code class="docutils literal notranslate"><span class="pre">Linter.create_geometry_errors_msg()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.get_asset_name"><code class="docutils literal notranslate"><span class="pre">Linter.get_asset_name()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.get_message_field"><code class="docutils literal notranslate"><span class="pre">Linter.get_message_field()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.headers"><code class="docutils literal notranslate"><span class="pre">Linter.headers</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.item"><code class="docutils literal notranslate"><span class="pre">Linter.item</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.links"><code class="docutils literal notranslate"><span class="pre">Linter.links</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.load_data"><code class="docutils literal notranslate"><span class="pre">Linter.load_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.max_depth"><code class="docutils literal notranslate"><span class="pre">Linter.max_depth</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.parse_config"><code class="docutils literal notranslate"><span class="pre">Linter.parse_config()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.pydantic"><code class="docutils literal notranslate"><span class="pre">Linter.pydantic</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.recursive"><code class="docutils literal notranslate"><span class="pre">Linter.recursive</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.recursive_validation"><code class="docutils literal notranslate"><span class="pre">Linter.recursive_validation()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id14"><code class="docutils literal notranslate"><span class="pre">Linter.set_update_message()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.validate_file"><code class="docutils literal notranslate"><span class="pre">Linter.validate_file()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stac_check.lint.Linter.verbose"><code class="docutils literal notranslate"><span class="pre">Linter.verbose</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">stac-check</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">API Reference</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/api.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="api-reference">
+<h1>API Reference<a class="headerlink" href="#api-reference" title="Link to this heading"></a></h1>
+<dl class="py class" id="module-stac_check.lint">
+<dt class="sig sig-object py" id="stac_check.lint.Linter">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">stac_check.lint.</span></span><span class="sig-name descname"><span class="pre">Linter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">~typing.Dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_file:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assets:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">links:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recursive:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_depth:</span> <span class="pre">int</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assets_open_urls:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">headers:</span> <span class="pre">~typing.Dict</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pydantic:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/stac_check/lint.html#Linter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stac_check.lint.Linter" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A class for linting STAC JSON files and generating validation messages.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>item</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>dict</em><em>]</em>) – A URL, file name, or dictionary representing a STAC JSON file.</p></li>
+<li><p><strong>config_file</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – A path to a YAML configuration file. Defaults to None.</p></li>
+<li><p><strong>assets</strong> (<em>bool</em><em>, </em><em>optional</em>) – A boolean value indicating whether to validate assets. Defaults to False.</p></li>
+<li><p><strong>links</strong> (<em>bool</em><em>, </em><em>optional</em>) – A boolean value indicating whether to validate links. Defaults to False.</p></li>
+<li><p><strong>recursive</strong> (<em>bool</em><em>, </em><em>optional</em>) – A boolean value indicating whether to perform recursive validation. Defaults to False.</p></li>
+<li><p><strong>max_depth</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em><em>, </em><em>optional</em>) – An optional integer indicating the maximum depth to validate recursively. Defaults to None.</p></li>
+<li><p><strong>assets_open_urls</strong> (<em>bool</em>) – Whether to open assets URLs when validating assets. Defaults to True.</p></li>
+<li><p><strong>headers</strong> (<em>dict</em>) – HTTP headers to include in the requests.</p></li>
+<li><p><strong>pydantic</strong> (<em>bool</em><em>, </em><em>optional</em>) – A boolean value indicating whether to use pydantic validation. Defaults to False.</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – A boolean value indicating whether to enable verbose output. Defaults to False.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.data">
+<span class="sig-name descname"><span class="pre">data</span></span><a class="headerlink" href="#stac_check.lint.Linter.data" title="Link to this definition"></a></dt>
+<dd><p>A dictionary representing the STAC JSON file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.message">
+<span class="sig-name descname"><span class="pre">message</span></span><a class="headerlink" href="#stac_check.lint.Linter.message" title="Link to this definition"></a></dt>
+<dd><p>A dictionary containing the validation message for the STAC JSON file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.config">
+<span class="sig-name descname"><span class="pre">config</span></span><a class="headerlink" href="#stac_check.lint.Linter.config" title="Link to this definition"></a></dt>
+<dd><p>A dictionary containing the configuration settings.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.asset_type">
+<span class="sig-name descname"><span class="pre">asset_type</span></span><a class="headerlink" href="#stac_check.lint.Linter.asset_type" title="Link to this definition"></a></dt>
+<dd><p>A string representing the asset type, if one is specified.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.version">
+<span class="sig-name descname"><span class="pre">version</span></span><a class="headerlink" href="#stac_check.lint.Linter.version" title="Link to this definition"></a></dt>
+<dd><p>A string representing the version of the STAC standard used in the STAC JSON file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.validator_version">
+<span class="sig-name descname"><span class="pre">validator_version</span></span><a class="headerlink" href="#stac_check.lint.Linter.validator_version" title="Link to this definition"></a></dt>
+<dd><p>A string representing the version of the STAC validator used to validate the STAC JSON file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.validate_all">
+<span class="sig-name descname"><span class="pre">validate_all</span></span><a class="headerlink" href="#stac_check.lint.Linter.validate_all" title="Link to this definition"></a></dt>
+<dd><p>A dictionary containing the validation message for all STAC JSON files found recursively, if recursive validation was performed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.valid_stac">
+<span class="sig-name descname"><span class="pre">valid_stac</span></span><a class="headerlink" href="#stac_check.lint.Linter.valid_stac" title="Link to this definition"></a></dt>
+<dd><p>A boolean value indicating whether the STAC JSON file is valid.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.error_type">
+<span class="sig-name descname"><span class="pre">error_type</span></span><a class="headerlink" href="#stac_check.lint.Linter.error_type" title="Link to this definition"></a></dt>
+<dd><p>A string representing the type of error in the STAC JSON file, if one exists.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.error_msg">
+<span class="sig-name descname"><span class="pre">error_msg</span></span><a class="headerlink" href="#stac_check.lint.Linter.error_msg" title="Link to this definition"></a></dt>
+<dd><p>A string representing the error message in the STAC JSON file, if one exists.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.invalid_asset_format">
+<span class="sig-name descname"><span class="pre">invalid_asset_format</span></span><a class="headerlink" href="#stac_check.lint.Linter.invalid_asset_format" title="Link to this definition"></a></dt>
+<dd><p>A list of URLs with invalid asset formats, if assets were validated.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.invalid_asset_request">
+<span class="sig-name descname"><span class="pre">invalid_asset_request</span></span><a class="headerlink" href="#stac_check.lint.Linter.invalid_asset_request" title="Link to this definition"></a></dt>
+<dd><p>A list of URLs with invalid asset requests, if assets were validated.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.invalid_link_format">
+<span class="sig-name descname"><span class="pre">invalid_link_format</span></span><a class="headerlink" href="#stac_check.lint.Linter.invalid_link_format" title="Link to this definition"></a></dt>
+<dd><p>A list of URLs with invalid link formats, if links were validated.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.invalid_link_request">
+<span class="sig-name descname"><span class="pre">invalid_link_request</span></span><a class="headerlink" href="#stac_check.lint.Linter.invalid_link_request" title="Link to this definition"></a></dt>
+<dd><p>A list of URLs with invalid link requests, if links were validated.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.schema">
+<span class="sig-name descname"><span class="pre">schema</span></span><a class="headerlink" href="#stac_check.lint.Linter.schema" title="Link to this definition"></a></dt>
+<dd><p>A list of the STAC JSON file’s JSON schema files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.object_id">
+<span class="sig-name descname"><span class="pre">object_id</span></span><a class="headerlink" href="#stac_check.lint.Linter.object_id" title="Link to this definition"></a></dt>
+<dd><p>A string representing the STAC JSON file’s ID.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.file_name">
+<span class="sig-name descname"><span class="pre">file_name</span></span><a class="headerlink" href="#stac_check.lint.Linter.file_name" title="Link to this definition"></a></dt>
+<dd><p>A string representing the name of the file containing the STAC JSON data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.best_practices_msg">
+<span class="sig-name descname"><span class="pre">best_practices_msg</span></span><a class="headerlink" href="#stac_check.lint.Linter.best_practices_msg" title="Link to this definition"></a></dt>
+<dd><p>A string representing best practices messages for the STAC JSON file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.geometry_errors_msg">
+<span class="sig-name descname"><span class="pre">geometry_errors_msg</span></span><a class="headerlink" href="#stac_check.lint.Linter.geometry_errors_msg" title="Link to this definition"></a></dt>
+<dd><p>A string representing geometry-related error messages for the STAC JSON file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">parse_config(config_file</span></span></dt>
+<dd><p>Optional[str] = None) -&gt; Dict:
+Parses a YAML configuration file and returns a dictionary with the configuration settings.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">def</span> <span class="pre">get_asset_name(self,</span> <span class="pre">file</span></span></dt>
+<dd><p>Union[str, Dict] = None) -&gt; str:
+Returns the name of a file.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">load_data(self,</span> <span class="pre">file</span></span></dt>
+<dd><p>Union[str, Dict]) -&gt; Dict:
+Loads a STAC JSON file from a URL or file path and returns a dictionary representation.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">validate_file(self,</span> <span class="pre">file</span></span></dt>
+<dd><p>Union[str, dict]) -&gt; Dict[str, Any]:
+Validates a STAC JSON file and returns a dictionary with the validation message.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">recursive_validation(self,</span> <span class="pre">file</span></span></dt>
+<dd><p>Union[str, Dict[str, Any]]) -&gt; str:
+Validates a STAC JSON file recursively and returns a dictionary with the validation message.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.set_update_message">
+<span class="sig-name descname"><span class="pre">set_update_message</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/stac_check/lint.html#Linter.set_update_message"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stac_check.lint.Linter.set_update_message" title="Link to this definition"></a></dt>
+<dd><p>Sets a message regarding the recommended version of the STAC JSON file standard.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">check_links_assets(self,</span> <span class="pre">num_links</span></span></dt>
+<dd><p>int, url_type: str, format_type: str) -&gt; List[str]:
+Checks whether the STAC JSON file has links or assets with invalid formats or requests.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.check_error_type">
+<span class="sig-name descname"><span class="pre">check_error_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#stac_check.lint.Linter.check_error_type" title="Link to this definition"></a></dt>
+<dd><p>Checks whether the STAC JSON file has an error type.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.check_error_message">
+<span class="sig-name descname"><span class="pre">check_error_message</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#stac_check.lint.Linter.check_error_message" title="Link to this definition"></a></dt>
+<dd><p>Checks whether the STAC JSON file has an error message.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">def</span> <span class="pre">check_summaries(self)</span> <span class="pre">-&gt;</span> <span class="pre">bool</span></span></dt>
+<dd><p>Checks whether the STAC JSON file has summaries.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">check_bloated_links(self,</span> <span class="pre">max_links</span></span></dt>
+<dd><p>Optional[int] = 20) -&gt; bool:
+Checks whether the STAC JSON file has bloated links.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">check_bloated_metadata(self,</span> <span class="pre">max_properties</span></span></dt>
+<dd><p>Optional[int] = 20) -&gt; bool:
+Checks whether the STAC JSON file has bloated metadata.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.check_datetime_null">
+<span class="sig-name descname"><span class="pre">check_datetime_null</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/stac_check/lint.html#Linter.check_datetime_null"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stac_check.lint.Linter.check_datetime_null" title="Link to this definition"></a></dt>
+<dd><p>Checks whether the STAC JSON file has a null datetime.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.check_unlocated">
+<span class="sig-name descname"><span class="pre">check_unlocated</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/stac_check/lint.html#Linter.check_unlocated"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stac_check.lint.Linter.check_unlocated" title="Link to this definition"></a></dt>
+<dd><p>Checks whether the STAC JSON file has unlocated items.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.check_geometry_null">
+<span class="sig-name descname"><span class="pre">check_geometry_null</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/stac_check/lint.html#Linter.check_geometry_null"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stac_check.lint.Linter.check_geometry_null" title="Link to this definition"></a></dt>
+<dd><p>Checks whether the STAC JSON file has a null geometry.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.check_searchable_identifiers">
+<span class="sig-name descname"><span class="pre">check_searchable_identifiers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/stac_check/lint.html#Linter.check_searchable_identifiers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stac_check.lint.Linter.check_searchable_identifiers" title="Link to this definition"></a></dt>
+<dd><p>Checks whether the STAC JSON file has searchable identifiers.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.check_bbox_antimeridian">
+<span class="sig-name descname"><span class="pre">check_bbox_antimeridian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/stac_check/lint.html#Linter.check_bbox_antimeridian"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stac_check.lint.Linter.check_bbox_antimeridian" title="Link to this definition"></a></dt>
+<dd><p>Checks if a bbox that crosses the antimeridian is correctly formatted.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.check_percent_encoded">
+<span class="sig-name descname"><span class="pre">check_percent_encoded</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/stac_check/lint.html#Linter.check_percent_encoded"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stac_check.lint.Linter.check_percent_encoded" title="Link to this definition"></a></dt>
+<dd><p>Checks whether the STAC JSON file has percent-encoded characters.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.check_thumbnail">
+<span class="sig-name descname"><span class="pre">check_thumbnail</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/stac_check/lint.html#Linter.check_thumbnail"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stac_check.lint.Linter.check_thumbnail" title="Link to this definition"></a></dt>
+<dd><p>Checks whether the STAC JSON file has a thumbnail.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.check_links_title_field">
+<span class="sig-name descname"><span class="pre">check_links_title_field</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/stac_check/lint.html#Linter.check_links_title_field"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stac_check.lint.Linter.check_links_title_field" title="Link to this definition"></a></dt>
+<dd><p>Checks whether the STAC JSON file has a title field in its links.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.check_links_self">
+<span class="sig-name descname"><span class="pre">check_links_self</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/stac_check/lint.html#Linter.check_links_self"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stac_check.lint.Linter.check_links_self" title="Link to this definition"></a></dt>
+<dd><p>Checks whether the STAC JSON file has a self link.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.check_item_id_file_name">
+<span class="sig-name descname"><span class="pre">check_item_id_file_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/stac_check/lint.html#Linter.check_item_id_file_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stac_check.lint.Linter.check_item_id_file_name" title="Link to this definition"></a></dt>
+<dd><p>Checks whether the filename of an Item conforms to the STAC specification.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.check_catalog_file_name">
+<span class="sig-name descname"><span class="pre">check_catalog_file_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/stac_check/lint.html#Linter.check_catalog_file_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stac_check.lint.Linter.check_catalog_file_name" title="Link to this definition"></a></dt>
+<dd><p>Checks whether the filename of a Catalog or Collection conforms to the STAC specification.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.create_best_practices_dict">
+<span class="sig-name descname"><span class="pre">create_best_practices_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/stac_check/lint.html#Linter.create_best_practices_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stac_check.lint.Linter.create_best_practices_dict" title="Link to this definition"></a></dt>
+<dd><p>Creates a dictionary with best practices recommendations for the STAC JSON file.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.create_best_practices_msg">
+<span class="sig-name descname"><span class="pre">create_best_practices_msg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/stac_check/lint.html#Linter.create_best_practices_msg"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stac_check.lint.Linter.create_best_practices_msg" title="Link to this definition"></a></dt>
+<dd><p>Creates a message with best practices recommendations for the STAC JSON file.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.create_geometry_errors_msg">
+<span class="sig-name descname"><span class="pre">create_geometry_errors_msg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/stac_check/lint.html#Linter.create_geometry_errors_msg"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stac_check.lint.Linter.create_geometry_errors_msg" title="Link to this definition"></a></dt>
+<dd><p>Creates a message with geometry-related error messages for the STAC JSON file.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.assets">
+<span class="sig-name descname"><span class="pre">assets</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#stac_check.lint.Linter.assets" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.assets_open_urls">
+<span class="sig-name descname"><span class="pre">assets_open_urls</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#stac_check.lint.Linter.assets_open_urls" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">check_bbox_antimeridian</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/stac_check/lint.html#Linter.check_bbox_antimeridian"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id0" title="Link to this definition"></a></dt>
+<dd><p>Checks if a bbox that crosses the antimeridian is correctly formatted.</p>
+<p>According to the GeoJSON spec, when a bbox crosses the antimeridian (180°/-180° longitude),
+the minimum longitude (bbox[0]) should be greater than the maximum longitude (bbox[2]).
+This method checks if this convention is followed correctly.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><dl class="simple">
+<dt>True if the bbox is valid (either doesn’t cross antimeridian or crosses it correctly),</dt><dd><p>False if it incorrectly crosses the antimeridian.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.check_bbox_matches_geometry">
+<span class="sig-name descname"><span class="pre">check_bbox_matches_geometry</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/stac_check/lint.html#Linter.check_bbox_matches_geometry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stac_check.lint.Linter.check_bbox_matches_geometry" title="Link to this definition"></a></dt>
+<dd><p>Checks if the bbox of a STAC item matches its geometry.</p>
+<p>This function verifies that the bounding box (bbox) accurately represents
+the minimum bounding rectangle of the item’s geometry. It only applies to
+items with non-null geometry of type Polygon or MultiPolygon.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><ul class="simple">
+<li><p>True if the bbox matches the geometry or if the check is not applicable
+(e.g., null geometry or non-polygon type).</p></li>
+<li><p>When there’s a mismatch: a tuple containing (False, calculated_bbox, actual_bbox, differences)</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Union[bool, Tuple[bool, List[float], List[float], List[float]]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.check_bloated_links">
+<span class="sig-name descname"><span class="pre">check_bloated_links</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_links</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/stac_check/lint.html#Linter.check_bloated_links"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stac_check.lint.Linter.check_bloated_links" title="Link to this definition"></a></dt>
+<dd><p>Checks if the number of links in the STAC data exceeds a certain maximum.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>max_links</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The maximum number of links that the STAC data is allowed to have. Default is 20.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A boolean indicating if the number of links in the STAC data exceeds the specified maximum.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.check_bloated_metadata">
+<span class="sig-name descname"><span class="pre">check_bloated_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_properties</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/stac_check/lint.html#Linter.check_bloated_metadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stac_check.lint.Linter.check_bloated_metadata" title="Link to this definition"></a></dt>
+<dd><p>Checks whether a STAC item’s metadata contains too many properties.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>max_properties</strong> (<em>int</em><em>, </em><em>optional</em>) – The maximum number of properties that the metadata can contain before it is
+considered too bloated. Defaults to 20.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>True if the number of properties in the metadata exceeds the maximum number of properties specified by</dt><dd><p><cite>max_properties</cite>, False otherwise.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">check_catalog_file_name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/stac_check/lint.html#Linter.check_catalog_file_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id1" title="Link to this definition"></a></dt>
+<dd><p>Checks whether the filename of a Catalog or Collection conforms to the STAC specification.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if the filename is valid, False otherwise.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id2">
+<span class="sig-name descname"><span class="pre">check_datetime_null</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/stac_check/lint.html#Linter.check_datetime_null"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id2" title="Link to this definition"></a></dt>
+<dd><p>Checks if the STAC item has a null datetime property.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A boolean indicating whether the datetime property is null (True) or not (False).</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.check_geometry_coordinates_definite_errors">
+<span class="sig-name descname"><span class="pre">check_geometry_coordinates_definite_errors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/stac_check/lint.html#Linter.check_geometry_coordinates_definite_errors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stac_check.lint.Linter.check_geometry_coordinates_definite_errors" title="Link to this definition"></a></dt>
+<dd><p>Checks if the coordinates in a geometry contain definite errors.</p>
+<p>This function checks for coordinates that definitely violate the GeoJSON specification:</p>
+<ol class="arabic simple">
+<li><p>Latitude values (second element) exceed ±90 degrees</p></li>
+<li><p>Longitude values (first element) exceed ±180 degrees</p></li>
+</ol>
+<p>This check focuses on definite errors rather than potential/likely errors.
+For checking potential errors (likely reversed coordinates), use check_geometry_coordinates_order().</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><ul class="simple">
+<li><p>If no errors: True</p></li>
+<li><p>If errors found: (False, list_of_invalid_coordinates)</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Union[bool, Tuple[bool, List]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.check_geometry_coordinates_order">
+<span class="sig-name descname"><span class="pre">check_geometry_coordinates_order</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/stac_check/lint.html#Linter.check_geometry_coordinates_order"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stac_check.lint.Linter.check_geometry_coordinates_order" title="Link to this definition"></a></dt>
+<dd><p>Checks if the coordinates in a geometry may be in the incorrect order.</p>
+<p>This function uses a heuristic to detect coordinates that are likely in the wrong order
+(latitude, longitude instead of longitude, latitude). It looks for cases where:
+- The first value (supposed to be longitude) is &gt; 90 degrees
+- The second value (supposed to be latitude) is &lt; 90 degrees
+- The first value is more than twice the second value</p>
+<p>For checking definite errors (values outside valid ranges), use check_geometry_coordinates_definite_errors().</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if coordinates appear to be in the correct order, False if they may be reversed.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id3">
+<span class="sig-name descname"><span class="pre">check_geometry_null</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/stac_check/lint.html#Linter.check_geometry_null"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id3" title="Link to this definition"></a></dt>
+<dd><p>Checks if a STAC item has a null geometry property.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A boolean indicating whether the geometry property is null (True) or not (False).</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id4">
+<span class="sig-name descname"><span class="pre">check_item_id_file_name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/stac_check/lint.html#Linter.check_item_id_file_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id4" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.check_links_assets">
+<span class="sig-name descname"><span class="pre">check_links_assets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_links</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">url_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/stac_check/lint.html#Linter.check_links_assets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stac_check.lint.Linter.check_links_assets" title="Link to this definition"></a></dt>
+<dd><p>Checks the links and assets in the STAC catalog and returns a list of invalid links of a specified type and format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>num_links</strong> (<em>int</em>) – The maximum number of invalid links to return.</p></li>
+<li><p><strong>url_type</strong> (<em>str</em>) – The type of URL to check, which can be either ‘self’ or ‘external’.</p></li>
+<li><p><strong>format_type</strong> (<em>str</em>) – The format of the URL to check, which can be either ‘html’ or ‘json’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of invalid links of the specified type and format. If there are no invalid links, an empty list is returned.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id5">
+<span class="sig-name descname"><span class="pre">check_links_self</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/stac_check/lint.html#Linter.check_links_self"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id5" title="Link to this definition"></a></dt>
+<dd><p>Checks whether the “self” link is present in the STAC collection or catalog or absent in STAC item.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if the “self” link is present in STAC collection or catalog or absent in STAC item, False otherwise.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id6">
+<span class="sig-name descname"><span class="pre">check_links_title_field</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/stac_check/lint.html#Linter.check_links_title_field"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id6" title="Link to this definition"></a></dt>
+<dd><p>Checks if all links in a STAC collection or catalog have a ‘title’ field.
+The ‘title’ field is not required for the ‘self’ link.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if all links have a ‘title’ field, False otherwise.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id7">
+<span class="sig-name descname"><span class="pre">check_percent_encoded</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/stac_check/lint.html#Linter.check_percent_encoded"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id7" title="Link to this definition"></a></dt>
+<dd><p>Checks if the identifiers of a STAC item are percent-encoded, i.e.,
+they only contain lowercase letters, numbers, hyphens, and underscores.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if the identifiers are percent-encoded, False otherwise.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id8">
+<span class="sig-name descname"><span class="pre">check_searchable_identifiers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/stac_check/lint.html#Linter.check_searchable_identifiers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id8" title="Link to this definition"></a></dt>
+<dd><p>Checks if the identifiers of a STAC item are searchable, i.e.,
+they only contain lowercase letters, numbers, hyphens, and underscores.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if the identifiers are searchable, False otherwise.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.check_summaries">
+<span class="sig-name descname"><span class="pre">check_summaries</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/stac_check/lint.html#Linter.check_summaries"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stac_check.lint.Linter.check_summaries" title="Link to this definition"></a></dt>
+<dd><p>Check if a Collection asset has a “summaries” property.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A boolean indicating whether the Collection asset has a “summaries” property.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id9">
+<span class="sig-name descname"><span class="pre">check_thumbnail</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/stac_check/lint.html#Linter.check_thumbnail"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id9" title="Link to this definition"></a></dt>
+<dd><p>Checks if the thumbnail of a STAC item is valid, i.e., it has a valid format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if the thumbnail is valid, False otherwise.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id10">
+<span class="sig-name descname"><span class="pre">check_unlocated</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/stac_check/lint.html#Linter.check_unlocated"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id10" title="Link to this definition"></a></dt>
+<dd><p>Checks if a STAC item is unlocated, i.e., has no geometry but has a bounding box.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if the STAC item is unlocated, False otherwise.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.config_file">
+<span class="sig-name descname"><span class="pre">config_file</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#stac_check.lint.Linter.config_file" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id11">
+<span class="sig-name descname"><span class="pre">create_best_practices_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span></span></span><a class="reference internal" href="_modules/stac_check/lint.html#Linter.create_best_practices_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id11" title="Link to this definition"></a></dt>
+<dd><p>Creates a dictionary of best practices violations for the current STAC object. The violations are determined
+by a set of configurable linting rules specified in the config file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A dictionary of best practices violations for the current STAC object. The keys in the dictionary correspond
+to the linting rules that were violated, and the values are lists of strings containing error messages and
+recommendations for how to fix the violations.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id12">
+<span class="sig-name descname"><span class="pre">create_best_practices_msg</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/stac_check/lint.html#Linter.create_best_practices_msg"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id12" title="Link to this definition"></a></dt>
+<dd><p>Generates a list of best practices messages based on the results of the ‘create_best_practices_dict’ method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A list of strings, where each string contains a best practice message. Each message starts with the
+‘STAC Best Practices:’ base string and is followed by a specific recommendation. Each message is indented
+with four spaces, and there is an empty string between each message for readability.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id13">
+<span class="sig-name descname"><span class="pre">create_geometry_errors_msg</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/stac_check/lint.html#Linter.create_geometry_errors_msg"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id13" title="Link to this definition"></a></dt>
+<dd><p>Generates a list of geometry-related error messages based on the results of the ‘create_best_practices_dict’ method.</p>
+<p>This separates geometry coordinate validation errors from other best practices for clearer presentation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A list of strings, where each string contains a geometry error message. Each message starts with the
+‘Geometry Validation Errors [BETA]:’ base string and is followed by specific details. Each message is indented
+with four spaces, and there is an empty string between each message for readability.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.get_asset_name">
+<span class="sig-name descname"><span class="pre">get_asset_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/stac_check/lint.html#Linter.get_asset_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stac_check.lint.Linter.get_asset_name" title="Link to this definition"></a></dt>
+<dd><p>Extracts the name of an asset from its file path or from a STAC item asset dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>file</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>dict</em><em>]</em><em>, </em><em>optional</em>) – A string representing the file path to the asset or a dictionary representing the
+asset as specified in a STAC item’s <cite>assets</cite> property.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A string containing the name of the asset.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>TypeError</strong> – If the input <cite>file</cite> is not a string or a dictionary.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.get_message_field">
+<span class="sig-name descname"><span class="pre">get_message_field</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">field_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/stac_check/lint.html#Linter.get_message_field"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stac_check.lint.Linter.get_message_field" title="Link to this definition"></a></dt>
+<dd><p>Get a field from the validation message.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>field_name</strong> – The name of the field to retrieve (e.g., ‘error_type’, ‘error_message’)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The value of the field if it exists, otherwise an empty string.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.headers">
+<span class="sig-name descname"><span class="pre">headers</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dict</span></em><a class="headerlink" href="#stac_check.lint.Linter.headers" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.item">
+<span class="sig-name descname"><span class="pre">item</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Dict</span></em><a class="headerlink" href="#stac_check.lint.Linter.item" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.links">
+<span class="sig-name descname"><span class="pre">links</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#stac_check.lint.Linter.links" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.load_data">
+<span class="sig-name descname"><span class="pre">load_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span></span></span><a class="reference internal" href="_modules/stac_check/lint.html#Linter.load_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stac_check.lint.Linter.load_data" title="Link to this definition"></a></dt>
+<dd><p>Loads JSON data from a file or URL.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>file</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Dict</em><em>]</em>) – A string representing the path to a JSON file or a dictionary containing the JSON data.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dictionary containing the loaded JSON data.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>TypeError</strong> – If the input <cite>file</cite> is not a string or dictionary.</p></li>
+<li><p><strong>ValueError</strong> – If <cite>file</cite> is a string that doesn’t represent a valid URL or file path.</p></li>
+<li><p><strong>requests.exceptions.RequestException</strong> – If there is an error making a request to a URL.</p></li>
+<li><p><strong>JSONDecodeError</strong> – If the JSON data cannot be decoded.</p></li>
+<li><p><strong>FileNotFoundError</strong> – If the specified file cannot be found.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.max_depth">
+<span class="sig-name descname"><span class="pre">max_depth</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#stac_check.lint.Linter.max_depth" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.parse_config">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span></span></span><a class="reference internal" href="_modules/stac_check/lint.html#Linter.parse_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stac_check.lint.Linter.parse_config" title="Link to this definition"></a></dt>
+<dd><p>Parse the configuration file for STAC checks.</p>
+<p>The method first looks for a file path specified in the <cite>STAC_CHECK_CONFIG</cite>
+environment variable. If the variable is defined, the method loads the
+YAML configuration file located at that path. Otherwise, it loads the default
+configuration file packaged with the <cite>stac-check</cite> module.</p>
+<p>If <cite>config_file</cite> is specified, the method also loads the YAML configuration
+file located at that path and merges its contents with the default or
+environment-based configuration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config_file</strong> (<em>str</em>) – The path to the YAML configuration file.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dictionary containing the parsed configuration values.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>IOError</strong> – If <cite>config_file</cite> is specified but cannot be read.</p></li>
+<li><p><strong>yaml.YAMLError</strong> – If any YAML syntax errors occur while parsing the
+    configuration file(s).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.pydantic">
+<span class="sig-name descname"><span class="pre">pydantic</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#stac_check.lint.Linter.pydantic" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.recursive">
+<span class="sig-name descname"><span class="pre">recursive</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#stac_check.lint.Linter.recursive" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.recursive_validation">
+<span class="sig-name descname"><span class="pre">recursive_validation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/stac_check/lint.html#Linter.recursive_validation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stac_check.lint.Linter.recursive_validation" title="Link to this definition"></a></dt>
+<dd><p>Recursively validate a STAC item or catalog file and its child items.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>file</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em>) – A string representing the file path to the STAC item or catalog, or a
+dictionary representing the STAC item or catalog.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A string containing the validation message.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>TypeError</strong> – If the input <cite>file</cite> is not a string or a dictionary.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="id14">
+<span class="sig-name descname"><span class="pre">set_update_message</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/stac_check/lint.html#Linter.set_update_message"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id14" title="Link to this definition"></a></dt>
+<dd><p>Returns a message for users to update their STAC version.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A string containing a message for users to update their STAC version.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.validate_file">
+<span class="sig-name descname"><span class="pre">validate_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/stac_check/lint.html#Linter.validate_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stac_check.lint.Linter.validate_file" title="Link to this definition"></a></dt>
+<dd><p>Validates the given file path or STAC dictionary against the validation schema.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>file</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>dict</em><em>]</em>) – A string representing the file path to the STAC file or a dictionary representing the STAC
+item.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dictionary containing the results of the validation, including the status of the validation and any errors
+encountered.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If <cite>file</cite> is not a valid file path or STAC dictionary.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="stac_check.lint.Linter.verbose">
+<span class="sig-name descname"><span class="pre">verbose</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#stac_check.lint.Linter.verbose" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="cli.html" class="btn btn-neutral float-left" title="CLI Reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Jonathan Healy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
