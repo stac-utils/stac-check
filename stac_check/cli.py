@@ -1,8 +1,11 @@
 import importlib.metadata
+import json
 import sys
 from typing import Optional
 
 import click
+import requests
+from stac_validator.utilities import is_valid_url
 
 from stac_check.api_lint import ApiLinter
 from stac_check.display_messages import (
@@ -14,6 +17,37 @@ from stac_check.display_messages import (
 )
 from stac_check.lint import Linter
 from stac_check.utilities import handle_output
+
+
+def is_item_collection(file: str, headers: dict = None) -> bool:
+    """Detect if a file is an item collection (FeatureCollection with features).
+
+    Args:
+        file: Path or URL to the file
+        headers: Optional HTTP headers for URL requests
+
+    Returns:
+        True if the file is an item collection, False otherwise
+    """
+    try:
+        if is_valid_url(file):
+            resp = requests.get(file, headers=headers or {})
+            data = resp.json()
+        else:
+            with open(file) as f:
+                data = json.load(f)
+
+        # Check if it's a FeatureCollection with features
+        return (
+            isinstance(data, dict)
+            and data.get("type") == "FeatureCollection"
+            and "features" in data
+            and isinstance(data.get("features"), list)
+            and len(data.get("features", [])) > 0
+        )
+    except Exception:
+        # If we can't determine, return False
+        return False
 
 
 @click.option(
@@ -131,6 +165,11 @@ def main(
                 fg="yellow",
             )
             pydantic = False
+
+    # Auto-detect item collection if no explicit flag is set
+    if not collections and not item_collection and not recursive:
+        if is_item_collection(file, headers=dict(header)):
+            item_collection = True
 
     if collections or item_collection:
         # Handle API-based validation (collections or item collections)

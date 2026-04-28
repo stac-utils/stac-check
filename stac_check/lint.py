@@ -174,9 +174,7 @@ class Linter:
         self.version = self.get_message_field("version")
         self.valid_stac = self.get_message_field("valid_stac")
 
-        self.validator_version = importlib.metadata.distribution(
-            "stac-validator"
-        ).version
+        self.validator_version = importlib.metadata.distribution("stac-valid").version
         self.validate_all = self.recursive_validation(self.item)
 
         # Set error and info fields
