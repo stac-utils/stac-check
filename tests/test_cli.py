@@ -1,5 +1,6 @@
 """Tests for the stac-check CLI."""
 
+import json
 import os
 import tempfile
 from unittest.mock import MagicMock, patch
@@ -7,6 +8,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from click.testing import CliRunner
 
+from stac_check.cli import is_item_collection
 from stac_check.cli import main as cli_main
 
 
@@ -75,9 +77,10 @@ def test_cli_output_to_file(runner):
 
 def test_cli_collections(runner):
     """Test --collections flag with mock."""
-    with patch("stac_check.cli.ApiLinter") as mock_api_linter, patch(
-        "stac_check.cli.Linter"
-    ) as mock_linter:
+    with (
+        patch("stac_check.cli.ApiLinter") as mock_api_linter,
+        patch("stac_check.cli.Linter") as mock_linter,
+    ):
         # Mock ApiLinter instance
         mock_api_instance = MagicMock()
         mock_api_instance.lint_all.return_value = [{"valid_stac": True}]
@@ -104,9 +107,10 @@ def test_cli_collections(runner):
 
 def test_cli_item_collection(runner):
     """Test --item-collection flag with mock."""
-    with patch("stac_check.cli.ApiLinter") as mock_api_linter, patch(
-        "stac_check.cli.Linter"
-    ) as mock_linter:
+    with (
+        patch("stac_check.cli.ApiLinter") as mock_api_linter,
+        patch("stac_check.cli.Linter") as mock_linter,
+    ):
         # Mock ApiLinter instance
         mock_api_instance = MagicMock()
         mock_api_instance.lint_all.return_value = [{"valid_stac": True}]
@@ -193,8 +197,9 @@ def test_cli_headers(runner):
 
 def test_cli_pydantic_flag(runner):
     """Test that the --pydantic flag is passed correctly."""
-    with patch("stac_check.cli.Linter") as mock_linter, patch(
-        "stac_check.cli.importlib.import_module"
+    with (
+        patch("stac_check.cli.Linter") as mock_linter,
+        patch("stac_check.cli.importlib.import_module"),
     ):
         mock_instance = MagicMock()
         mock_linter.return_value = mock_instance
@@ -218,3 +223,99 @@ def test_cli_pydantic_flag(runner):
         assert result.exit_code == 0
         mock_linter.assert_called_once()
         assert mock_linter.call_args[1]["pydantic"] is False
+
+
+def test_is_item_collection_with_valid_file():
+    """Test is_item_collection with a valid item collection file."""
+    test_file = os.path.join(
+        os.path.dirname(__file__), "../sample_files/1.0.0/feature_collection.json"
+    )
+    assert is_item_collection(test_file) is True
+
+
+def test_is_item_collection_with_regular_item():
+    """Test is_item_collection with a regular item file."""
+    test_file = os.path.join(
+        os.path.dirname(__file__), "../sample_files/1.0.0/core-item.json"
+    )
+    assert is_item_collection(test_file) is False
+
+
+def test_is_item_collection_with_collection():
+    """Test is_item_collection with a collection file."""
+    test_file = os.path.join(
+        os.path.dirname(__file__), "../sample_files/1.0.0/collection.json"
+    )
+    assert is_item_collection(test_file) is False
+
+
+def test_is_item_collection_with_invalid_file():
+    """Test is_item_collection with a non-existent file."""
+    assert is_item_collection("/nonexistent/file.json") is False
+
+
+def test_is_item_collection_with_empty_features():
+    """Test is_item_collection with a FeatureCollection that has no features."""
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as tmp:
+        json.dump({"type": "FeatureCollection", "features": []}, tmp)
+        tmp_path = tmp.name
+
+    try:
+        assert is_item_collection(tmp_path) is False
+    finally:
+        os.unlink(tmp_path)
+
+
+def test_is_item_collection_with_mock_url():
+    """Test is_item_collection with a mocked URL."""
+    mock_response = MagicMock()
+    mock_response.json.return_value = {
+        "type": "FeatureCollection",
+        "features": [{"type": "Feature", "properties": {}}],
+    }
+
+    with (
+        patch("stac_check.cli.requests.get", return_value=mock_response),
+        patch("stac_check.cli.is_valid_url", return_value=True),
+    ):
+        assert is_item_collection("https://example.com/items") is True
+
+
+def test_cli_auto_detect_item_collection(runner):
+    """Test that the CLI automatically detects and validates item collections."""
+    test_file = os.path.join(
+        os.path.dirname(__file__), "../sample_files/1.0.0/feature_collection.json"
+    )
+    result = runner.invoke(cli_main, [test_file])
+
+    assert result.exit_code == 0
+    # Should automatically detect and show item collection validation
+    assert "Item Collection" in result.output or "Assets Checked" in result.output
+
+
+def test_cli_auto_detect_respects_explicit_flag(runner):
+    """Test that explicit --item-collection flag still works."""
+    test_file = os.path.join(
+        os.path.dirname(__file__), "../sample_files/1.0.0/feature_collection.json"
+    )
+    result = runner.invoke(cli_main, [test_file, "--item-collection"])
+
+    assert result.exit_code == 0
+    # Should validate as item collection
+    assert "Item Collection" in result.output or "Assets Checked" in result.output
+
+
+def test_cli_auto_detect_does_not_trigger_with_recursive(runner):
+    """Test that auto-detection doesn't trigger when --recursive is used."""
+    test_file = os.path.join(
+        os.path.dirname(__file__), "../sample_files/1.0.0/core-item.json"
+    )
+    with patch("stac_check.cli.Linter") as mock_linter:
+        mock_instance = MagicMock()
+        mock_instance.valid_stac = True
+        mock_linter.return_value = mock_instance
+
+        runner.invoke(cli_main, [test_file, "--recursive"])
+
+        # Should use Linter, not ApiLinter (auto-detection disabled with --recursive)
+        assert mock_linter.called

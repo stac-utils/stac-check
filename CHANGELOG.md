@@ -6,6 +6,19 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 
 ## Unreleased
 
+## [v1.12.0] - 2026-04-28
+
+### Added
+
+- Support for stac-validator v4 (pip install stac-valid~=4.2.0)([#143](https://github.com/stac-utils/stac-check/pull/143))
+- pyproject.toml configuration file ([#143](https://github.com/stac-utils/stac-check/pull/143))
+- Dependabot configuration for automated dependency updates ([#143](https://github.com/stac-utils/stac-check/pull/143))
+
+### Changed
+
+- Updated dependencies and build system to use pyproject.toml ([#143](https://github.com/stac-utils/stac-check/pull/143))
+- Allowed automatic check for validating item collections without needing to specify --item-collection flag ([#143](https://github.com/stac-utils/stac-check/pull/143))
+
 ## [v1.11.1] - 2025-07-29
 
 ### Updated

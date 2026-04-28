@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stac_check"
+version = "1.12.0"
+description = "Linting and validation tool for STAC assets"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+    {name = "Jonathan Healy", email = "jonathan.d.healy@gmail.com"}
+]
+dependencies = [
+    "requests>=2.32.4",
+    "jsonschema>=4.25.0",
+    "click>=8.1.8",
+    "stac-valid~=4.2.0",
+    "PyYAML",
+    "python-dotenv",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "requests-mock",
+    "types-setuptools",
+    "stac-valid[pydantic]~=4.2.0",
+]
+docs = [
+    "sphinx>=8.2.3",
+    "sphinx-click>=6.0.0",
+    "sphinx_rtd_theme>=3.0.2",
+    "myst-parser>=4.0.1",
+    "sphinx-autodoc-typehints>=3.2.0",
+]
+pydantic = ["stac-valid[pydantic]~=4.2.0"]
+
+[project.urls]
+Homepage = "https://github.com/stac-utils/stac-check"
+
+[project.scripts]
+stac-check = "stac_check.cli:main"
+
+[tool.setuptools]
+packages = ["stac_check"]
+
+[tool.setuptools.package-data]
+stac_check = ["**/*"]
