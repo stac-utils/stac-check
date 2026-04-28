@@ -6,6 +6,10 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 
 ## Unreleased
 
+### Updated
+
+- Updated publish script to use pyproject.toml instead of setup.py
+
 ## [v1.12.0] - 2026-04-28
 
 ### Added
