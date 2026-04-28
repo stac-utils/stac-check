@@ -8,7 +8,7 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 
 ### Updated
 
-- Updated publish script to use pyproject.toml instead of setup.py
+- Updated publish script to use pyproject.toml instead of setup.py ([#149](https://github.com/stac-utils/stac-check/pull/149))
 
 ## [v1.12.0] - 2026-04-28
 
