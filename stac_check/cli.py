@@ -186,6 +186,7 @@ def main(
             pages=pages if pages else 1,
             headers=dict(header),
             verbose=verbose,
+            fast=fast,
         )
         results = api_linter.lint_all()
 
@@ -197,6 +198,7 @@ def main(
             headers=dict(header),
             pydantic=pydantic,
             verbose=verbose,
+            fast=fast,
         )
 
         # Show intro message in the terminal

@@ -203,6 +203,10 @@ class Linter:
         self.best_practices_msg = self.create_best_practices_msg()
         self.geometry_errors_msg = self.create_geometry_errors_msg()
 
+        # Extract timing information from FastValidator if available
+        self.fast_setup_time = self.get_message_field("fast_setup_time")
+        self.fast_exec_time = self.get_message_field("fast_exec_time")
+
     @staticmethod
     def parse_config(config_file: Optional[str] = None) -> Dict:
         """Parse the configuration file for STAC checks.
@@ -306,6 +310,74 @@ class Linter:
         Raises:
             ValueError: If `file` is not a valid file path or STAC dictionary.
         """
+        # Use FastValidator for fast mode with file paths
+        if self.fast and isinstance(file, str):
+            try:
+                import io
+                import sys
+
+                from stac_validator.fast_validator import FastValidator
+
+                # Capture FastValidator output
+                old_stdout = sys.stdout
+                sys.stdout = captured_output = io.StringIO()
+
+                fast_validator = FastValidator(file, quiet=False, verbose=self.verbose)
+                fast_validator.run()
+
+                # Restore stdout
+                sys.stdout = old_stdout
+                output = captured_output.getvalue()
+
+                # Extract error message and timing info from output
+                error_message = ""
+                setup_time = ""
+                exec_time = ""
+                if not fast_validator.valid:
+                    # Look for error messages in the output
+                    # Skip the status line and look for the actual error message
+                    lines = output.split("\n")
+                    for i, line in enumerate(lines):
+                        # Skip the status line (contains ID and INVALID)
+                        if "ID:" in line and "INVALID" in line:
+                            continue
+                        # Look for actual error messages
+                        if "❌" in line and (
+                            "STAC" in line or "Missing" in line or "data must" in line
+                        ):
+                            error_message = line.strip().replace("❌", "").strip()
+                            break
+
+                    # If no error found, use the first error-like line
+                    if not error_message:
+                        for line in lines:
+                            if "❌" in line:
+                                error_message = line.strip().replace("❌", "").strip()
+                                break
+
+                # Extract timing information from output
+                for line in output.split("\n"):
+                    if "Total Setup Time" in line:
+                        setup_time = line.split(":")[-1].strip()
+                    elif "Total Execution Time" in line:
+                        exec_time = line.split(":")[-1].strip()
+
+                # Convert FastValidator result to StacValidate message format
+                return {
+                    "valid_stac": fast_validator.valid,
+                    "asset_type": "",
+                    "version": "",
+                    "validation_method": "FastJSONSchema",
+                    "error_type": (
+                        "FastValidationError" if not fast_validator.valid else ""
+                    ),
+                    "error_message": error_message,
+                    "fast_setup_time": setup_time,
+                    "fast_exec_time": exec_time,
+                }
+            except ImportError:
+                pass
+
         if isinstance(file, str):
             stac = StacValidate(
                 file,

@@ -84,6 +84,9 @@ def test_cli_collections(runner):
         # Mock ApiLinter instance
         mock_api_instance = MagicMock()
         mock_api_instance.lint_all.return_value = [{"valid_stac": True}]
+        mock_api_instance.total_time = 0.0
+        mock_api_instance.schemas_checked = []
+        mock_api_instance.fast = False
         mock_api_linter.return_value = mock_api_instance
 
         # Mock Linter instance used for display
@@ -102,6 +105,7 @@ def test_cli_collections(runner):
             pages=1,
             headers={},
             verbose=False,
+            fast=False,
         )
 
 
@@ -114,6 +118,9 @@ def test_cli_item_collection(runner):
         # Mock ApiLinter instance
         mock_api_instance = MagicMock()
         mock_api_instance.lint_all.return_value = [{"valid_stac": True}]
+        mock_api_instance.total_time = 0.0
+        mock_api_instance.schemas_checked = []
+        mock_api_instance.fast = False
         mock_api_linter.return_value = mock_api_instance
 
         # Mock Linter instance used for display
@@ -131,6 +138,7 @@ def test_cli_item_collection(runner):
             pages=2,
             headers={},
             verbose=False,
+            fast=False,
         )
 
 
@@ -319,3 +327,56 @@ def test_cli_auto_detect_does_not_trigger_with_recursive(runner):
 
         # Should use Linter, not ApiLinter (auto-detection disabled with --recursive)
         assert mock_linter.called
+
+
+def test_cli_fast_validation_single_file(runner):
+    """Test --fast flag with a single file."""
+    test_file = os.path.join(
+        os.path.dirname(__file__), "../sample_files/1.0.0/core-item.json"
+    )
+    result = runner.invoke(cli_main, [test_file, "--fast"])
+    assert result.exit_code == 0
+    assert "FastJSONSchema" in result.output
+
+
+def test_cli_fast_validation_item_collection(runner):
+    """Test --fast flag with an item collection."""
+    test_file = os.path.join(
+        os.path.dirname(__file__), "../sample_files/1.0.0/feature_collection.json"
+    )
+    result = runner.invoke(cli_main, [test_file, "--fast"])
+    assert result.exit_code == 0
+    assert "FastJSONSchema" in result.output
+    assert "Validation Summary" in result.output
+    assert "Schemas checked:" in result.output
+
+
+def test_cli_fast_validation_shows_timing(runner):
+    """Test that --fast flag shows timing information."""
+    test_file = os.path.join(
+        os.path.dirname(__file__), "../sample_files/1.0.0/feature_collection.json"
+    )
+    result = runner.invoke(cli_main, [test_file, "--fast"])
+    assert result.exit_code == 0
+    assert "Timing Information" in result.output or "Validation Time" in result.output
+
+
+def test_cli_fast_validation_skips_best_practices(runner):
+    """Test that --fast flag skips best practices validation."""
+    test_file = os.path.join(
+        os.path.dirname(__file__), "../sample_files/1.0.0/core-item.json"
+    )
+    with patch("stac_check.cli.Linter") as mock_linter:
+        mock_instance = MagicMock()
+        mock_instance.fast = True
+        mock_instance.valid_stac = True
+        mock_instance.best_practices_msg = []
+        mock_instance.geometry_errors_msg = []
+        mock_linter.return_value = mock_instance
+
+        runner.invoke(cli_main, [test_file, "--fast"])
+
+        # Verify Linter was called with fast=True
+        assert mock_linter.called
+        call_kwargs = mock_linter.call_args[1]
+        assert call_kwargs.get("fast") is True

@@ -1,9 +1,11 @@
+import time
 from dataclasses import dataclass
 from typing import Dict, Generator, List, Optional, Tuple
 from urllib.parse import urlparse, urlunparse
 
 from stac_validator.utilities import fetch_and_parse_file
 
+from stac_check.fast_validator_wrapper import validate_collection_fast
 from stac_check.lint import Linter
 
 
@@ -38,14 +40,19 @@ class ApiLinter:
         pages: Optional[int] = 1,
         headers: Optional[Dict] = None,
         verbose: bool = False,
+        fast: bool = False,
     ):
         self.source = source
         self.object_list_key = object_list_key
         self.pages = pages if pages is not None else 1
         self.headers = headers or {}
         self.verbose = verbose
+        self.fast = fast
         self.version = None
         self.validator_version = self._get_validator_version()
+        self.start_time = time.time()
+        self.total_time = 0.0
+        self.schemas_checked: List[str] = []
 
     def _get_validator_version(self) -> str:
         """Get the version of stac-validator being used.
@@ -148,9 +155,35 @@ class ApiLinter:
                 matching the message structure of the Linter class.
         """
         results_by_url = {}
+
+        # In fast mode with a file path, validate with FastValidator for better performance
+        if (
+            self.fast
+            and isinstance(self.source, str)
+            and self.source.endswith((".json", ".geojson"))
+        ):
+            try:
+                results, total_time, schemas = validate_collection_fast(
+                    self.source, Linter, self.verbose
+                )
+
+                # Store results and metadata
+                self.total_time = total_time
+                self.schemas_checked = schemas
+
+                # Set version from first result
+                if results and self.version is None:
+                    self.version = results[0].get("version")
+
+                return results
+            except Exception:
+                # Fall back to regular validation if fast validation fails
+                pass
+
+        # Regular validation path (non-fast or when FastValidator unavailable)
         for obj, obj_url in self.iterate_objects():
             try:
-                linter = Linter(obj, verbose=self.verbose)
+                linter = Linter(obj, verbose=self.verbose, fast=self.fast)
                 msg = dict(linter.message)
                 msg["path"] = obj_url
                 msg["best_practices"] = linter.best_practices_msg
@@ -180,4 +213,10 @@ class ApiLinter:
                     "failed_schema": None,
                     "original_object": obj,  # Still include the original object even if validation failed
                 }
+
+        # Calculate total validation time
+        self.total_time = (
+            time.time() - self.start_time
+        ) * 1000  # Convert to milliseconds
+
         return list(results_by_url.values())
