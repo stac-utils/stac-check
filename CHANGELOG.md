@@ -10,7 +10,7 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 
 ### Added
 
-- Support for FastJSONSchema validation method with --fast flag to validate items, item collections ([#149](https://github.com/stac-utils/stac-check/pull/149))
+- Support for FastJSONSchema validation method with --fast flag to validate items, item collections ([#150](https://github.com/stac-utils/stac-check/pull/150))
 
 ### Updated
 
