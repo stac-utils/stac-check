@@ -98,6 +98,10 @@ def _display_best_practices(linter: Linter) -> None:
     Args:
         linter: The Linter object containing best practices information
     """
+    # Skip best practices display in fast mode
+    if hasattr(linter, "fast") and linter.fast:
+        return
+
     if linter.best_practices_msg:
         click.secho("\n " + linter.best_practices_msg[0], bg="blue")
         click.secho()
@@ -111,6 +115,10 @@ def _display_geometry_errors(linter: Linter) -> None:
     Args:
         linter: The Linter object containing geometry error information
     """
+    # Skip geometry errors display in fast mode
+    if hasattr(linter, "fast") and linter.fast:
+        return
+
     if linter.geometry_errors_msg:
         click.secho("\n " + linter.geometry_errors_msg[0], bg="magenta", fg="black")
         click.secho()
@@ -216,19 +224,99 @@ def _display_disclaimer() -> None:
     click.secho()
 
 
+def _display_fast_validation_summary(
+    results: List[Dict[str, Any]],
+    total_time: float = 0.0,
+    schemas: Optional[List[str]] = None,
+) -> None:
+    """Display a compact validation summary for fast mode with large datasets.
+
+    Args:
+        results: List of validation result dictionaries
+        total_time: Total validation time in milliseconds
+        schemas: List of schemas that were checked
+    """
+    passed = 0
+    failed = []
+    error_registry: Dict[str, List[str]] = {}
+
+    for result in results:
+        if result.get("valid_stac"):
+            passed += 1
+        else:
+            failed.append(result)
+            # Group errors by message
+            error_msg = result.get("error_message", "Unknown error")
+            if error_msg not in error_registry:
+                error_registry[error_msg] = []
+            # Extract item ID from path
+            path = result.get("path", "unknown")
+            item_id = path.split("/")[-1] if "/" in path else path
+            error_registry[error_msg].append(item_id)
+
+    click.secho()
+    click.secho("\n Validation Summary", bold=True, bg="black", fg="white")
+    click.secho()
+    click.secho(f"✅ Passed: {passed}/{len(results)}")
+
+    if len(failed) > 0:
+        click.secho(f"❌ Failed: {len(failed)}/{len(results)}", fg="red")
+
+    if total_time > 0:
+        click.secho()
+        click.secho("⚡ Timing Information:", bold=True, fg="cyan")
+        click.secho(f"  Total Validation Time: {total_time:.2f} ms")
+        if len(results) > 0:
+            avg_time = total_time / len(results)
+            click.secho(f"  Average per Object: {avg_time:.3f} ms")
+
+    # Display schemas checked
+    if schemas and len(schemas) > 0:
+        click.secho()
+        click.secho("Schemas checked:", bold=True)
+        for schema in schemas:
+            click.secho(f"    {schema}")
+
+    # Display grouped errors
+    if error_registry:
+        click.secho()
+        click.secho("\n Validation Errors", bg="red", fg="white")
+        click.secho()
+        for err_msg, affected_ids in error_registry.items():
+            count = len(affected_ids)
+            click.secho(f"❌ {err_msg}", fg="red")
+            sample_ids = ", ".join(affected_ids[:3])
+            if count > 3:
+                sample_ids += f" ... (and {count - 3} more)"
+            click.secho(
+                f"   Affected Items: {count} | Examples: {sample_ids}", fg="red"
+            )
+            click.secho()
+
+    click.secho()
+
+
 def _display_validation_summary(
-    results: List[Dict[str, Any]], verbose: bool = False
+    results: List[Dict[str, Any]],
+    verbose: bool = False,
+    fast: bool = False,
+    total_time: float = 0.0,
 ) -> None:
     """Display a summary of validation results, including warnings and best practice issues.
 
     Args:
         results: List of validation result dictionaries
         verbose: Whether to show detailed output
+        fast: Whether fast mode is enabled (for compact output and timing display)
+        total_time: Total validation time in milliseconds (for fast mode)
     """
     passed = 0
     failed = []
     warnings = []
     all_paths = []
+    total_setup_time = 0.0
+    total_exec_time = 0.0
+    error_registry: Dict[str, List[str]] = {}
 
     for result in results:
         path = result.get("path", "unknown")
@@ -239,6 +327,13 @@ def _display_validation_summary(
             passed += 1
         else:
             failed.append(path)
+            # Group errors by message for fast mode
+            error_msg = result.get("error_message", "Unknown error")
+            if error_msg not in error_registry:
+                error_registry[error_msg] = []
+            # Extract item ID from path
+            item_id = path.split("/")[-1] if "/" in path else path
+            error_registry[error_msg].append(item_id)
 
         # Check for best practice warnings in the result
         best_practices = []
@@ -264,36 +359,71 @@ def _display_validation_summary(
         if best_practices:
             warnings.append((path, best_practices))
 
-    click.secho("\n Validation Summary", bold=True, bg="black", fg="white")
-    click.secho()
-    click.secho(f"✅ Passed: {passed}/{len(all_paths)}")
+        # Accumulate timing information if available
+        if fast and result.get("fast_setup_time"):
+            try:
+                setup_str = result.get("fast_setup_time", "0").split()[0]
+                total_setup_time += float(setup_str)
+            except (ValueError, IndexError):
+                pass
+        if fast and result.get("fast_exec_time"):
+            try:
+                exec_str = result.get("fast_exec_time", "0").split()[0]
+                total_exec_time += float(exec_str)
+            except (ValueError, IndexError):
+                pass
 
-    if failed:
-        click.secho(f"❌ Failed: {len(failed)}/{len(all_paths)}", fg="red")
-        click.secho("\nFailed Assets:", fg="red")
-        for path in failed:
-            click.secho(f"  - {path}")
-
-    if warnings:
-        click.secho(
-            f"\n⚠️  Best Practice Warnings ({len(warnings)} assets)", fg="yellow"
-        )
-        if verbose or len(warnings) <= 12:
-            for path, msgs in warnings:
-                click.secho(f"\n  {path}:", fg="yellow")
-                for msg in msgs:
-                    click.secho(f"    • {msg}", fg="yellow")
-        else:
-            click.secho("  (Use --verbose to see details)", fg="yellow")
-
-    click.secho(f"\n🔍 All {len(all_paths)} Assets Checked")
-    if verbose or len(all_paths) <= 12:
-        for path in all_paths:
-            click.secho(f"  - {path}")
+    # Use fast validation summary for fast mode
+    if fast:
+        # Collect all unique schemas from results
+        all_schemas = set()
+        for result in results:
+            if result.get("schema"):
+                all_schemas.update(result.get("schema", []))
+        schemas_list = sorted(list(all_schemas)) if all_schemas else None
+        _display_fast_validation_summary(results, total_time, schemas_list)
     else:
-        click.secho("  (Use --verbose to see all assets)", fg="yellow")
+        # Standard output for non-fast mode or small datasets
+        click.secho("\n Validation Summary", bold=True, bg="black", fg="white")
+        click.secho()
+        click.secho(f"✅ Passed: {passed}/{len(all_paths)}")
 
-    click.secho()
+        if failed:
+            click.secho(f"❌ Failed: {len(failed)}/{len(all_paths)}", fg="red")
+            click.secho("\nFailed Assets:", fg="red")
+            for path in failed:
+                click.secho(f"  - {path}")
+
+        if warnings:
+            click.secho(
+                f"\n⚠️  Best Practice Warnings ({len(warnings)} assets)", fg="yellow"
+            )
+            if verbose or len(warnings) <= 12:
+                for path, msgs in warnings:
+                    click.secho(f"\n  {path}:", fg="yellow")
+                    for msg in msgs:
+                        click.secho(f"    • {msg}", fg="yellow")
+            else:
+                click.secho("  (Use --verbose to see details)", fg="yellow")
+
+        click.secho(f"\n🔍 All {len(all_paths)} Assets Checked")
+        if verbose or len(all_paths) <= 12:
+            for path in all_paths:
+                click.secho(f"  - {path}")
+        else:
+            click.secho("  (Use --verbose to see all assets)", fg="yellow")
+
+        # Display timing information if in fast mode
+        if fast and (total_setup_time > 0 or total_exec_time > 0):
+            click.secho()
+            click.secho("⚡ FastValidator Timing:", bold=True, fg="cyan")
+            click.secho(f"  Total Setup Time: {total_setup_time:.2f} ms")
+            click.secho(f"  Total Execution Time: {total_exec_time:.2f} ms")
+            if len(all_paths) > 0:
+                avg_time = total_exec_time / len(all_paths)
+                click.secho(f"  Average per Item: {avg_time:.3f} ms")
+
+        click.secho()
 
 
 def _display_validation_results(
@@ -303,6 +433,8 @@ def _display_validation_results(
     cli_message_func: Optional[Callable[[Linter], None]] = None,
     create_linter_func: Optional[Callable[[Dict[str, Any]], Linter]] = None,
     verbose: bool = False,
+    fast: bool = False,
+    total_time: float = 0.0,
 ) -> None:
     """Shared helper function to display validation results consistently.
 
@@ -325,63 +457,85 @@ def _display_validation_results(
     if cli_message_func is None:
         cli_message_func = cli_message
 
-    click.secho()
-    click.secho(title, bold=True)
+    # In fast mode with many items, show first 5 items then silence
+    show_all_items = not (fast and len(results) > 20)
+    items_shown = 0
+    max_items_to_show = 5
 
-    # Display any metadata provided
-    if metadata:
-        for key, value in metadata.items():
-            click.secho(f"{key} = {value}")
-
-    click.secho("-------------------------")
-    for count, msg in enumerate(results):
-        # Get the path or use a fallback
-        path = msg.get("path", f"(unknown-{count + 1})")
-        click.secho(f"\n Asset {count + 1}: {path}", bg="white", fg="black")
+    if show_all_items:
         click.secho()
+        click.secho(title, bold=True)
 
-        try:
-            # Try to create a Linter instance using the provided function
-            if create_linter_func:
-                item_linter = create_linter_func(msg)
-
-                # If create_linter_func returns None (for recursive validation), use fallback
-                if item_linter is None:
-                    _display_fallback_message(msg)
-                else:
-                    # Set validation status and error info for invalid items
-                    if not msg.get("valid_stac", True):
-                        item_linter.valid_stac = False
-                        item_linter.error_type = msg.get("error_type")
-                        item_linter.error_msg = msg.get("error_message")
-
-                    # Ensure best practices are included in the result
-                    if (
-                        hasattr(item_linter, "best_practices_msg")
-                        and item_linter.best_practices_msg
-                    ):
-                        # Skip the first line which is just the header
-                        bp_msgs = [
-                            msg
-                            for msg in item_linter.best_practices_msg[1:]
-                            if msg.strip()
-                        ]
-                        if bp_msgs:
-                            msg["best_practices"] = bp_msgs
-
-                    # Display using the provided message function
-                    cli_message_func(item_linter)
-            else:
-                # No linter creation function provided, use fallback
-                _display_fallback_message(msg)
-        except Exception as e:
-            # Fall back to basic display if creating the Linter fails
-            _display_fallback_message(msg, e)
+        # Display any metadata provided
+        if metadata:
+            for key, value in metadata.items():
+                click.secho(f"{key} = {value}")
 
         click.secho("-------------------------")
 
+    for count, msg in enumerate(results):
+        # In fast mode with many items, show only first 5 then silence
+        if not show_all_items and items_shown >= max_items_to_show:
+            if items_shown == max_items_to_show:
+                click.secho(
+                    "... silencing output for remaining items (validating at maximum speed) ...",
+                    dim=True,
+                )
+            items_shown += 1
+            continue
+
+        if show_all_items:
+            # Get the path or use a fallback
+            path = msg.get("path", f"(unknown-{count + 1})")
+            click.secho(f"\n Asset {count + 1}: {path}", bg="white", fg="black")
+            click.secho()
+
+            try:
+                # Try to create a Linter instance using the provided function
+                if create_linter_func:
+                    item_linter = create_linter_func(msg)
+
+                    # If create_linter_func returns None (for recursive validation), use fallback
+                    if item_linter is None:
+                        _display_fallback_message(msg)
+                    else:
+                        # Set validation status and error info for invalid items
+                        if not msg.get("valid_stac", True):
+                            item_linter.valid_stac = False
+                            item_linter.error_type = msg.get("error_type")
+                            item_linter.error_msg = msg.get("error_message")
+
+                        # Ensure best practices are included in the result
+                        if (
+                            hasattr(item_linter, "best_practices_msg")
+                            and item_linter.best_practices_msg
+                        ):
+                            # Skip the first line which is just the header
+                            bp_msgs = [
+                                msg
+                                for msg in item_linter.best_practices_msg[1:]
+                                if msg.strip()
+                            ]
+                            if bp_msgs:
+                                msg["best_practices"] = bp_msgs
+
+                        # Display using the provided message function
+                        cli_message_func(item_linter)
+                else:
+                    # No linter creation function provided, use fallback
+                    _display_fallback_message(msg)
+            except Exception as e:
+                # Fall back to basic display if creating the Linter fails
+                _display_fallback_message(msg, e)
+
+            click.secho("-------------------------")
+        else:
+            items_shown += 1
+
     # Display summary at the end for better visibility with many items
-    _display_validation_summary(results, verbose=verbose)
+    _display_validation_summary(
+        results, verbose=verbose, fast=fast, total_time=total_time
+    )
 
 
 def item_collection_message(
@@ -412,10 +566,16 @@ def item_collection_message(
     if results is None:
         results = linter.lint_all()
 
+    # In fast mode, use compact display
+    if linter.fast:
+        schemas = linter.schemas_checked if hasattr(linter, "schemas_checked") else None
+        _display_fast_validation_summary(results, linter.total_time, schemas)
+        return
+
     # Define a function to create Linter instances from API results
     def create_api_linter(msg):
         if msg.get("original_object"):
-            return Linter(msg.get("original_object"))
+            return Linter(msg.get("original_object"), fast=linter.fast)
         raise ValueError("No original object available")
 
     # Display the results using the shared helper
@@ -426,6 +586,8 @@ def item_collection_message(
         cli_message_func=cli_message_func,
         create_linter_func=create_api_linter,
         verbose=verbose,
+        fast=linter.fast,
+        total_time=linter.total_time,
     )
 
 
@@ -524,7 +686,7 @@ def collections_message(
     # Define a function to create Linter instances from API results
     def create_collection_linter(msg):
         if msg.get("original_object"):
-            return Linter(msg.get("original_object"))
+            return Linter(msg.get("original_object"), fast=linter.fast)
         raise ValueError("No original object available")
 
     # Display the results using the shared helper
@@ -535,6 +697,8 @@ def collections_message(
         cli_message_func=cli_message_func,
         create_linter_func=create_collection_linter,
         verbose=verbose,
+        fast=linter.fast,
+        total_time=linter.total_time,
     )
 
 
@@ -629,16 +793,19 @@ def intro_message(linter: Linter) -> None:
         click.secho(linter.set_update_message(), fg="red")
 
     click.secho(
-        f"\n Validator: stac-validator {linter.validator_version}",
+        f"\n Validator: stac-valid {linter.validator_version}",
         bold=True,
         bg="black",
         fg="white",
     )
 
     # Always show validation method
-    validation_method = (
-        "Pydantic" if hasattr(linter, "pydantic") and linter.pydantic else "JSONSchema"
-    )
+    if hasattr(linter, "fast") and linter.fast:
+        validation_method = "FastJSONSchema"
+    elif hasattr(linter, "pydantic") and linter.pydantic:
+        validation_method = "Pydantic"
+    else:
+        validation_method = "JSONSchema"
 
     click.secho(f"\n Validation method: {validation_method}", bg="cyan", fg="white")
 

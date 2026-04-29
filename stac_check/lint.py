@@ -29,6 +29,7 @@ class Linter:
         headers (dict): HTTP headers to include in the requests.
         pydantic (bool, optional): A boolean value indicating whether to use pydantic validation. Defaults to False.
         verbose (bool, optional): A boolean value indicating whether to enable verbose output. Defaults to False.
+        fast (bool, optional): A boolean value indicating whether to use fast validation mode (skips best practices and geometry checks). Defaults to False.
 
     Attributes:
         data (dict): A dictionary representing the STAC JSON file.
@@ -141,6 +142,7 @@ class Linter:
     headers: Dict = field(default_factory=dict)
     pydantic: bool = False
     verbose: bool = False
+    fast: bool = False
 
     def __post_init__(self):
         # Check if pydantic validation is requested but not installed
@@ -200,6 +202,10 @@ class Linter:
         self.file_name = self.get_asset_name(self.item)
         self.best_practices_msg = self.create_best_practices_msg()
         self.geometry_errors_msg = self.create_geometry_errors_msg()
+
+        # Extract timing information from FastValidator if available
+        self.fast_setup_time = self.get_message_field("fast_setup_time")
+        self.fast_exec_time = self.get_message_field("fast_exec_time")
 
     @staticmethod
     def parse_config(config_file: Optional[str] = None) -> Dict:
@@ -304,6 +310,63 @@ class Linter:
         Raises:
             ValueError: If `file` is not a valid file path or STAC dictionary.
         """
+        # Use FastValidator for fast mode with file paths
+        if self.fast and isinstance(file, str):
+            try:
+                import io
+                import sys
+
+                from stac_validator.fast_validator import FastValidator
+
+                # Suppress FastValidator output
+                old_stdout = sys.stdout
+                sys.stdout = io.StringIO()
+
+                fast_validator = FastValidator(file, quiet=False, verbose=self.verbose)
+                fast_validator.run()
+
+                # Restore stdout
+                sys.stdout = old_stdout
+
+                # Use the message attribute directly from FastValidator if available
+                # FastValidator.message is a list with one dict containing all validation info
+                fv_msg = {}
+                if hasattr(fast_validator, "message"):
+                    if (
+                        isinstance(fast_validator.message, list)
+                        and len(fast_validator.message) > 0
+                    ):
+                        fv_msg = fast_validator.message[0]
+                    elif isinstance(fast_validator.message, dict):
+                        fv_msg = fast_validator.message
+
+                # Extract error message from the first error if any
+                error_message = ""
+                if not fast_validator.valid and "errors" in fv_msg:
+                    errors = fv_msg.get("errors", [])
+                    if errors and len(errors) > 0:
+                        error_message = errors[0].get("error_message", "")
+
+                # Convert FastValidator result to StacValidate message format
+                return {
+                    "valid_stac": fast_validator.valid,
+                    "asset_type": "",
+                    "version": "",
+                    "validation_method": "FastJSONSchema",
+                    "error_type": (
+                        "FastValidationError" if not fast_validator.valid else ""
+                    ),
+                    "error_message": error_message,
+                    "fast_setup_time": fv_msg.get("setup_time_ms", ""),
+                    "fast_exec_time": fv_msg.get("execution_time_ms", ""),
+                    "valid_objects": fv_msg.get("valid_objects", 0),
+                    "invalid_objects": fv_msg.get("invalid_objects", 0),
+                    "schemas_checked": fv_msg.get("schemas_checked", []),
+                    "errors": fv_msg.get("errors", []),
+                }
+            except ImportError:
+                pass
+
         if isinstance(file, str):
             stac = StacValidate(
                 file,
@@ -1041,6 +1104,10 @@ class Linter:
         base_string = "STAC Best Practices: "
         best_practices.append(base_string)
 
+        # Skip best practices checks in fast mode
+        if self.fast:
+            return best_practices
+
         best_practices_dict = self.create_best_practices_dict()
 
         # Filter out geometry-related errors as they will be displayed separately
@@ -1073,6 +1140,10 @@ class Linter:
             'Geometry Validation Errors [BETA]:' base string and is followed by specific details. Each message is indented
             with four spaces, and there is an empty string between each message for readability.
         """
+        # Skip geometry validation in fast mode
+        if self.fast:
+            return []
+
         # Check if geometry validation is enabled
         geometry_config = self.config.get("geometry_validation", {})
         if not geometry_config.get("enabled", True):

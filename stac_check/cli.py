@@ -112,6 +112,11 @@ def is_item_collection(file: str, headers: dict = None) -> bool:
     is_flag=True,
     help="Enable verbose output.",
 )
+@click.option(
+    "--fast",
+    is_flag=True,
+    help="Use FastJSONSchema for high-speed validation. Skips best practices and geometry checks for maximum performance.",
+)
 @click.command()
 @click.argument("file")
 @click.version_option(version=importlib.metadata.distribution("stac-check").version)
@@ -129,6 +134,7 @@ def main(
     pydantic: bool,
     verbose: bool,
     output: Optional[str],
+    fast: bool,
 ) -> None:
     """Main entry point for the stac-check CLI.
 
@@ -146,6 +152,7 @@ def main(
         pydantic: Use stac-pydantic for validation
         verbose: Show verbose output
         output: Save output to file (only with --collections, --item-collection, or --recursive)
+        fast: Fast validation mode (skips best practices and geometry checks)
     """
     # Check if output is used without --collections, --item-collection, or --recursive
     if output and not any([collections, item_collection, recursive]):
@@ -179,6 +186,7 @@ def main(
             pages=pages if pages else 1,
             headers=dict(header),
             verbose=verbose,
+            fast=fast,
         )
         results = api_linter.lint_all()
 
@@ -190,6 +198,7 @@ def main(
             headers=dict(header),
             pydantic=pydantic,
             verbose=verbose,
+            fast=fast,
         )
 
         # Show intro message in the terminal
@@ -227,6 +236,7 @@ def main(
             headers=dict(header),
             pydantic=pydantic,
             verbose=verbose,
+            fast=fast,
         )
 
         intro_message(linter)
@@ -235,6 +245,36 @@ def main(
         def generate_output():
             if recursive:
                 recursive_message(linter, cli_message_func=cli_message, verbose=verbose)
+            elif fast:
+                # For fast mode, use item_collection_message to show compact summary
+                # even for single items
+                from stac_check.display_messages import _display_fast_validation_summary
+
+                result = {
+                    "path": file,
+                    "valid_stac": linter.valid_stac,
+                    "asset_type": linter.asset_type,
+                    "version": linter.version,
+                    "validation_method": "FastJSONSchema",
+                    "error_type": linter.error_type,
+                    "error_message": linter.error_msg,
+                    "best_practices": [],
+                    "geometry_errors": [],
+                    "schema": linter.schema,
+                    "original_object": linter.data,
+                }
+                results = [result]
+                _display_fast_validation_summary(
+                    results,
+                    total_time=(
+                        linter.total_time if hasattr(linter, "total_time") else 0
+                    ),
+                    schemas=(
+                        linter.schemas_checked
+                        if hasattr(linter, "schemas_checked")
+                        else None
+                    ),
+                )
             else:
                 cli_message(linter)
 
