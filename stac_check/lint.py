@@ -29,6 +29,7 @@ class Linter:
         headers (dict): HTTP headers to include in the requests.
         pydantic (bool, optional): A boolean value indicating whether to use pydantic validation. Defaults to False.
         verbose (bool, optional): A boolean value indicating whether to enable verbose output. Defaults to False.
+        fast (bool, optional): A boolean value indicating whether to use fast validation mode (skips best practices and geometry checks). Defaults to False.
 
     Attributes:
         data (dict): A dictionary representing the STAC JSON file.
@@ -141,6 +142,7 @@ class Linter:
     headers: Dict = field(default_factory=dict)
     pydantic: bool = False
     verbose: bool = False
+    fast: bool = False
 
     def __post_init__(self):
         # Check if pydantic validation is requested but not installed
@@ -1041,6 +1043,10 @@ class Linter:
         base_string = "STAC Best Practices: "
         best_practices.append(base_string)
 
+        # Skip best practices checks in fast mode
+        if self.fast:
+            return best_practices
+
         best_practices_dict = self.create_best_practices_dict()
 
         # Filter out geometry-related errors as they will be displayed separately
@@ -1073,6 +1079,10 @@ class Linter:
             'Geometry Validation Errors [BETA]:' base string and is followed by specific details. Each message is indented
             with four spaces, and there is an empty string between each message for readability.
         """
+        # Skip geometry validation in fast mode
+        if self.fast:
+            return []
+
         # Check if geometry validation is enabled
         geometry_config = self.config.get("geometry_validation", {})
         if not geometry_config.get("enabled", True):
