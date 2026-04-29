@@ -35,6 +35,7 @@ The intent of this project is to provide a validation tool that also follows the
   - [Link and Asset Validation](#link-and-asset-validation)
   - [Invalid STAC](#invalid-stac)
   - [Using HTTP Headers](#using-http-headers)
+  - [Fast Validation](#fast-validation)
   - [STAC API Validation](#stac-api-validation)
 - [Development](#development)
   - [Building Documentation](#building-documentation)
@@ -94,6 +95,8 @@ Options:
   --pydantic               Use stac-pydantic for enhanced validation with Pydantic models.
   --verbose                Show verbose error messages.
   -o, --output FILE        Save output to the specified file.
+  --fast                   Use FastJSONSchema for high-speed validation. Skips best
+                           practices and geometry checks for maximum performance.
   --item-collection        Validate item collection response. Can be combined with
                            --pages. Defaults to one page.
   --collections            Validate collections endpoint response. Can be combined with
@@ -420,6 +423,64 @@ No ASSET format errors!
 
 This object has 4 links
 </pre>
+
+### Fast Validation
+
+For large STAC collections or when you need maximum validation speed, use the `--fast` flag to enable FastJSONSchema validation. This mode skips best practices and geometry checks, focusing only on STAC spec compliance.
+
+**Fast Validation of a Large Item Collection:**
+
+```bash
+stac-check large_collection.json --fast
+```
+
+<pre><b>stac-check: STAC spec validation and linting tool</b>
+
+Validator: stac-valid 4.2.1
+
+Validation method: FastJSONSchema
+
+ Validation Summary
+
+✅ Passed: 998/1000
+❌ Failed: 2/1000
+
+⚡ Timing Information:
+  Total Validation Time: 245.67 ms
+  Average per Object: 0.246 ms
+
+Schemas checked:
+    https://schemas.stacspec.org/v1.0.0/item-spec/json-schema/item.json
+    https://stac-extensions.github.io/eo/v1.0.0/schema.json
+    https://stac-extensions.github.io/projection/v1.0.0/schema.json
+
+ Validation Errors
+
+❌ STAC Spec Violation: Missing {'rel': 'collection'} in links array.
+   Affected Items: 2 | Examples: item_1, item_2
+</pre>
+
+**Fast Validation with Verbose Output:**
+
+You can combine `--fast` with `--verbose` to see detailed validation output for each item:
+
+```bash
+stac-check large_collection.json --fast --verbose
+```
+
+This will show detailed validation information for each item while still maintaining the speed benefits of FastJSONSchema.
+
+**Performance Comparison:**
+
+- **`--fast` mode**: ~0.25ms per item (skips best practices and geometry)
+- **Regular mode**: ~1-2ms per item (includes all checks)
+- **Speedup**: 4-8x faster for large collections
+
+Use `--fast` when:
+- Validating large collections (100+ items)
+- You only need STAC spec compliance
+- You want to skip best practices checks
+- Performance is critical
 
 ### STAC API Validation
 

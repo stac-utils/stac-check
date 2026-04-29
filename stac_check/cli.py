@@ -115,7 +115,7 @@ def is_item_collection(file: str, headers: dict = None) -> bool:
 @click.option(
     "--fast",
     is_flag=True,
-    help="Fast validation mode. Skips best practices checks and geometry validation, only validates core STAC schema.",
+    help="Use FastJSONSchema for high-speed validation. Skips best practices and geometry checks for maximum performance.",
 )
 @click.command()
 @click.argument("file")
