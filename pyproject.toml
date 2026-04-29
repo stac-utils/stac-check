@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "stac_check"
-version = "1.12.0"
+version = "1.13.0"
 description = "Linting and validation tool for STAC assets"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -16,7 +16,7 @@ dependencies = [
     "requests>=2.32.4",
     "jsonschema>=4.25.0",
     "click>=8.1.8",
-    "stac-valid~=4.2.0",
+    "stac-valid~=4.2.2",
     "PyYAML",
     "python-dotenv",
 ]
@@ -26,7 +26,7 @@ dev = [
     "pytest",
     "requests-mock",
     "types-setuptools",
-    "stac-valid[pydantic]~=4.2.0",
+    "stac-valid[pydantic]~=4.2.2",
 ]
 docs = [
     "sphinx>=8.2.3",
@@ -35,7 +35,7 @@ docs = [
     "myst-parser>=4.0.1",
     "sphinx-autodoc-typehints>=3.2.0",
 ]
-pydantic = ["stac-valid[pydantic]~=4.2.0"]
+pydantic = ["stac-valid[pydantic]~=4.2.2"]
 
 [project.urls]
 Homepage = "https://github.com/stac-utils/stac-check"

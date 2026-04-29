@@ -318,49 +318,34 @@ class Linter:
 
                 from stac_validator.fast_validator import FastValidator
 
-                # Capture FastValidator output
+                # Suppress FastValidator output
                 old_stdout = sys.stdout
-                sys.stdout = captured_output = io.StringIO()
+                sys.stdout = io.StringIO()
 
                 fast_validator = FastValidator(file, quiet=False, verbose=self.verbose)
                 fast_validator.run()
 
                 # Restore stdout
                 sys.stdout = old_stdout
-                output = captured_output.getvalue()
 
-                # Extract error message and timing info from output
+                # Use the message attribute directly from FastValidator if available
+                # FastValidator.message is a list with one dict containing all validation info
+                fv_msg = {}
+                if hasattr(fast_validator, "message"):
+                    if (
+                        isinstance(fast_validator.message, list)
+                        and len(fast_validator.message) > 0
+                    ):
+                        fv_msg = fast_validator.message[0]
+                    elif isinstance(fast_validator.message, dict):
+                        fv_msg = fast_validator.message
+
+                # Extract error message from the first error if any
                 error_message = ""
-                setup_time = ""
-                exec_time = ""
-                if not fast_validator.valid:
-                    # Look for error messages in the output
-                    # Skip the status line and look for the actual error message
-                    lines = output.split("\n")
-                    for i, line in enumerate(lines):
-                        # Skip the status line (contains ID and INVALID)
-                        if "ID:" in line and "INVALID" in line:
-                            continue
-                        # Look for actual error messages
-                        if "❌" in line and (
-                            "STAC" in line or "Missing" in line or "data must" in line
-                        ):
-                            error_message = line.strip().replace("❌", "").strip()
-                            break
-
-                    # If no error found, use the first error-like line
-                    if not error_message:
-                        for line in lines:
-                            if "❌" in line:
-                                error_message = line.strip().replace("❌", "").strip()
-                                break
-
-                # Extract timing information from output
-                for line in output.split("\n"):
-                    if "Total Setup Time" in line:
-                        setup_time = line.split(":")[-1].strip()
-                    elif "Total Execution Time" in line:
-                        exec_time = line.split(":")[-1].strip()
+                if not fast_validator.valid and "errors" in fv_msg:
+                    errors = fv_msg.get("errors", [])
+                    if errors and len(errors) > 0:
+                        error_message = errors[0].get("error_message", "")
 
                 # Convert FastValidator result to StacValidate message format
                 return {
@@ -372,8 +357,12 @@ class Linter:
                         "FastValidationError" if not fast_validator.valid else ""
                     ),
                     "error_message": error_message,
-                    "fast_setup_time": setup_time,
-                    "fast_exec_time": exec_time,
+                    "fast_setup_time": fv_msg.get("setup_time_ms", ""),
+                    "fast_exec_time": fv_msg.get("execution_time_ms", ""),
+                    "valid_objects": fv_msg.get("valid_objects", 0),
+                    "invalid_objects": fv_msg.get("invalid_objects", 0),
+                    "schemas_checked": fv_msg.get("schemas_checked", []),
+                    "errors": fv_msg.get("errors", []),
                 }
             except ImportError:
                 pass
