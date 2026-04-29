@@ -1,6 +1,8 @@
 """Fast validation wrapper for item collections using FastValidator."""
 
 import json
+import os
+import tempfile
 import time
 from typing import Any, Dict, List
 
@@ -39,7 +41,10 @@ def extract_schemas(obj: Dict) -> List[str]:
 def validate_collection_fast(
     source: str, linter_class: Any, verbose: bool = False
 ) -> tuple[List[Dict], float, List[str]]:
-    """Validate a collection file using FastValidator with per-item results.
+    """Validate a collection file using FastValidator.
+
+    FastValidator automatically detects FeatureCollections and validates each item,
+    tracking valid/invalid counts.
 
     Args:
         source: Path to the STAC collection file
@@ -52,7 +57,7 @@ def validate_collection_fast(
     start_time = time.time()
     results_by_url = {}
 
-    # Parse the source file to get items
+    # Parse the source file to get items and schemas
     with open(source) as f:
         data = json.load(f)
 
@@ -60,39 +65,38 @@ def validate_collection_fast(
         data.get("features", []) if data.get("type") == "FeatureCollection" else [data]
     )
 
-    # Collect all schemas from items
     all_schemas = set()
-
-    # Validate the entire collection with FastValidator once (for schema caching)
-    # This validates all items at once and caches schemas
-    linter_for_file = linter_class(source, verbose=verbose, fast=True)
-    file_result = linter_for_file.message
-
-    # Create per-item results from the collection validation
-    # All items get the same validation result as the collection
-    for idx, obj in enumerate(items):
-        item_id = obj.get("id", f"unknown-{idx}")
-        obj_url = f"{source}/{item_id}"
-
-        # Extract schemas from item
+    for obj in items:
         item_schemas = extract_schemas(obj)
         all_schemas.update(item_schemas)
 
-        # Create result for this item
-        msg = {
-            "path": obj_url,
-            "valid_stac": file_result.get("valid_stac", True),
-            "asset_type": file_result.get("asset_type", ""),
-            "version": obj.get("stac_version", ""),
-            "validation_method": file_result.get("validation_method", "FastJSONSchema"),
-            "error_type": file_result.get("error_type", ""),
-            "error_message": file_result.get("error_message", ""),
-            "best_practices": [],
-            "geometry_errors": [],
-            "schema": item_schemas,
-            "original_object": obj,
-        }
-        results_by_url[obj_url] = msg
+    # Validate each item individually with temp files to use FastValidator
+    for idx, obj in enumerate(items):
+        item_id = obj.get("id", f"unknown-{idx}")
+        obj_url = f"{source}/{item_id}"
+        item_schemas = extract_schemas(obj)
+
+        # Create temp file for this item and validate with FastValidator
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as tmp:
+            json.dump(obj, tmp)
+            tmp_path = tmp.name
+
+        try:
+            # Validate with Linter using fast=True (will use FastValidator on file)
+            linter = linter_class(tmp_path, verbose=verbose, fast=True)
+            msg = dict(linter.message)
+
+            msg["path"] = obj_url
+            msg["best_practices"] = []
+            msg["geometry_errors"] = []
+            msg["schema"] = item_schemas
+            msg["original_object"] = obj
+            results_by_url[obj_url] = msg
+        finally:
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
 
     # Calculate total validation time
     total_time = (time.time() - start_time) * 1000
