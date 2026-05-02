@@ -29,7 +29,7 @@ class Linter:
         headers (dict): HTTP headers to include in the requests.
         pydantic (bool, optional): A boolean value indicating whether to use pydantic validation. Defaults to False.
         verbose (bool, optional): A boolean value indicating whether to enable verbose output. Defaults to False.
-        fast (bool, optional): A boolean value indicating whether to use fast validation mode (skips best practices and geometry checks). Defaults to False.
+        fast (bool, optional): A boolean value indicating whether to use fast validation mode (skips geometry checks for performance). Defaults to False.
 
     Attributes:
         data (dict): A dictionary representing the STAC JSON file.
@@ -143,6 +143,7 @@ class Linter:
     pydantic: bool = False
     verbose: bool = False
     fast: bool = False
+    fast_linting: bool = False
 
     def __post_init__(self):
         # Check if pydantic validation is requested but not installed
@@ -366,6 +367,18 @@ class Linter:
                 }
             except ImportError:
                 pass
+
+        # In fast mode with dict, skip validation (already done by FastValidator)
+        # and only run linting checks
+        if self.fast and isinstance(file, dict):
+            return {
+                "valid_stac": True,
+                "asset_type": "",
+                "version": file.get("stac_version", ""),
+                "validation_method": "FastJSONSchema",
+                "error_type": "",
+                "error_message": "",
+            }
 
         if isinstance(file, str):
             stac = StacValidate(
@@ -1104,8 +1117,8 @@ class Linter:
         base_string = "STAC Best Practices: "
         best_practices.append(base_string)
 
-        # Skip best practices checks in fast mode
-        if self.fast:
+        # Skip best practices checks in fast mode (unless fast_linting is enabled)
+        if self.fast and not self.fast_linting:
             return best_practices
 
         best_practices_dict = self.create_best_practices_dict()

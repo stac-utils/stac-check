@@ -37,7 +37,7 @@ def extract_schemas(obj: Dict) -> List[str]:
 
 
 def validate_collection_fast(
-    source: str, linter_class: Any, verbose: bool = False
+    source: str, linter_class: Any, verbose: bool = False, fast_linting: bool = False
 ) -> tuple[List[Dict], float, List[str]]:
     """Validate a collection file using FastValidator.
 
@@ -48,6 +48,7 @@ def validate_collection_fast(
         source: Path to the STAC collection file
         linter_class: The Linter class to use for validation
         verbose: Whether to show verbose output
+        fast_linting: Whether to include linting checks in fast mode
 
     Returns:
         Tuple of (results list, total_time in ms, schemas_checked list)
@@ -95,6 +96,18 @@ def validate_collection_fast(
         is_valid = item_id not in failed_items
         error_messages = failed_items.get(item_id, [])
 
+        # Get best practices for this item (linting checks only, no re-validation)
+        # Only run linting if fast_linting is enabled
+        best_practices = []
+        if fast_linting:
+            try:
+                item_linter = linter_class(
+                    obj, verbose=verbose, fast=True, fast_linting=True
+                )
+                best_practices = item_linter.best_practices_msg
+            except Exception:
+                best_practices = []
+
         result = {
             "path": obj_url,
             "valid_stac": is_valid,
@@ -103,7 +116,7 @@ def validate_collection_fast(
             "validation_method": "FastJSONSchema",
             "error_type": "FastValidationError" if not is_valid else "",
             "error_message": error_messages[0] if error_messages else "",
-            "best_practices": [],
+            "best_practices": best_practices,
             "geometry_errors": [],
             "schema": item_schemas,
             "original_object": obj,

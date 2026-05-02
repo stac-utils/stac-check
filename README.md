@@ -95,8 +95,10 @@ Options:
   --pydantic               Use stac-pydantic for enhanced validation with Pydantic models.
   --verbose                Show verbose error messages.
   -o, --output FILE        Save output to the specified file.
-  --fast                   Use FastJSONSchema for high-speed validation. Skips best
-                           practices and geometry checks for maximum performance.
+  --fast                   Use FastJSONSchema for high-speed validation. Skips geometry
+                           checks and best practices linting for maximum performance.
+  --fast-linting           Use FastJSONSchema for high-speed validation with best
+                           practices linting. Skips geometry checks for maximum performance.
   --item-collection        Validate item collection response. Can be combined with
                            --pages. Defaults to one page.
   --collections            Validate collections endpoint response. Can be combined with
@@ -426,9 +428,14 @@ This object has 4 links
 
 ### Fast Validation
 
-For large STAC collections or when you need maximum validation speed, use the `--fast` flag to enable FastJSONSchema validation. This mode skips best practices and geometry checks, focusing only on STAC spec compliance.
+For large STAC collections or when you need maximum validation speed, use the `--fast` or `--fast-linting` flags to enable FastJSONSchema validation. Both modes skip geometry checks for maximum performance.
 
-**Fast Validation of a Large Item Collection:**
+**Two Fast Validation Modes:**
+
+- **`--fast`**: Fastest mode - skips geometry checks and best practices linting, focuses only on STAC spec compliance
+- **`--fast-linting`**: Fast mode with linting - skips geometry checks but includes best practices checks for code quality
+
+**Fast Validation (Spec Only) of a Large Item Collection:**
 
 ```bash
 stac-check large_collection.json --fast
@@ -460,26 +467,32 @@ Schemas checked:
    Affected Items: 2 | Examples: item_1, item_2
 </pre>
 
-**Fast Validation with Verbose Output:**
+**Fast Validation with Best Practices Linting:**
 
-You can combine `--fast` with `--verbose` to see detailed validation output for each item:
+Use `--fast-linting` to include best practices checks while maintaining fast performance:
 
 ```bash
-stac-check large_collection.json --fast --verbose
+stac-check large_collection.json --fast-linting
 ```
 
-This will show detailed validation information for each item while still maintaining the speed benefits of FastJSONSchema.
+This will show both validation errors and best practices warnings in a compact, grouped format.
 
 **Performance Comparison:**
 
-- **`--fast` mode**: ~0.25ms per item (skips best practices and geometry)
-- **Regular mode**: ~1-2ms per item (includes all checks)
-- **Speedup**: 4-8x faster for large collections
+- **`--fast` mode**: ~0.25ms per item (spec compliance only)
+- **`--fast-linting` mode**: ~0.5ms per item (spec + best practices)
+- **Regular mode**: ~1-2ms per item (includes geometry checks)
+- **Speedup**: 4-8x faster for large collections with `--fast`
 
 Use `--fast` when:
 - Validating large collections (100+ items)
 - You only need STAC spec compliance
-- You want to skip best practices checks
+- You want maximum validation speed
+
+Use `--fast-linting` when:
+- Validating large collections with best practices checks
+- You want to ensure code quality without geometry validation
+- You need a balance between speed and thoroughness
 - Performance is critical
 
 ### STAC API Validation
