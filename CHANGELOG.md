@@ -6,6 +6,10 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 
 ## Unreleased
 
+### Added
+
+- Added `--fast-linting` flag for fast validation with best practices linting (skips geometry checks)
+
 ## [v1.13.0] - 2026-04-29
 
 ### Added

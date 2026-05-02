@@ -115,7 +115,12 @@ def is_item_collection(file: str, headers: dict = None) -> bool:
 @click.option(
     "--fast",
     is_flag=True,
-    help="Use FastJSONSchema for high-speed validation. Skips best practices and geometry checks for maximum performance.",
+    help="Use FastJSONSchema for high-speed validation. Skips geometry checks and linting for maximum performance.",
+)
+@click.option(
+    "--fast-linting",
+    is_flag=True,
+    help="Use FastJSONSchema for high-speed validation with linting. Skips geometry checks for maximum performance.",
 )
 @click.command()
 @click.argument("file")
@@ -135,6 +140,7 @@ def main(
     verbose: bool,
     output: Optional[str],
     fast: bool,
+    fast_linting: bool,
 ) -> None:
     """Main entry point for the stac-check CLI.
 
@@ -152,8 +158,13 @@ def main(
         pydantic: Use stac-pydantic for validation
         verbose: Show verbose output
         output: Save output to file (only with --collections, --item-collection, or --recursive)
-        fast: Fast validation mode (skips best practices and geometry checks)
+        fast: Fast validation mode (skips geometry checks and linting for maximum performance)
+        fast_linting: Fast validation mode with linting (skips geometry checks for maximum performance)
     """
+    # Resolve fast/fast-linting flags
+    if fast_linting:
+        fast = True
+
     # Check if output is used without --collections, --item-collection, or --recursive
     if output and not any([collections, item_collection, recursive]):
         click.echo(
@@ -187,6 +198,7 @@ def main(
             headers=dict(header),
             verbose=verbose,
             fast=fast,
+            fast_linting=fast_linting,
         )
         results = api_linter.lint_all()
 
@@ -199,6 +211,7 @@ def main(
             pydantic=pydantic,
             verbose=verbose,
             fast=fast,
+            fast_linting=fast_linting,
         )
 
         # Show intro message in the terminal
@@ -237,6 +250,7 @@ def main(
             pydantic=pydantic,
             verbose=verbose,
             fast=fast,
+            fast_linting=fast_linting,
         )
 
         intro_message(linter)
@@ -258,7 +272,7 @@ def main(
                     "validation_method": "FastJSONSchema",
                     "error_type": linter.error_type,
                     "error_message": linter.error_msg,
-                    "best_practices": [],
+                    "best_practices": linter.best_practices_msg,
                     "geometry_errors": [],
                     "schema": linter.schema,
                     "original_object": linter.data,

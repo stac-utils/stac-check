@@ -106,6 +106,7 @@ def test_cli_collections(runner):
             headers={},
             verbose=False,
             fast=False,
+            fast_linting=False,
         )
 
 
@@ -139,6 +140,7 @@ def test_cli_item_collection(runner):
             headers={},
             verbose=False,
             fast=False,
+            fast_linting=False,
         )
 
 
@@ -361,8 +363,8 @@ def test_cli_fast_validation_shows_timing(runner):
     assert "Timing Information" in result.output or "Validation Time" in result.output
 
 
-def test_cli_fast_validation_skips_best_practices(runner):
-    """Test that --fast flag skips best practices validation."""
+def test_cli_fast_validation_passes_fast_flag(runner):
+    """Test that --fast flag is passed to Linter for fast validation."""
     test_file = os.path.join(
         os.path.dirname(__file__), "../sample_files/1.0.0/core-item.json"
     )
@@ -380,3 +382,29 @@ def test_cli_fast_validation_skips_best_practices(runner):
         assert mock_linter.called
         call_kwargs = mock_linter.call_args[1]
         assert call_kwargs.get("fast") is True
+
+
+def test_cli_fast_linting_validation(runner):
+    """Test that --fast-linting flag is passed to Linter with fast=True and fast_linting=True."""
+    test_file = os.path.join(
+        os.path.dirname(__file__), "../sample_files/1.0.0/core-item.json"
+    )
+    with patch("stac_check.cli.Linter") as mock_linter:
+        mock_instance = MagicMock()
+        mock_instance.fast = True
+        mock_instance.fast_linting = True
+        mock_instance.valid_stac = True
+        mock_instance.best_practices_msg = [
+            "STAC Best Practices: ",
+            "Test best practice",
+        ]
+        mock_instance.geometry_errors_msg = []
+        mock_linter.return_value = mock_instance
+
+        runner.invoke(cli_main, [test_file, "--fast-linting"])
+
+        # Verify Linter was called with fast=True and fast_linting=True
+        assert mock_linter.called
+        call_kwargs = mock_linter.call_args[1]
+        assert call_kwargs.get("fast") is True
+        assert call_kwargs.get("fast_linting") is True

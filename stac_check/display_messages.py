@@ -1,3 +1,4 @@
+import re
 from typing import Any, Callable, Dict, List, Optional
 
 import click
@@ -98,10 +99,6 @@ def _display_best_practices(linter: Linter) -> None:
     Args:
         linter: The Linter object containing best practices information
     """
-    # Skip best practices display in fast mode
-    if hasattr(linter, "fast") and linter.fast:
-        return
-
     if linter.best_practices_msg:
         click.secho("\n " + linter.best_practices_msg[0], bg="blue")
         click.secho()
@@ -239,6 +236,7 @@ def _display_fast_validation_summary(
     passed = 0
     failed = []
     error_registry: Dict[str, List[str]] = {}
+    best_practices_issues: List[tuple] = []
 
     for result in results:
         if result.get("valid_stac"):
@@ -253,6 +251,19 @@ def _display_fast_validation_summary(
             path = result.get("path", "unknown")
             item_id = path.split("/")[-1] if "/" in path else path
             error_registry[error_msg].append(item_id)
+
+        # Collect best practices issues (filter out empty/base messages)
+        best_practices = result.get("best_practices", [])
+        if best_practices:
+            # Filter out the base string and empty messages
+            filtered_practices = [
+                msg
+                for msg in best_practices
+                if msg and msg.strip() and msg.strip() != "STAC Best Practices:"
+            ]
+            if filtered_practices:
+                path = result.get("path", "unknown")
+                best_practices_issues.append((path, filtered_practices))
 
     click.secho()
     click.secho("\n Validation Summary", bold=True, bg="black", fg="white")
@@ -290,6 +301,43 @@ def _display_fast_validation_summary(
                 sample_ids += f" ... (and {count - 3} more)"
             click.secho(
                 f"   Affected Items: {count} | Examples: {sample_ids}", fg="red"
+            )
+            click.secho()
+
+    # Display best practices issues (grouped by message type)
+    if best_practices_issues:
+        click.secho()
+        click.secho("\n Best Practices Warnings", bg="blue", fg="white")
+        click.secho()
+
+        # Group best practices by message type (normalize item-specific messages)
+        practices_registry: Dict[str, List[str]] = {}
+        for path, messages in best_practices_issues:
+            # Extract item ID from path
+            item_id = path.split("/")[-1] if "/" in path else path
+            for msg in messages:
+                # Normalize messages that contain item IDs to group them together
+                # e.g., "Item name 'S2B_1CCV_20200317_0_L2A' should only contain..."
+                # becomes "Item name should only contain Searchable identifiers"
+                normalized_msg = msg
+                # Replace specific item names with generic placeholder
+                normalized_msg = re.sub(
+                    r"Item name '[^']+' should", "Item name should", normalized_msg
+                )
+
+                if normalized_msg not in practices_registry:
+                    practices_registry[normalized_msg] = []
+                practices_registry[normalized_msg].append(item_id)
+
+        # Display grouped best practices
+        for practice_msg, affected_ids in practices_registry.items():
+            count = len(affected_ids)
+            click.secho(f"⚠️  {practice_msg}", fg="blue")
+            sample_ids = ", ".join(affected_ids[:3])
+            if count > 3:
+                sample_ids += f" ... (and {count - 3} more)"
+            click.secho(
+                f"   Affected Items: {count} | Examples: {sample_ids}", fg="blue"
             )
             click.secho()
 
