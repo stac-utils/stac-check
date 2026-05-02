@@ -320,9 +320,11 @@ def _display_fast_validation_summary(
                 # e.g., "Item name 'S2B_1CCV_20200317_0_L2A' should only contain..."
                 # becomes "Item name should only contain Searchable identifiers"
                 normalized_msg = msg
-                # Replace specific item names with generic placeholder
+                # Replace specific item/file names in single quotes with generic placeholder
+                # Handles patterns like: "Item name 'xyz' should...", "Item file names should match their ids: 'xyz' not equal to 'abc'"
+                # Use negative lookbehind to avoid matching apostrophes in contractions (e.g., "item's")
                 normalized_msg = re.sub(
-                    r"Item name '[^']+' should", "Item name should", normalized_msg
+                    r"(?<![a-zA-Z])'[^']+'", "'<id>'", normalized_msg
                 )
 
                 if normalized_msg not in practices_registry:
