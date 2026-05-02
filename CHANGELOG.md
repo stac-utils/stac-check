@@ -6,9 +6,12 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 
 ## Unreleased
 
+## [v1.14.0] - 2025-05-02
+
 ### Added
 
-- Added `--fast-linting` flag for fast validation with best practices linting (skips geometry checks)
+- Added `--fast-linting` flag for fast validation with best practices linting (skips geometry checks) ([#152](https://github.com/stac-utils/stac-check/pull/152))
+- Pull request template ([#153](https://github.com/stac-utils/stac-check/pull/153))
 
 ## [v1.13.0] - 2026-04-29
 
@@ -332,7 +335,8 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 - Validation from stac-validator 2.3.0
 - Links and assets validation checks
 
-[Unreleased]: https://github.com/stac-utils/stac-check/compare/v1.13.0...main
+[Unreleased]: https://github.com/stac-utils/stac-check/compare/v1.14.0...main
+[v1.14.0]: https://github.com/stac-utils/stac-check/compare/v1.13.0...v1.14.0
 [v1.13.0]: https://github.com/stac-utils/stac-check/compare/v1.12.0...v1.13.0
 [v1.12.0]: https://github.com/stac-utils/stac-check/compare/v1.11.1...v1.12.0
 [v1.11.1]: https://github.com/stac-utils/stac-check/compare/v1.11.0...v1.11.1
