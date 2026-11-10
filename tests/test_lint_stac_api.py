@@ -179,6 +179,27 @@ def test_error_handling_with_individual_items():
         assert "error_message" in invalid_result
 
 
+def test_iterate_objects_without_ids():
+    """Objects without an id cannot be deduplicated, so all must be yielded."""
+    with mock.patch("stac_check.api_lint.fetch_and_parse_file") as mock_fetch:
+        mock_fetch.return_value = {
+            "features": [
+                {"type": "Feature", "geometry": None, "properties": {}},
+                {"type": "Feature", "geometry": None, "properties": {}},
+            ]
+        }
+
+        linter = ApiLinter(
+            source="https://example.com/items",
+            object_list_key="features",
+            pages=1,
+        )
+
+        objects = list(linter.iterate_objects())
+
+        assert len(objects) == 2
+
+
 def test_item_collection_message_display(item_collection_url):
     """Test that item_collection_message correctly displays validation results."""
     linter = ApiLinter(
