@@ -127,8 +127,9 @@ class ApiLinter:
                 obj_id = obj.get("id")
                 base_url = get_base_url(stac_file)
                 obj_url = f"{base_url}/{obj_id}" if obj_id else base_url
-                # Only yield if not seen before (protects against duplicates from bad APIs)
-                if obj_id not in seen_ids:
+                # Only yield if not seen before (protects against duplicates from bad APIs).
+                # Objects without an id cannot be deduplicated, so always yield them.
+                if obj_id is None or obj_id not in seen_ids:
                     seen_ids.add(obj_id)
                     yield obj, obj_url
             # Pagination: look for 'next' link
