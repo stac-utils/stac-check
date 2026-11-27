@@ -1442,7 +1442,7 @@ requires-dist = [
     { name = "sphinx-rtd-theme", marker = "python_full_version >= '3.11' and extra == 'docs'", specifier = ">=3.0.2" },
     { name = "stac-pydantic", marker = "extra == 'dev'", specifier = ">=3.7,<4" },
     { name = "stac-pydantic", marker = "extra == 'pydantic'", specifier = ">=3.7,<4" },
-    { name = "stac-valid", specifier = ">=4.6.4,<5" },
+    { name = "stac-valid", specifier = ">=4.7.0,<5" },
     { name = "types-setuptools", marker = "extra == 'dev'" },
 ]
 provides-extras = ["dev", "docs", "pydantic"]
@@ -1464,7 +1464,7 @@ wheels = [
 
 [[package]]
 name = "stac-valid"
-version = "4.6.4"
+version = "4.7.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
@@ -1475,9 +1475,9 @@ dependencies = [
     { name = "requests" },
     { name = "tqdm" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a5/23/b5a44105ec3e1eb3b679164870e3e3734866bbbee26993e5c3591b0f42dc/stac_valid-4.6.4.tar.gz", hash = "sha256:273fca034d840dc2a374f4fdc1e77d7e08252d9cd2a7bfc11264259b11370610", size = 104889, upload-time = "2026-11-26T04:55:23.507Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/4c/20/b01cf0b5e2ac2c4795f29bb1530f12c9307337643994c07f7bcdc83f3c3d/stac_valid-4.7.0.tar.gz", hash = "sha256:57c1a3c1c163479018bd604c8a96481522d4415183ee84f788e9bca4af11fd54", size = 111313, upload-time = "2026-11-27T05:55:28.63Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/8e/c6/a6369f4269a3ddc8c7cd04ac384c4cf6f03528e7ef47a11920701cba5535/stac_valid-4.6.4-py3-none-any.whl", hash = "sha256:e2b1981af9f63039784cb17fdfe870310b31abea1af2d300da2eab6f4b429f51", size = 59266, upload-time = "2026-11-26T04:55:22.412Z" },
+    { url = "https://files.pythonhosted.org/packages/9d/e4/6a06190c4188e0fc0b7b42297f4a995da118fdecd2afba126305b02f4537/stac_valid-4.7.0-py3-none-any.whl", hash = "sha256:b4c6bfcfbfe7b179cec5740c60263b20cf0b0220fc1ba7f4c1daa874a3a48f50", size = 62669, upload-time = "2026-11-27T05:55:27.428Z" },
 ]
 
 [[package]]

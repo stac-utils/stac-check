@@ -16,7 +16,7 @@ dependencies = [
     "requests>=2.32.4",
     "jsonschema>=4.25.0",
     "click>=8.1.8",
-    "stac-valid>=4.6.4,<5",
+    "stac-valid>=4.7.0,<5",
     "PyYAML",
     "python-dotenv",
 ]

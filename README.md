@@ -231,7 +231,7 @@ stac-check sample_files/1.0.0/core-item.json
 
 Please upgrade from version 1.0.0 to version 1.1.0!
 
-Validator: stac-valid 4.6.4
+Validator: stac-valid 4.7.0
 
 Validation method: stac-valid FastValidator
 
@@ -274,7 +274,7 @@ Multi-asset modes (`--recursive`, `--collections`, `--item-collection`) print a 
 
 Please upgrade from version 1.0.0 to version 1.1.0!
 
-Validator: stac-valid 4.6.4
+Validator: stac-valid 4.7.0
 
 Validation method: stac-valid FastValidator
 
@@ -317,7 +317,7 @@ stac-check sample_files/1.0.0/core-item.json --assets
 
 Please upgrade from version 1.0.0 to version 1.1.0!
 
-Validator: stac-valid 4.6.4
+Validator: stac-valid 4.7.0
 
 Validation method: stac-valid FastValidator
 
@@ -356,7 +356,7 @@ stac-check sample_files/1.0.0/core-item-bad-links.json --links --assets
 
 Please upgrade from version 1.0.0 to version 1.1.0!
 
-Validator: stac-valid 4.6.4
+Validator: stac-valid 4.7.0
 
 Validation method: stac-valid FastValidator
 
@@ -403,7 +403,7 @@ stac-check sample_files/1.0.0/bad-item.json
 
 Please upgrade from version 1.0.0 to version 1.1.0!
 
-Validator: stac-valid 4.6.4
+Validator: stac-valid 4.7.0
 
 Validation method: stac-valid FastValidator
 
@@ -432,7 +432,7 @@ stac-check https://stac-catalog.eu/collections/sentinel-s2-l2a/items/item1 --ass
 
 Please upgrade from version 1.0.0 to version 1.1.0!
 
-Validator: stac-valid 4.6.4
+Validator: stac-valid 4.7.0
 
 Validation method: stac-valid FastValidator
 
@@ -462,7 +462,7 @@ stac-check large_collection.json --fast
 
 <pre><b>stac-check: STAC spec validation and linting tool</b>
 
-Validator: stac-valid 4.6.4
+Validator: stac-valid 4.7.0
 
 Validation method: stac-valid FastValidator
 
@@ -508,7 +508,7 @@ stac-check https://stac.geobon.org/collections/chelsa-clim/items --item-collecti
 
 <pre><b>stac-check: STAC spec validation and linting tool</b>
 
-Validator: stac-valid 4.6.4
+Validator: stac-valid 4.7.0
 
 Item Collection: Validate all assets in a feature collection
 Pages = 1
@@ -529,7 +529,7 @@ stac-check https://stac.geobon.org/collections/chelsa-clim/items --item-collecti
 
 <pre><b>stac-check: STAC spec validation and linting tool</b>
 
-Validator: stac-valid 4.6.4
+Validator: stac-valid 4.7.0
 
 Item Collection: Validate all assets in a feature collection
 Pages = 3
@@ -550,7 +550,7 @@ stac-check https://stac.geobon.org/collections --collections
 
 <pre><b>stac-check: STAC spec validation and linting tool</b>
 
-Validator: stac-valid 4.6.4
+Validator: stac-valid 4.7.0
 
 Collections: Validate all collections in a STAC API
 Pages = 1

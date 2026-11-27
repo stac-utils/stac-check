@@ -2,7 +2,6 @@ import importlib.metadata
 import importlib.resources
 import json
 import os
-import re
 import time
 from contextlib import contextmanager
 from dataclasses import dataclass, field
@@ -372,32 +371,22 @@ class Linter:
 
     @contextmanager
     def _fast_validator_context(self):
-        """Suppress FastValidator output and apply custom headers to its session.
+        """Suppress FastValidator's progress and summary output.
 
-        FastValidator fetches remote resources through a module-level
-        requests.Session and does not accept a headers argument, so any
-        user-supplied headers are applied to that session for the duration
-        of the validation run and restored afterwards.
+        FastValidator prints liberally to stdout; capture it for the
+        duration of a run so consumers can opt into quiet output while
+        still recovering printed error details when needed.
         """
         import io
         import sys
 
-        from stac_validator.fast_validator import HTTP_SESSION
-
         old_stdout = sys.stdout
         captured = io.StringIO()
         sys.stdout = captured
-        original_headers = None
-        if self.headers:
-            original_headers = dict(HTTP_SESSION.headers)
-            HTTP_SESSION.headers.update(self.headers)
         try:
             yield captured
         finally:
             sys.stdout = old_stdout
-            if original_headers is not None:
-                HTTP_SESSION.headers.clear()
-                HTTP_SESSION.headers.update(original_headers)
 
     def validate_file(self, file: Union[str, dict]) -> Dict[str, Any]:
         """Validates the given file path or STAC dictionary against the validation schema.
@@ -444,6 +433,7 @@ class Linter:
             fast_validator = FastValidator(
                 file if isinstance(file, str) else "in-memory",
                 quiet=False,
+                headers=self.headers or None,
             )
             if isinstance(file, dict):
                 fast_validator.run_dict(file)
@@ -538,41 +528,25 @@ class Linter:
     def _fast_recursive_validation(self, file: str) -> List[Dict]:
         """Recursively validate a catalog and its children using FastValidator."""
         import sys
+        import threading
 
         from stac_validator.fast_validator import FastValidator
 
         class _RecursiveFastValidator(FastValidator):
-            """FastValidator with workarounds for upstream recursive-mode bugs.
+            """FastValidator plus stac-check's recursive-mode policy and UX.
 
-            - ``_validate_recursive`` resolves relative child hrefs with
-              ``os.path.normpath``, which collapses ``https://`` to ``https:/``
-              for URL bases and breaks loading of remote children.
-            - ``_validate_recursive`` requires a ``type`` field, but STAC
-              documents older than 1.0.0 do not have one.
+            stac-valid 4.7 handles URL resolution, depth-capped fetching,
+            ``next``/``catalogs``/``collections`` traversal, page caps, and
+            result→document indexing natively (``max_depth``, ``max_pages``,
+            ``truncated_endpoints``, ``keep_documents``/``loaded_objects``).
+            This subclass adds only the stderr progress line and stac-check's
+            rejection of pre-1.0 documents.
             """
 
             def __init__(self, *args: Any, **kwargs: Any) -> None:
                 super().__init__(*args, **kwargs)
-                # Documents as loaded, keyed by the path FastValidator
-                # records in its results (before URL repair).
-                self.loaded_objects: Dict[str, Dict[str, Any]] = {}
-                # Optional user-supplied depth cap; objects at or beyond
-                # it are not validated (root is depth 0).
-                self._max_depth: Optional[int] = None
                 # Objects encountered by the walk, for the stderr progress line
                 self._checked_count = 0
-                # Paginated API lists: follow rel="next" when enabled.
-                # _page_cap=None means follow every page; N caps the number
-                # of pages consumed per list (including the first).
-                self._follow_pagination = False
-                self._page_cap: Optional[int] = None
-                # (list_url, pages consumed) for lists cut short by _page_cap
-                self._truncated_lists: List[Tuple[str, int]] = []
-                # Depth tracking so resources for objects the _max_depth cap
-                # would exclude are never fetched in the first place
-                # (upstream's depth check runs after loading).
-                self._current_depth = 0
-                self._in_walk = False
 
             def _write_progress(self, text: str) -> None:
                 """Overwrite the stderr status line, capped to a safe width."""
@@ -580,142 +554,20 @@ class Linter:
                 sys.stderr.flush()
 
             def _load_json_resource(self, resource_path: str) -> Dict[str, Any]:
-                original_path = resource_path
+                # Remote fetches are the slow part of a walk — keep the
+                # status line alive. Prefetch workers would interleave
+                # writes, so progress is only emitted on the main thread.
                 if (
-                    self._in_walk
-                    and self._max_depth is not None
-                    and self._max_depth > 0
-                    and self._current_depth + 1 >= self._max_depth
+                    resource_path.startswith("http")
+                    and threading.current_thread() is threading.main_thread()
                 ):
-                    # Called from a parent's link loop for a child that the
-                    # depth cap will exclude — skip the fetch (and its page
-                    # merges). The recursion into the empty dict is skipped
-                    # by the same cap, so no error result is produced. This
-                    # also neuters upstream's prefetch, which would otherwise
-                    # fetch every depth-capped collection and its items pages.
-                    return {}
-                if re.match(r"^https?:/[^/]", resource_path):
-                    resource_path = resource_path.replace(":/", "://", 1)
-                if self._follow_pagination and resource_path.startswith("http"):
                     label = (
                         resource_path
                         if len(resource_path) <= 68
                         else "…" + resource_path[-67:]
                     )
                     self._write_progress(f"Fetching… {label}")
-                data = super()._load_json_resource(resource_path)
-                if isinstance(data, dict):
-                    # The root's result path is os.path.abspath'ed by
-                    # run_recursive(); children are keyed by the path as
-                    # passed in. Store both forms for local files.
-                    self.loaded_objects[original_path] = data
-                    if not original_path.startswith("http"):
-                        self.loaded_objects[os.path.abspath(original_path)] = data
-                    if "type" not in data:
-                        # STAC Catalogs have no 'type' member at any version;
-                        # a Collection always has 'extent'.
-                        if "extent" in data:
-                            data["type"] = "Collection"
-                        elif "id" in data and "description" in data:
-                            data["type"] = "Catalog"
-                    if self._follow_pagination:
-                        self._normalize_api_links(data)
-                        self._merge_next_pages(data, resource_path)
-                    # Index embedded objects under the synthetic
-                    # "{page_url}#{id}" paths upstream gives them — items
-                    # extracted from items pages are never loaded
-                    # individually, so without this they get no
-                    # original_object, linting, or pydantic coverage.
-                    for list_key in ("features", "collections", "catalogs"):
-                        objects = data.get(list_key)
-                        if isinstance(objects, list):
-                            for obj in objects:
-                                if isinstance(obj, dict) and obj.get("id"):
-                                    self.loaded_objects.setdefault(
-                                        f"{original_path}#{obj['id']}", obj
-                                    )
-                return data
-
-            def _normalize_api_links(self, data: Dict[str, Any]) -> None:
-                """Make catalogs-extension links traversable by upstream.
-
-                The API walk only follows rel "data"/"child"/"item"/"items",
-                so a landing page's rel="catalogs" link (catalogs extension)
-                and a catalog's rel="collections" link are never traversed.
-                Both are rewritten to rel="data" — whose handling fetches the
-                endpoint and extracts its "collections" list — and a
-                "catalogs" payload is aliased to "collections" so the same
-                extraction produces correct ``{endpoint}/{id}`` URLs.
-                """
-                for link in data.get("links", []):
-                    if isinstance(link, dict) and link.get("rel") in (
-                        "catalogs",
-                        "collections",
-                    ):
-                        link["rel"] = "data"
-                if "collections" not in data and isinstance(data.get("catalogs"), list):
-                    data["collections"] = data["catalogs"]
-
-            def _merge_next_pages(self, data: Dict[str, Any], page_url: str) -> None:
-                """Merge later pages of a paginated list response into ``data``.
-
-                Upstream's walk never follows ``rel="next"``, so a remote
-                recursive run would otherwise validate only the first page of
-                every collections/items list. Later pages are fetched here and
-                their objects appended to the page-one list, leaving the
-                upstream link-following code to consume the merged result.
-                Page URLs are tracked to terminate on bad APIs that loop, and
-                a failed page fetch stops the chain rather than failing the
-                whole run.
-                """
-                list_key = next(
-                    (
-                        k
-                        for k in ("features", "collections", "catalogs")
-                        if isinstance(data.get(k), list)
-                    ),
-                    None,
-                )
-                if list_key is None:
-                    return
-                seen = {page_url}
-                label = page_url if len(page_url) <= 60 else "…" + page_url[-59:]
-                current_url, current = page_url, data
-                remaining = None if self._page_cap is None else self._page_cap - 1
-                while remaining is None or remaining > 0:
-                    next_href = next(
-                        (
-                            link.get("href")
-                            for link in current.get("links", [])
-                            if isinstance(link, dict) and link.get("rel") == "next"
-                        ),
-                        None,
-                    )
-                    if not next_href:
-                        break
-                    next_url = urljoin(current_url, next_href)
-                    if next_url in seen:
-                        break
-                    seen.add(next_url)
-                    self._write_progress(f"Fetching… page {len(seen)} of {label}")
-                    try:
-                        page = super()._load_json_resource(next_url)
-                    except Exception:
-                        break
-                    self._normalize_api_links(page)
-                    objects = page.get(list_key)
-                    if not isinstance(objects, list):
-                        break
-                    data[list_key].extend(objects)
-                    current_url, current = next_url, page
-                    if remaining is not None:
-                        remaining -= 1
-                if remaining == 0 and any(
-                    isinstance(link, dict) and link.get("rel") == "next"
-                    for link in current.get("links", [])
-                ):
-                    # The cap stopped the chain while more pages exist
-                    self._truncated_lists.append((page_url, len(seen)))
+                return super()._load_json_resource(resource_path)
 
             def _validate_recursive(
                 self,
@@ -732,72 +584,71 @@ class Linter:
             ):
                 # Tolerate upstream adding parameters to this private
                 # method within the pinned stac-valid range
-                self._in_walk = True
-                prev_depth = self._current_depth
-                self._current_depth = depth
-                try:
-                    if (
-                        self._max_depth is not None
-                        and self._max_depth > 0
-                        and depth >= self._max_depth
-                    ):
-                        return
-                    self._checked_count += 1
-                    self._write_progress(
-                        f"Validating… {self._checked_count} objects checked"
+                if self.max_depth is not None and depth >= self.max_depth:
+                    return
+                if self._limit_reached(results):
+                    return
+                self._checked_count += 1
+                self._write_progress(
+                    f"Validating… {self._checked_count} objects checked"
+                )
+                if _is_pre_1_0(data):
+                    # Report a clear error instead of letting get_validator
+                    # fail on schemas.stacspec.org, which does not host
+                    # pre-1.0 schemas. Do not descend into its children.
+                    results.append(
+                        {
+                            "path": file_path,
+                            "id": data.get("id", "unknown"),
+                            "valid_stac": False,
+                            "stac_type": str(data.get("type", "unknown")).lower(),
+                            "stac_version": data.get("stac_version", ""),
+                            "error_type": "UnsupportedVersionError",
+                            "error_message": (
+                                f"STAC version {data.get('stac_version', '')} "
+                                "is not supported; stac-check validates "
+                                "STAC 1.0.0 and later."
+                            ),
+                        }
                     )
-                    if _is_pre_1_0(data):
-                        # Report a clear error instead of letting get_validator
-                        # fail on schemas.stacspec.org, which does not host
-                        # pre-1.0 schemas. Do not descend into its children.
-                        results.append(
-                            {
-                                "path": file_path,
-                                "id": data.get("id", "unknown"),
-                                "valid_stac": False,
-                                "stac_type": str(data.get("type", "unknown")).lower(),
-                                "stac_version": data.get("stac_version", ""),
-                                "error_type": "UnsupportedVersionError",
-                                "error_message": (
-                                    f"STAC version {data.get('stac_version', '')} "
-                                    "is not supported; stac-check validates "
-                                    "STAC 1.0.0 and later."
-                                ),
-                            }
-                        )
-                        return
-                    super()._validate_recursive(
-                        data,
-                        file_path,
-                        results,
-                        visited,
-                        is_api,
-                        collection_id=collection_id,
-                        prefetched_resources=prefetched_resources,
-                        depth=depth,
-                        *args,
-                        **kwargs,
-                    )
-                finally:
-                    self._current_depth = prev_depth
+                    return
+                super()._validate_recursive(
+                    data,
+                    file_path,
+                    results,
+                    visited,
+                    is_api,
+                    collection_id=collection_id,
+                    prefetched_resources=prefetched_resources,
+                    depth=depth,
+                    *args,
+                    **kwargs,
+                )
 
         start_time = time.perf_counter()
         with self._fast_validator_context() as captured:
-            fast_validator = _RecursiveFastValidator(file, quiet=False)
-            fast_validator._max_depth = self.max_depth
+            fast_validator = _RecursiveFastValidator(
+                file,
+                quiet=False,
+                # max_depth=0 means unlimited here (falsy); upstream's 0
+                # would exclude the root itself
+                max_depth=self.max_depth or None,
+                keep_documents=True,
+                headers=self.headers or None,
+                # Default: first page of each paginated list; --pages N
+                # overrides, --pages 0 consumes every page (upstream
+                # max_pages=0). Local walks ignore pagination links anyway.
+                max_pages=(
+                    0
+                    if self.pages == 0
+                    else (self.pages if self.pages is not None else 1)
+                ),
+            )
             # Remote sources are STAC APIs or hosted catalogs: API mode
             # additionally follows "data"/"items" links (landing pages link
             # to /collections via rel="data" rather than "child"/"item")
             try:
                 if file.startswith("http"):
-                    fast_validator._follow_pagination = True
-                    # Default: first page of each paginated list; --pages N
-                    # overrides, --pages 0 consumes every page
-                    fast_validator._page_cap = (
-                        None
-                        if self.pages == 0
-                        else (self.pages if self.pages is not None else 1)
-                    )
                     fast_validator.run_api()
                 else:
                     fast_validator.run_recursive()
@@ -806,7 +657,7 @@ class Linter:
                 if fast_validator._checked_count:
                     sys.stderr.write("\r" + " " * 80 + "\r")
                     sys.stderr.flush()
-        self.truncated_lists = list(fast_validator._truncated_lists)
+        self.truncated_lists = list(fast_validator.truncated_endpoints)
         self.fast_total_time = (time.perf_counter() - start_time) * 1000
 
         results = [
@@ -884,9 +735,7 @@ class Linter:
         valid = result.get("valid_stac", False)
         return {
             "version": stac_version,
-            # os.path.normpath in FastValidator collapses "https://" to
-            # "https:/" in resolved child paths; restore it for display.
-            "path": re.sub(r"^(https?):/([^/])", r"\1://\2", result.get("path", "")),
+            "path": result.get("path", ""),
             "id": result.get("id", ""),
             "schema": schema,
             "asset_type": (
