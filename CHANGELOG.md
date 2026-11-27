@@ -6,14 +6,15 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 
 ## Unreleased
 
-## [v2.0.0] - 2026-11-26
+## [v2.0.0] - 2026-11-27
 
 ### Changed
 
 - **Single validation engine**: the legacy `StacValidate` (jsonschema) engine has been removed; all validation now runs through `FastValidator` (fastjsonschema) from stac-valid. `validation_method`/`validator_engine` report `"stac-valid FastValidator"` and `error_type` reports `"FastValidationError"` instead of `"JSONSchemaValidationError"`
+- Updated stac-valid dependency to >=4.7.0,<5. Recursive-mode `rel="next"` pagination, `catalogs`/`collections` link traversal, depth-capped fetching, `next`-page item dedup, per-request `--headers`, and result→document indexing are now provided upstream (`max_pages`, `truncated_endpoints`, `keep_documents`/`loaded_objects`), replacing stac-check's private-method workarounds
 - `--fast` is redefined as "validation only": it skips linting and geometry checks for maximum speed in every mode
 - Linting and geometry checks now run by default in every mode, including per object during `--recursive`
-- `--max-depth` is now honored in recursive mode (objects at or beyond the limit are not validated); it was previously ignored in fast mode. Depth-capped objects are also no longer fetched at all — upstream previously prefetched every linked collection and its items pages before the cap was applied
+- `--max-depth` is now honored in recursive mode (objects at or beyond the limit are not validated); it was previously ignored in fast mode. Directly-linked children beyond the cap are also no longer fetched — upstream previously loaded them before applying it. (A prefetched collection's `items` page can still be fetched one level past the cap; the items themselves are not validated — an upstream limitation.)
 - `--pydantic` is now backed by `stac-pydantic` directly via the `stac-check[pydantic]` extra rather than `stac-valid[pydantic]`
 - Recursive display no longer re-fetches and re-validates every asset; per-asset linting runs on the documents already loaded during the walk, removing quadratic remote-fetch behavior on large catalogs
 - Recursive validation of in-memory dictionaries validates only the document itself (child links cannot be resolved without a base path) and warns
@@ -35,7 +36,7 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 - Malformed self/alternate links no longer fabricate bogus resolved URLs (e.g. `http://catalog/collection.json`) in link checks
 - Local `{"collections": [...]}` files passed to `--collections` are validated per collection instead of being treated as a single object
 - `--recursive` on remote STAC APIs now descends the whole API (root → `rel=data` collections → `rel=items` features) instead of validating only the landing page; local/catalog files keep the `child`/`item` walk. `rel="catalogs"` (catalogs extension) and `rel="collections"` links on catalogs are now traversed too, so sub-catalogs and their collections are reachable
-- `--recursive` on remote APIs now follows `rel="next"` pagination on collections/items list responses — previously only the first page of each list was validated (stac-valid never follows `next`). `--pages` now also applies to `--recursive` as a per-list page cap (default one page per list, `--pages 0` for all pages), and a note is printed when a list is cut short by the cap. `--pages 0` now also means "all pages" for the `--collections`/`--item-collection`/`--catalogs` list modes, which previously had no way to follow every page
+- `--recursive` on remote APIs now follows `rel="next"` pagination on collections/items list responses — previously only the first page of each list was validated. `--pages` now also applies to `--recursive` as a per-list page cap (default one page per list, `--pages 0` for all pages), and a note is printed when a list is cut short by the cap. `--pages 0` now also means "all pages" for the `--collections`/`--item-collection`/`--catalogs` list modes, which previously had no way to follow every page
 - Items extracted from remote `items` pages during `--recursive` now get linting, geometry checks, `--verbose` detail, and `--pydantic` re-validation like every other object — they were previously skipped because their synthetic `items-page#id` result paths had no loaded document to attach
 - Recursive validation now prints live progress on stderr (objects validated, list pages being fetched) so long remote walks no longer appear frozen, and the summary's "Assets Checked" line shows a per-type breakdown (catalogs, collections, items)
 - `--collections --fast` no longer crashes aggregating FastValidator's float timing fields, and uses the same compact fast-mode summary as `--item-collection --fast`

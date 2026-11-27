@@ -360,14 +360,14 @@ def test_linter_recursive_fast_remote(monkeypatch):
 
 
 def test_linter_recursive_fast_headers(monkeypatch):
-    """Custom headers are applied to FastValidator's HTTP session and
-    restored afterwards."""
+    """Custom headers are passed to FastValidator (which sends them
+    per-request) without touching the shared HTTP session."""
     from stac_validator import fast_validator as fv
 
     seen_headers = {}
 
     def spy_load(self_v, resource_path):
-        seen_headers.update(fv.HTTP_SESSION.headers)
+        seen_headers.update(self_v.headers or {})
         return {
             "type": "Catalog",
             "id": "c",
