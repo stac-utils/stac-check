@@ -610,6 +610,10 @@ class Linter:
                 super().__init__(*args, **kwargs)
                 # Objects encountered by the walk, for the stderr progress line
                 self._checked_count = 0
+                # Remote fetch count, for the progress line
+                self._fetch_count = 0
+                # Serializes stderr writes from prefetch worker threads
+                self._progress_lock = threading.Lock()
                 # Minimum seconds between remote document fetches, shared
                 # across prefetch workers; set from Linter.rps (0 = off)
                 self._min_interval = 0.0
@@ -622,9 +626,14 @@ class Linter:
                 self._rate_limit_attempts = 5
 
             def _write_progress(self, text: str) -> None:
-                """Overwrite the stderr status line, capped to a safe width."""
-                sys.stderr.write("\r" + text[:80].ljust(80))
-                sys.stderr.flush()
+                """Overwrite the stderr status line, capped to a safe width.
+
+                Called from prefetch worker threads too — the lock keeps
+                one writer per redraw, last writer wins.
+                """
+                with self._progress_lock:
+                    sys.stderr.write("\r" + text[:80].ljust(80))
+                    sys.stderr.flush()
 
             def _throttle(self) -> None:
                 """Space remote fetches to at least _min_interval seconds.
@@ -643,18 +652,18 @@ class Linter:
                     time.sleep(delay)
 
             def _load_json_resource(self, resource_path: str) -> Dict[str, Any]:
+                label = (
+                    resource_path
+                    if len(resource_path) <= 60
+                    else "…" + resource_path[-59:]
+                )
                 if resource_path.startswith("http"):
                     self._throttle()
                     # Remote fetches are the slow part of a walk — keep the
-                    # status line alive. Prefetch workers would interleave
-                    # writes, so progress is only emitted on the main thread.
-                    if threading.current_thread() is threading.main_thread():
-                        label = (
-                            resource_path
-                            if len(resource_path) <= 68
-                            else "…" + resource_path[-67:]
-                        )
-                        self._write_progress(f"Fetching… {label}")
+                    # status line alive from prefetch worker threads too,
+                    # since prefetch is where most fetches actually happen.
+                    self._fetch_count += 1
+                    self._write_progress(f"Fetching #{self._fetch_count}… {label}")
                 attempts = 0
                 while True:
                     try:
@@ -672,11 +681,10 @@ class Linter:
                     if attempts >= self._rate_limit_attempts:
                         raise last_error
                     attempts += 1
-                    if threading.current_thread() is threading.main_thread():
-                        self._write_progress(
-                            f"Rate limited — retrying in"
-                            f" {self._rate_limit_backoff:.0f}s…"
-                        )
+                    self._write_progress(
+                        f"Rate limited — retrying in"
+                        f" {self._rate_limit_backoff:.0f}s… {label}"
+                    )
                     time.sleep(self._rate_limit_backoff)
 
             def _validate_recursive(
