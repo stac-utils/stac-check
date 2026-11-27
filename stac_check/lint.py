@@ -82,6 +82,7 @@ class Linter:
         recursive (bool, optional): A boolean value indicating whether to perform recursive validation. Defaults to False.
         max_depth (Optional[int], optional): An optional integer indicating the maximum depth to validate recursively. Defaults to None.
         pages (Optional[int], optional): Maximum number of "next" pages to follow per paginated API list during remote recursive validation. Defaults to None (one page per list); 0 follows every page.
+        rps (Optional[float], optional): Maximum remote requests per second during recursive validation; spaces document fetches to stay under API rate limits (e.g. 429 responses). Defaults to None (no throttle).
         assets_open_urls (bool): Whether to open assets URLs when validating assets. Defaults to True.
         headers (dict): HTTP headers to include in the requests.
         pydantic (bool, optional): A boolean value indicating whether to use pydantic validation. Defaults to False.
@@ -197,6 +198,7 @@ class Linter:
     recursive: bool = False
     max_depth: Optional[int] = None
     pages: Optional[int] = None
+    rps: Optional[float] = None
     assets_open_urls: bool = True
     headers: Dict = field(default_factory=dict)
     pydantic: bool = False
@@ -383,11 +385,18 @@ class Linter:
         headers are therefore also applied to the shared session for the
         duration of the run and restored afterwards, so STAC/extension
         schema fetches honor ``--header`` too.
+
+        Upstream's retry policy only covers 5xx; 429 (rate limited) is
+        retried here too, honoring Retry-After, so throttled APIs like
+        CDSE don't fail objects outright. The adapter object is shared
+        with prefetch workers' thread-local sessions, so this covers
+        every document and schema fetch.
         """
         import io
         import sys
 
         from stac_validator.fast_validator import HTTP_SESSION
+        from urllib3.util.retry import Retry
 
         old_stdout = sys.stdout
         captured = io.StringIO()
@@ -396,6 +405,15 @@ class Linter:
         if self.headers:
             original_headers = dict(HTTP_SESSION.headers)
             HTTP_SESSION.headers.update(self.headers)
+        adapter = HTTP_SESSION.get_adapter("https://")
+        original_retry = adapter.max_retries if adapter is not None else None
+        if adapter is not None:
+            adapter.max_retries = Retry(
+                total=8,
+                backoff_factor=1.0,
+                status_forcelist={429, 500, 502, 503, 504},
+                respect_retry_after_header=True,
+            )
         try:
             yield captured
         finally:
@@ -403,6 +421,8 @@ class Linter:
             if original_headers is not None:
                 HTTP_SESSION.headers.clear()
                 HTTP_SESSION.headers.update(original_headers)
+            if original_retry is not None:
+                adapter.max_retries = original_retry
 
     def validate_file(self, file: Union[str, dict]) -> Dict[str, Any]:
         """Validates the given file path or STAC dictionary against the validation schema.
@@ -563,26 +583,46 @@ class Linter:
                 super().__init__(*args, **kwargs)
                 # Objects encountered by the walk, for the stderr progress line
                 self._checked_count = 0
+                # Minimum seconds between remote document fetches, shared
+                # across prefetch workers; set from Linter.rps (0 = off)
+                self._min_interval = 0.0
+                self._rate_lock = threading.Lock()
+                self._next_slot = 0.0
 
             def _write_progress(self, text: str) -> None:
                 """Overwrite the stderr status line, capped to a safe width."""
                 sys.stderr.write("\r" + text[:80].ljust(80))
                 sys.stderr.flush()
 
+            def _throttle(self) -> None:
+                """Space remote fetches to at least _min_interval seconds.
+
+                Each call claims the next free slot under the lock, then
+                sleeps outside it, so aggregate request rate stays under
+                the cap no matter how many prefetch workers are active.
+                """
+                if self._min_interval <= 0:
+                    return
+                with self._rate_lock:
+                    slot = max(time.monotonic(), self._next_slot)
+                    self._next_slot = slot + self._min_interval
+                delay = slot - time.monotonic()
+                if delay > 0:
+                    time.sleep(delay)
+
             def _load_json_resource(self, resource_path: str) -> Dict[str, Any]:
-                # Remote fetches are the slow part of a walk — keep the
-                # status line alive. Prefetch workers would interleave
-                # writes, so progress is only emitted on the main thread.
-                if (
-                    resource_path.startswith("http")
-                    and threading.current_thread() is threading.main_thread()
-                ):
-                    label = (
-                        resource_path
-                        if len(resource_path) <= 68
-                        else "…" + resource_path[-67:]
-                    )
-                    self._write_progress(f"Fetching… {label}")
+                if resource_path.startswith("http"):
+                    self._throttle()
+                    # Remote fetches are the slow part of a walk — keep the
+                    # status line alive. Prefetch workers would interleave
+                    # writes, so progress is only emitted on the main thread.
+                    if threading.current_thread() is threading.main_thread():
+                        label = (
+                            resource_path
+                            if len(resource_path) <= 68
+                            else "…" + resource_path[-67:]
+                        )
+                        self._write_progress(f"Fetching… {label}")
                 return super()._load_json_resource(resource_path)
 
             def _validate_recursive(
@@ -662,6 +702,10 @@ class Linter:
                     else (self.pages if self.pages is not None else 1)
                 ),
             )
+            # --rps N → at most N remote fetches/second across the walk,
+            # including prefetch worker threads
+            if self.rps and self.rps > 0:
+                fast_validator._min_interval = 1.0 / self.rps
             # Remote sources are STAC APIs or hosted catalogs: API mode
             # additionally follows "data"/"items" links (landing pages link
             # to /collections via rel="data" rather than "child"/"item")

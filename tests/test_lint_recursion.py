@@ -599,3 +599,56 @@ def test_linter_recursive_100():
     assert all(
         "digital-atlas.s3.amazonaws.com" in msg["path"] for msg in stac.validate_all
     )
+
+
+def test_recursive_remote_rps_throttles_fetches(monkeypatch):
+    """--rps spaces remote document fetches across the whole walk."""
+    import time
+
+    payloads = _paginated_api_payloads()
+    _mock_remote(monkeypatch, payloads)
+
+    sleeps = []
+    monkeypatch.setattr(time, "sleep", lambda d: sleeps.append(d))
+
+    linter = Linter("https://api.test/stac", recursive=True, rps=100)
+    assert len(linter.validate_all) == 7
+    # ~13 remote fetches at one per 10ms → the slots push into the future
+    # and most calls end up sleeping
+    assert len(sleeps) >= 2
+    # prefetch workers can claim several slots ahead, so a single delay can
+    # exceed one interval but stays well under the whole walk's budget
+    assert all(0 < d <= 0.5 for d in sleeps)
+
+
+def test_recursive_remote_no_rps_does_not_throttle(monkeypatch):
+    """Without --rps remote fetches are never delayed."""
+    import time
+
+    payloads = _paginated_api_payloads()
+    _mock_remote(monkeypatch, payloads)
+
+    sleeps = []
+    monkeypatch.setattr(time, "sleep", lambda d: sleeps.append(d))
+
+    linter = Linter("https://api.test/stac", recursive=True)
+    assert len(linter.validate_all) == 7
+    assert sleeps == []
+
+
+def test_fast_validator_context_retries_429():
+    """The shared HTTP adapter retries 429 with Retry-After for the
+    duration of a validation run and is restored afterwards."""
+    from stac_validator.fast_validator import HTTP_SESSION
+
+    linter = Linter("sample_files/1.0.0/catalog.json")
+    adapter = HTTP_SESSION.get_adapter("https://")
+    original = adapter.max_retries
+    assert 429 not in (original.status_forcelist or ())
+
+    with linter._fast_validator_context():
+        retries = adapter.max_retries
+        assert 429 in retries.status_forcelist
+        assert retries.respect_retry_after_header
+
+    assert adapter.max_retries is original

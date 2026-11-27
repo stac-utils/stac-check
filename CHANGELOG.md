@@ -6,6 +6,11 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 
 ## Unreleased
 
+### Added
+
+- New `--rps` flag: maximum remote requests per second during `--recursive`, spacing document fetches (including prefetch worker threads) to stay under API rate limits
+- HTTP 429 (rate limited) responses during recursive validation are now retried with backoff, honoring `Retry-After` — upstream stac-valid only retries 5xx, so throttled APIs like the Copernicus Data Space previously failed objects outright as "Failed to load: 429"
+
 ## [v2.0.0] - 2026-11-27
 
 ### Changed
