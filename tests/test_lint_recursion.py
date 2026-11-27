@@ -652,3 +652,77 @@ def test_fast_validator_context_retries_429():
         assert retries.respect_retry_after_header
 
     assert adapter.max_retries is original
+
+
+def test_recursive_remote_retries_exhausted_429(monkeypatch):
+    """429s that exhaust the adapter's own retries get a second-level
+    document fetch retry instead of failing the object."""
+    import copy
+    import time
+    from unittest.mock import MagicMock
+
+    import requests
+
+    payloads = _paginated_api_payloads()
+    flaky = "https://api.test/stac/collections/c1"
+    calls = []
+
+    def fake_get(url, *a, **k):
+        if url == flaky and calls.count(url) < 2:
+            calls.append(url)
+            raise requests.exceptions.RetryError(
+                "Max retries exceeded with url: "
+                + url
+                + " (Caused by ResponseError('too many 429 error responses'))"
+            )
+        resp = MagicMock()
+        resp.json.return_value = copy.deepcopy(payloads[url])
+        resp.raise_for_status.return_value = None
+        resp.status_code = 200
+        return resp
+
+    monkeypatch.setattr("stac_validator.fast_validator.HTTP_SESSION.get", fake_get)
+    monkeypatch.setattr("stac_check.lint.requests.get", fake_get)
+    monkeypatch.setattr(time, "sleep", lambda d: None)
+
+    linter = Linter("https://api.test/stac", recursive=True)
+    assert len(calls) == 2  # two 429s before the fetch succeeded
+    assert len(linter.validate_all) == 7
+    assert all(
+        "Failed to load" not in (m.get("error_message") or "")
+        for m in linter.validate_all
+    )
+
+
+def test_recursive_remote_gives_up_on_persistent_429(monkeypatch):
+    """A URL that 429s past every retry layer fails as a load error."""
+    import copy
+    import time
+    from unittest.mock import MagicMock
+
+    import requests
+
+    payloads = _paginated_api_payloads()
+    dead = "https://api.test/stac/collections/c1"
+
+    def fake_get(url, *a, **k):
+        if url == dead:
+            raise requests.exceptions.RetryError(
+                "Max retries exceeded with url: "
+                + url
+                + " (Caused by ResponseError('too many 429 error responses'))"
+            )
+        resp = MagicMock()
+        resp.json.return_value = copy.deepcopy(payloads[url])
+        resp.raise_for_status.return_value = None
+        resp.status_code = 200
+        return resp
+
+    monkeypatch.setattr("stac_validator.fast_validator.HTTP_SESSION.get", fake_get)
+    monkeypatch.setattr("stac_check.lint.requests.get", fake_get)
+    monkeypatch.setattr(time, "sleep", lambda d: None)
+
+    linter = Linter("https://api.test/stac", recursive=True)
+    assert any(
+        "Failed to load" in (m.get("error_message") or "") for m in linter.validate_all
+    )

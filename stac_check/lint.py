@@ -588,6 +588,11 @@ class Linter:
                 self._min_interval = 0.0
                 self._rate_lock = threading.Lock()
                 self._next_slot = 0.0
+                # Seconds to wait when the adapter's own retries are
+                # exhausted by sustained rate limiting, and how many
+                # times to retry the whole document fetch at this level
+                self._rate_limit_backoff = 60.0
+                self._rate_limit_attempts = 5
 
             def _write_progress(self, text: str) -> None:
                 """Overwrite the stderr status line, capped to a safe width."""
@@ -623,7 +628,29 @@ class Linter:
                             else "…" + resource_path[-67:]
                         )
                         self._write_progress(f"Fetching… {label}")
-                return super()._load_json_resource(resource_path)
+                attempts = 0
+                while True:
+                    try:
+                        return super()._load_json_resource(resource_path)
+                    except requests.exceptions.RetryError as e:
+                        # requests reports exhausted retries as RetryError;
+                        # the inner reason string names the status code
+                        if "429" not in str(e):
+                            raise
+                        last_error: requests.exceptions.RequestException = e
+                    except requests.exceptions.HTTPError as e:
+                        if e.response is None or e.response.status_code != 429:
+                            raise
+                        last_error = e
+                    if attempts >= self._rate_limit_attempts:
+                        raise last_error
+                    attempts += 1
+                    if threading.current_thread() is threading.main_thread():
+                        self._write_progress(
+                            f"Rate limited — retrying in"
+                            f" {self._rate_limit_backoff:.0f}s…"
+                        )
+                    time.sleep(self._rate_limit_backoff)
 
             def _validate_recursive(
                 self,
