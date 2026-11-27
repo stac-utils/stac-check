@@ -66,6 +66,27 @@ def _http_head_status(url: str, headers: Dict) -> int:
         resp.close()
 
 
+def _with_items_limit(url: str, limit: int) -> str:
+    """Append ``limit=N`` to a bare STAC API ``items`` endpoint URL.
+
+    Servers clamp to their own page-size cap (e.g. CDSE: 100), so asking
+    for the common 100-item maximum returns up to 10x more items per
+    request than the API default — cutting the request count of a
+    recursive walk under rate-limited APIs. ``next`` links already carry
+    the parameter, so only the first page needs it.
+    """
+    from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
+
+    parts = urlparse(url)
+    if not parts.path.rstrip("/").endswith("/items"):
+        return url
+    query = dict(parse_qsl(parts.query))
+    if "limit" in query:
+        return url
+    query["limit"] = str(limit)
+    return urlunparse(parts._replace(query=urlencode(query)))
+
+
 def _is_pre_1_0(data: Dict[str, Any]) -> bool:
     """Return True when a STAC document declares a version below 1.0.0.
 
@@ -120,6 +141,7 @@ class Linter:
         max_depth (Optional[int], optional): An optional integer indicating the maximum depth to validate recursively. Defaults to None.
         pages (Optional[int], optional): Maximum number of "next" pages to follow per paginated API list during remote recursive validation. Defaults to None (one page per list); 0 follows every page.
         rps (Optional[float], optional): Maximum remote requests per second during recursive validation; spaces document fetches to stay under API rate limits (e.g. 429 responses). Defaults to None (no throttle).
+        items_limit (int): Page size requested on remote ``items`` endpoint fetches during recursive validation; servers clamp to their own cap (e.g. CDSE: 100). Defaults to 100.
         assets_open_urls (bool): Whether to open assets URLs when validating assets. Defaults to True.
         headers (dict): HTTP headers to include in the requests.
         pydantic (bool, optional): A boolean value indicating whether to use pydantic validation. Defaults to False.
@@ -236,6 +258,7 @@ class Linter:
     max_depth: Optional[int] = None
     pages: Optional[int] = None
     rps: Optional[float] = None
+    items_limit: int = 100
     assets_open_urls: bool = True
     headers: Dict = field(default_factory=dict)
     pydantic: bool = False
@@ -614,6 +637,9 @@ class Linter:
                 self._fetch_count = 0
                 # Serializes stderr writes from prefetch worker threads
                 self._progress_lock = threading.Lock()
+                # Page size to request on remote items endpoints; set
+                # from Linter.items_limit (0 = leave URLs untouched)
+                self._items_limit = 0
                 # Minimum seconds between remote document fetches, shared
                 # across prefetch workers; set from Linter.rps (0 = off)
                 self._min_interval = 0.0
@@ -652,6 +678,10 @@ class Linter:
                     time.sleep(delay)
 
             def _load_json_resource(self, resource_path: str) -> Dict[str, Any]:
+                if resource_path.startswith("http") and self._items_limit:
+                    # Ask items endpoints for the largest page the API
+                    # will serve — fewer fetches under a request quota
+                    resource_path = _with_items_limit(resource_path, self._items_limit)
                 label = (
                     resource_path
                     if len(resource_path) <= 60
@@ -768,6 +798,9 @@ class Linter:
             # including prefetch worker threads
             if self.rps and self.rps > 0:
                 fast_validator._min_interval = 1.0 / self.rps
+            # Request `items_limit` items per page on remote items
+            # endpoints — fewer page fetches under a request quota
+            fast_validator._items_limit = self.items_limit
             # Remote sources are STAC APIs or hosted catalogs: API mode
             # additionally follows "data"/"items" links (landing pages link
             # to /collections via rel="data" rather than "child"/"item")

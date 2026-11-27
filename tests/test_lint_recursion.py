@@ -160,6 +160,16 @@ def _paginated_api_payloads():
     }
 
 
+def _strip_limit_param(url):
+    """Drop the ``limit`` query param stac-check appends to items
+    endpoints so fixtures can stay keyed by the plain URL."""
+    from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
+
+    parts = urlparse(url)
+    query = {k: v for k, v in parse_qsl(parts.query) if k != "limit"}
+    return urlunparse(parts._replace(query=urlencode(query)))
+
+
 def _mock_remote(monkeypatch, payloads):
     """Serve ``payloads`` for both the Linter's initial fetch and
     FastValidator's HTTP_SESSION-backed _load_json_resource."""
@@ -168,6 +178,7 @@ def _mock_remote(monkeypatch, payloads):
     def fake_get(url, *a, **k):
         import copy
 
+        url = _strip_limit_param(url)
         resp = MagicMock()
         # deepcopy: the validator merges later pages into the returned
         # page-one dict in place, which must not corrupt the fixture
@@ -664,6 +675,7 @@ def test_recursive_remote_retries_exhausted_429(monkeypatch):
     calls = []
 
     def fake_get(url, *a, **k):
+        url = _strip_limit_param(url)
         if url == flaky and calls.count(url) < 2:
             calls.append(url)
             raise requests.exceptions.RetryError(
@@ -701,6 +713,7 @@ def test_recursive_remote_gives_up_on_persistent_429(monkeypatch):
     dead = "https://api.test/stac/collections/c1"
 
     def fake_get(url, *a, **k):
+        url = _strip_limit_param(url)
         if url == dead:
             raise requests.exceptions.RetryError(
                 "Max retries exceeded with url: "
@@ -720,3 +733,35 @@ def test_recursive_remote_gives_up_on_persistent_429(monkeypatch):
     assert any(
         "Failed to load" in (m.get("error_message") or "") for m in linter.validate_all
     )
+
+
+def test_recursive_remote_requests_items_limit(monkeypatch):
+    """Items endpoint fetches request the largest page size (limit=100)
+    so a walk needs fewer requests; explicit limits are left alone."""
+    import copy
+    from unittest.mock import MagicMock
+    from urllib.parse import urlparse
+
+    payloads = _paginated_api_payloads()
+    seen_urls = []
+
+    def fake_get(url, *a, **k):
+        seen_urls.append(url)
+        url = _strip_limit_param(url)
+        resp = MagicMock()
+        resp.json.return_value = copy.deepcopy(payloads[url])
+        resp.raise_for_status.return_value = None
+        resp.status_code = 200
+        return resp
+
+    monkeypatch.setattr("stac_validator.fast_validator.HTTP_SESSION.get", fake_get)
+    monkeypatch.setattr("stac_check.lint._remote_get", fake_get)
+
+    linter = Linter("https://api.test/stac", recursive=True)
+    assert len(linter.validate_all) == 7
+    items_fetches = [
+        u for u in seen_urls if urlparse(u).path.rstrip("/").endswith("/items")
+    ]
+    assert items_fetches
+    assert all("limit=100" in u for u in items_fetches)
+    assert any("limit=100" not in u for u in seen_urls)  # non-items untouched

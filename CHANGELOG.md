@@ -9,6 +9,7 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 ### Added
 
 - New `--rps` flag: maximum remote requests per second during `--recursive`, spacing document fetches (including prefetch worker threads) to stay under API rate limits
+- Remote `items` endpoint fetches during `--recursive` now request `limit=100` items per page (the common STAC API cap, e.g. CDSE) instead of the API default of 10 — up to 10x fewer page fetches and 10x more items validated per page under a request quota
 - HTTP 429 (rate limited) responses are now retried with backoff, honoring `Retry-After`: all remote fetches (the initial document, API list pages, recursive walks, `--links`/`--assets` href checks) go through stac-valid's shared session whose retry policy previously only covered 5xx — throttled APIs like the Copernicus Data Space previously failed objects outright as "Failed to load: 429". Fetches that still exhaust the adapter's retries during `--recursive` get a second-level 60s document retry
 
 ## [v2.0.0] - 2026-11-27
