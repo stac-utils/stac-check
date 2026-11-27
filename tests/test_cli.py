@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from click.testing import CliRunner
 
-from stac_check.cli import is_item_collection
+from stac_check.cli import detect_api_response_type, is_item_collection
 from stac_check.cli import main as cli_main
 
 
@@ -60,7 +60,7 @@ def test_cli_validate_recursive_fast(runner):
     )
     result = runner.invoke(cli_main, [test_dir, "--recursive", "--fast"])
     assert result.exit_code == 1
-    assert "Validation method: FastJSONSchema" in result.output
+    assert "Validation method: stac-valid FastValidator" in result.output
     assert "Failed: 1/3" in result.output
     assert "must contain" in result.output
 
@@ -81,7 +81,9 @@ def test_cli_output_to_file(runner):
         assert os.path.exists(output_file)
         with open(output_file, "r") as f:
             content = f.read()
-            assert "Passed: True" in content
+            # Without --verbose the output file holds the summary only
+            assert "Passed: 1/1" in content
+            assert "Asset 1:" not in content
     finally:
         if os.path.exists(output_file):
             os.unlink(output_file)
@@ -118,7 +120,6 @@ def test_cli_collections(runner):
             headers={},
             verbose=False,
             fast=False,
-            fast_linting=False,
         )
 
 
@@ -152,7 +153,6 @@ def test_cli_item_collection(runner):
             headers={},
             verbose=False,
             fast=False,
-            fast_linting=False,
         )
 
 
@@ -164,7 +164,7 @@ def test_cli_output_without_required_flags(runner):
         )
         assert result.exit_code == 1
         assert (
-            "--output can only be used with --collections, --item-collection, or --recursive"
+            "--output can only be used with --collections, --item-collection, --catalogs, or --recursive"
             in result.output
         )
 
@@ -315,6 +315,196 @@ def test_cli_auto_detect_item_collection(runner):
     assert "Item Collection" in result.output or "Assets Checked" in result.output
 
 
+def test_detect_api_response_type_collections():
+    """A collections endpoint response is detected as 'collections'."""
+    test_file = os.path.join(
+        os.path.dirname(__file__), "../sample_files/1.0.0/collections.json"
+    )
+    assert detect_api_response_type(test_file) == "collections"
+
+
+def test_detect_api_response_type_item_collection():
+    """A FeatureCollection is detected as 'item_collection'."""
+    test_file = os.path.join(
+        os.path.dirname(__file__), "../sample_files/1.0.0/feature_collection.json"
+    )
+    assert detect_api_response_type(test_file) == "item_collection"
+
+
+def test_detect_api_response_type_single_object():
+    """A regular STAC object returns None."""
+    test_file = os.path.join(
+        os.path.dirname(__file__), "../sample_files/1.0.0/core-item.json"
+    )
+    assert detect_api_response_type(test_file) is None
+
+
+def test_detect_api_response_type_empty_collections():
+    """An empty collections list is not auto-detected."""
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as tmp:
+        json.dump({"collections": [], "links": []}, tmp)
+        tmp_path = tmp.name
+
+    try:
+        assert detect_api_response_type(tmp_path) is None
+    finally:
+        os.unlink(tmp_path)
+
+
+def test_detect_api_response_type_collections_mock_url():
+    """A mocked /collections URL response is detected as 'collections'."""
+    mock_response = MagicMock()
+    mock_response.json.return_value = {
+        "collections": [{"id": "test", "type": "Collection"}],
+        "links": [],
+    }
+
+    with (
+        patch("stac_check.cli.requests.get", return_value=mock_response),
+        patch("stac_check.cli.is_valid_url", return_value=True),
+    ):
+        assert (
+            detect_api_response_type("https://example.com/collections") == "collections"
+        )
+
+
+def test_cli_auto_detect_collections(runner):
+    """Test that the CLI auto-detects a collections endpoint response."""
+    test_file = os.path.join(
+        os.path.dirname(__file__), "../sample_files/1.0.0/collections.json"
+    )
+    result = runner.invoke(cli_main, [test_file])
+
+    assert "Collections: Validate all collections" in result.output
+    assert "Assets Checked" in result.output
+    # 28 collections in the fixture, not a single-object validation
+    assert "28 Assets Checked" in result.output
+
+
+def test_cli_missing_file_clean_error(runner):
+    """A nonexistent file exits 1 with a clean error, not a traceback."""
+    result = runner.invoke(cli_main, ["/nonexistent/file.json"])
+
+    assert result.exit_code == 1
+    assert "file not found" in result.output
+    assert "Traceback" not in result.output
+
+
+def test_cli_invalid_json_clean_error(runner):
+    """A non-JSON file exits 1 with a clean error, not a traceback."""
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as tmp:
+        tmp.write("this is not json")
+        tmp_path = tmp.name
+
+    try:
+        result = runner.invoke(cli_main, [tmp_path])
+        assert result.exit_code == 1
+        assert "invalid JSON" in result.output
+        assert "Traceback" not in result.output
+    finally:
+        os.unlink(tmp_path)
+
+
+def test_cli_collections_flag_on_feature_collection_errors(runner):
+    """--collections on a FeatureCollection suggests --item-collection."""
+    test_file = os.path.join(
+        os.path.dirname(__file__), "../sample_files/1.0.0/feature_collection.json"
+    )
+    result = runner.invoke(cli_main, [test_file, "--collections"])
+
+    assert result.exit_code == 1
+    assert "did you mean --item-collection" in result.output
+
+
+def test_cli_item_collection_flag_on_collections_errors(runner):
+    """--item-collection on a collections response suggests --collections."""
+    test_file = os.path.join(
+        os.path.dirname(__file__), "../sample_files/1.0.0/collections.json"
+    )
+    result = runner.invoke(cli_main, [test_file, "--item-collection"])
+
+    assert result.exit_code == 1
+    assert "did you mean --collections" in result.output
+
+
+def test_cli_empty_object_list_warns(runner):
+    """An empty list response warns instead of reporting Passed: 0/0."""
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as tmp:
+        json.dump({"type": "FeatureCollection", "features": []}, tmp)
+        tmp_path = tmp.name
+
+    try:
+        result = runner.invoke(cli_main, [tmp_path, "--item-collection"])
+        assert result.exit_code == 0
+        assert "nothing was validated" in result.output
+    finally:
+        os.unlink(tmp_path)
+
+
+def test_cli_item_collection_pre_1_0_fails(runner):
+    """--item-collection reports file-level failures (e.g. unsupported
+    STAC version) instead of marking the item valid."""
+    test_file = os.path.join(
+        os.path.dirname(__file__), "../sample_files/0.9.0/landsat8-sample.json"
+    )
+    result = runner.invoke(cli_main, [test_file, "--item-collection"])
+
+    assert result.exit_code == 1
+    assert "Failed: 1/1" in result.output
+    assert "0.9.0 is not supported" in result.output
+
+
+def test_cli_collections_flag_on_single_collection(runner):
+    """--collections on a lone Collection validates the object itself."""
+    test_file = os.path.join(
+        os.path.dirname(__file__), "../sample_files/1.0.0/collection.json"
+    )
+    result = runner.invoke(cli_main, [test_file, "--collections"])
+
+    assert "1 Assets Checked" in result.output
+
+
+def test_detect_api_response_type_catalogs():
+    """A catalogs endpoint response is detected as 'catalogs'."""
+    test_file = os.path.join(
+        os.path.dirname(__file__), "../sample_files/1.0.0/catalogs.json"
+    )
+    assert detect_api_response_type(test_file) == "catalogs"
+
+
+def test_cli_auto_detect_catalogs(runner):
+    """Test that the CLI auto-detects a catalogs endpoint response."""
+    test_file = os.path.join(
+        os.path.dirname(__file__), "../sample_files/1.0.0/catalogs.json"
+    )
+    result = runner.invoke(cli_main, [test_file])
+
+    assert "Catalogs: Validate all catalogs" in result.output
+    assert "Assets Checked" in result.output
+
+
+def test_cli_catalogs_flag_on_collections_errors(runner):
+    """--catalogs on a collections response suggests --collections."""
+    test_file = os.path.join(
+        os.path.dirname(__file__), "../sample_files/1.0.0/collections.json"
+    )
+    result = runner.invoke(cli_main, [test_file, "--catalogs"])
+
+    assert result.exit_code == 1
+    assert "did you mean --collections" in result.output
+
+
+def test_cli_collections_flag_on_catalogs_errors(runner):
+    """--collections on a catalogs response suggests --catalogs."""
+    test_file = os.path.join(
+        os.path.dirname(__file__), "../sample_files/1.0.0/catalogs.json"
+    )
+    result = runner.invoke(cli_main, [test_file, "--collections"])
+
+    assert result.exit_code == 1
+    assert "did you mean --catalogs" in result.output
+
+
 def test_cli_auto_detect_respects_explicit_flag(runner):
     """Test that explicit --item-collection flag still works."""
     test_file = os.path.join(
@@ -350,7 +540,7 @@ def test_cli_fast_validation_single_file(runner):
     )
     result = runner.invoke(cli_main, [test_file, "--fast"])
     assert result.exit_code == 0
-    assert "FastJSONSchema" in result.output
+    assert "stac-valid FastValidator" in result.output
 
 
 def test_cli_fast_validation_item_collection(runner):
@@ -360,7 +550,7 @@ def test_cli_fast_validation_item_collection(runner):
     )
     result = runner.invoke(cli_main, [test_file, "--fast"])
     assert result.exit_code == 0
-    assert "FastJSONSchema" in result.output
+    assert "stac-valid FastValidator" in result.output
     assert "Validation Summary" in result.output
     assert "Schemas checked:" in result.output
 
@@ -396,27 +586,12 @@ def test_cli_fast_validation_passes_fast_flag(runner):
         assert call_kwargs.get("fast") is True
 
 
-def test_cli_fast_linting_validation(runner):
-    """Test that --fast-linting flag is passed to Linter with fast=True and fast_linting=True."""
+def test_cli_fast_linting_removed(runner):
+    """--fast-linting was removed in 2.0.0 and is rejected as an unknown option."""
     test_file = os.path.join(
         os.path.dirname(__file__), "../sample_files/1.0.0/core-item.json"
     )
-    with patch("stac_check.cli.Linter") as mock_linter:
-        mock_instance = MagicMock()
-        mock_instance.fast = True
-        mock_instance.fast_linting = True
-        mock_instance.valid_stac = True
-        mock_instance.best_practices_msg = [
-            "STAC Best Practices: ",
-            "Test best practice",
-        ]
-        mock_instance.geometry_errors_msg = []
-        mock_linter.return_value = mock_instance
+    result = runner.invoke(cli_main, [test_file, "--fast-linting"])
 
-        runner.invoke(cli_main, [test_file, "--fast-linting"])
-
-        # Verify Linter was called with fast=True and fast_linting=True
-        assert mock_linter.called
-        call_kwargs = mock_linter.call_args[1]
-        assert call_kwargs.get("fast") is True
-        assert call_kwargs.get("fast_linting") is True
+    assert result.exit_code != 0
+    assert "No such option" in result.output

@@ -19,15 +19,9 @@ The intent of this project is to provide a validation tool that also follows the
 
 ## Latest News
 
-- **11/26/2026:** ⚡ **Fast Recursive Validation!** `--fast` now works with `--recursive`, validating an entire catalog and all of its linked objects with FastJSONSchema in a single pass instead of re-fetching and re-validating every asset during display. In our benchmarks it validated a local catalog of 61 objects **~30× faster** than standard recursion (0.08s vs 2.5s validation time, ~19× end-to-end) and a remote catalog end-to-end **~6× faster** (2.9s vs 17.6s) — and the gap widens sharply on large or deeply nested remote catalogs, where standard recursion's per-asset re-walks push runtimes into the minutes while `--fast` finishes in seconds. Custom `--headers` are applied to remote fetches, `--fast-linting` additionally runs linting and geometry checks per object, and results are shown in the compact summary with errors grouped across the whole walk. Note that `--max-depth` is ignored in fast mode. See [Recursive Validation](#recursive-validation) and [Fast Validation](#fast-validation).
+- **11/26/2026:** 🚀 **stac-check 2.0!** The legacy validation engine has been removed — stac-check now validates everything with stac-valid FastValidator in a single pass, and recursive display no longer re-fetches or re-validates every asset. `--fast` now means "validation only": it skips linting and geometry checks for maximum speed, and `--fast-linting` has been removed (linting runs by default). `--max-depth` is honored in recursive mode, `--assets`/`--links` checks now work with every mode, and STAC documents older than 1.0.0 are rejected with a clear error instead of a cryptic schema failure. See the [2.0.0 changelog entry](CHANGELOG.md#v200) for the full migration notes.
 
-<details style="border: 1px solid #eaecef; border-radius: 6px; padding: 10px; margin-bottom: 16px; background-color: #f9f9f9;">
-<summary style="cursor: pointer; font-weight: bold; margin: -10px -10px 0; padding: 10px; background-color: #f0f0f0; border-bottom: 1px solid #eaecef; border-top-left-radius: 6px; border-top-right-radius: 6px;">View Older News (Click to Expand)</summary>
-
--------------
-<!-- Add older news items here in Markdown format; GitHub will parse them thanks to the blank line implicit in this structure -->
-
-</details>
+- **11/26/2026:** ⚡ **Fast Recursive Validation! (v1.15.0)** `--fast` now works with `--recursive`, validating an entire catalog and all of its linked objects with stac-valid FastValidator in a single pass instead of re-fetching and re-validating every asset during display. In our benchmarks it validated a local catalog of 61 objects **~30× faster** than standard recursion (0.08s vs 2.5s validation time, ~19× end-to-end) and a remote catalog end-to-end **~6× faster** (2.9s vs 17.6s). Custom `--headers` are applied to remote fetches, `--fast-linting` additionally runs linting and geometry checks per object (removed in 2.0.0 — linting is now the default), and results are shown in the compact summary with errors grouped across the whole walk.
 
 ## Table of Contents
 
@@ -104,28 +98,28 @@ Options:
   -l, --links              Validate links for format and response.
   -a, --assets             Validate assets for format and response.
   -m, --max-depth INTEGER  Maximum depth to traverse when recursing. Omit this
-                           argument to get full recursion. Ignored if
-                           `recursive == False` or in fast mode.
-  -r, --recursive          Recursively validate all related stac objects. Can be
-                           combined with --fast for FastJSONSchema validation.
+                           argument to get full recursion.
+  -r, --recursive          Recursively validate all related stac objects.
   --no-assets-urls         Disables the opening of href links when validating assets
                            (enabled by default).
   --header KEY VALUE       HTTP header to include in the requests. Can be used
                            multiple times.
   --pydantic               Use stac-pydantic for enhanced validation with Pydantic models.
-  --verbose                Show verbose error messages.
+  -v, --verbose            Show per-asset validation details; without it only
+                           a summary is printed.
   -o, --output FILE        Save output to the specified file.
-  --fast                   Use FastJSONSchema for high-speed validation. Skips geometry
-                           checks and best practices linting for maximum performance.
-                           Also applies to --recursive.
-  --fast-linting           Use FastJSONSchema for high-speed validation with best
-                           practices linting. Skips geometry checks for maximum performance.
+  --fast                   Skip linting and geometry checks for maximum validation
+                           speed. Also applies to --recursive.
   --item-collection        Validate item collection response. Can be combined with
                            --pages. Defaults to one page.
   --collections            Validate collections endpoint response. Can be combined with
                            --pages. Defaults to one page.
-  -p, --pages INTEGER      Maximum number of pages to validate via --item-collection
-                           or --collections. Defaults to one page.
+  --catalogs               Validate catalogs endpoint response (STAC API catalogs
+                           extension). Can be combined with --pages. Defaults to one page.
+  -p, --pages INTEGER      Maximum number of pages to validate per paginated list,
+                           via --item-collection/--collections/--catalogs or
+                           --recursive (default: one page per list; 0 for all
+                           pages).
   --help                   Show this message and exit.
 ```
 
@@ -230,31 +224,32 @@ for k, v in linter.create_best_practices_dict().items():
 ### Basic Validation
 
 ```bash
-stac-check sample_files/0.9.0/landsat8-sample.json
+stac-check sample_files/1.0.0/core-item.json
 ```
 
 <pre><b>stac-check: STAC spec validation and linting tool</b>
 
-Please upgrade from version 0.9.0 to version 1.1.0!
+Please upgrade from version 1.0.0 to version 1.1.0!
 
-Validator: stac-validator 4.2.1
+Validator: stac-valid 4.6.4
 
-Valid ITEM: True
+Validation method: stac-valid FastValidator
 
-Schemas validated:
-    https://cdn.staclint.com/v0.9.0/extension/eo.json
-    https://cdn.staclint.com/v0.9.0/extension/view.json
-    https://cdn.staclint.com/v0.9.0/item.json
+ITEM Passed: True
+
+Schemas checked:
+    https://schemas.stacspec.org/v1.0.0/item-spec/json-schema/item.json
 
 STAC Best Practices:
-    Item name 'LC81530252014153LGN00' should only contain Searchable identifiers
+    Item name '20201211_223832_CS2' should only contain Searchable identifiers
     Identifiers should consist of only lowercase characters, numbers, '_', and '-'
-    https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#searchable-identifiers
 
-    Item file names should match their ids: 'landsat8-sample' not equal to 'LC81530252014153LGN00
+    Item file names should match their ids: 'core-item' not equal to '20201211_223832_CS2
 
-    A link to 'self' in links is strongly recommended
+    Please avoid setting the datetime field to null, many clients search on this field
 
+Geometry Validation [BETA]:
+    Geometry coordinates may be in the wrong order (required order: longitude, latitude)
 
 This object has 4 links
 </pre>
@@ -262,53 +257,52 @@ This object has 4 links
 ### Recursive Validation
 
 ```bash
-stac-check https://raw.githubusercontent.com/stac-utils/pystac/main/tests/data-files/examples/0.9.0/collection-spec/examples/landsat-collection.json --recursive
+stac-check https://digital-atlas.s3.amazonaws.com/stac/public_stac/population/worldpop_2020/collection.json --recursive --verbose
 ```
 
-Combine `--recursive` with `--fast` to validate the entire catalog walk with FastValidator in a single pass — dramatically faster for large or remote catalogs:
+Recursive validation walks the whole catalog in a single pass with stac-valid FastValidator and runs linting and geometry checks on every object by default. Add `--fast` to skip those checks for maximum speed:
 
 ```bash
 stac-check catalog.json --recursive --fast
 ```
 
-In fast recursive mode, `--max-depth` is ignored (the full catalog is validated) and `--headers` still apply to remote fetches. Use `--fast-linting` instead of `--fast` to also run linting and geometry checks on every object in the walk. Note that FastValidator resolves schemas from schemas.stacspec.org, which does not host pre-1.0 schemas, so documents older than STAC 1.0 may fail schema resolution in fast mode.
+`--max-depth` caps how deep the walk goes (objects at or beyond the limit are not validated), and `--headers` apply to remote fetches. On remote STAC APIs the walk follows `rel=data`/`rel=items` links and paginates through each collections/items list — the first `rel="next"` page of each list by default (`--pages N` raises the cap, `--pages 0` follows every page; a note is printed when a list is cut short). Note that stac-check validates STAC 1.0.0 and later; documents declaring an older `stac_version` fail with a clear unsupported-version error instead of a cryptic schema failure.
+
+Multi-asset modes (`--recursive`, `--collections`, `--item-collection`) print a header and a validation summary by default. Add `--verbose`/`-v` for per-asset detail, as shown below:
 
 <pre><b>stac-check: STAC spec validation and linting tool</b>
 
-Please upgrade from version 0.9.0 to version 1.1.0!
+Please upgrade from version 1.0.0 to version 1.1.0!
 
-Validator: stac-validator 4.2.1
+Validator: stac-valid 4.6.4
+
+Validation method: stac-valid FastValidator
 
 
 Recursive: Validate all assets in a collection or catalog
-Max-depth = None
+Max-depth = unlimited
 -------------------------
-Asset 1 Validated: https://raw.githubusercontent.com/stac-utils/pystac/main/tests/data-files/examples/0.9.0/collection-spec/examples/landsat-collection.json
 
-Valid COLLECTION: True
+ Asset 1: https://digital-atlas.s3.amazonaws.com/stac/public_stac/population/worldpop_2020/collection.json
 
-Schemas validated:
-    https://cdn.staclint.com/v0.9.0/collection.json
+COLLECTION Passed: True
+
+Schemas checked:
+    https://schemas.stacspec.org/v1.0.0/collection-spec/json-schema/collection.json
 
 STAC Best Practices:
-    Object should be called 'collection.json' not 'landsat-collection.json'
-
     A STAC collection should contain a summaries field
     It is recommended to store information like eo:bands in summaries
 
-    Links in catalogs and collections should always have a 'title' field
-
-This object has 4 links
-
 -------------------------
-Asset 2 Validated: https://landsat-stac.s3.amazonaws.com/landsat-8-l1/paths/catalog.json
+ Asset 2: https://digital-atlas.s3.amazonaws.com/stac/public_stac/population/worldpop_2020/pop_2020/pop_2020.json
 
-Valid: False
-Schemas validated:
-    https://cdn.staclint.com/v0.9.0/collection.json
-Error Type: JSONDecodeError
-Error Message: Expecting value: line 1 column 1 (char 0)
+ITEM Passed: True
 -------------------------
+
+ Validation Summary
+
+✅ Passed: 4/4
 </pre>
 
 
@@ -323,17 +317,18 @@ stac-check sample_files/1.0.0/core-item.json --assets
 
 Please upgrade from version 1.0.0 to version 1.1.0!
 
-Validator: stac-validator 4.2.1
+Validator: stac-valid 4.6.4
 
-Valid ITEM: True
+Validation method: stac-valid FastValidator
 
-Schemas validated:
+ITEM Passed: True
+
+Schemas checked:
     https://schemas.stacspec.org/v1.0.0/item-spec/json-schema/item.json
 
 STAC Best Practices:
     Item name '20201211_223832_CS2' should only contain Searchable identifiers
     Identifiers should consist of only lowercase characters, numbers, '_', and '-'
-    https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#searchable-identifiers
 
     Item file names should match their ids: 'core-item' not equal to '20201211_223832_CS2
 
@@ -361,17 +356,18 @@ stac-check sample_files/1.0.0/core-item-bad-links.json --links --assets
 
 Please upgrade from version 1.0.0 to version 1.1.0!
 
-Validator: stac-validator 4.2.1
+Validator: stac-valid 4.6.4
 
-Valid ITEM: True
+Validation method: stac-valid FastValidator
 
-Schemas validated:
+ITEM Passed: True
+
+Schemas checked:
     https://schemas.stacspec.org/v1.0.0/item-spec/json-schema/item.json
 
 STAC Best Practices:
     Item name '20201211_223832_CS2' should only contain Searchable identifiers
     Identifiers should consist of only lowercase characters, numbers, '_', and '-'
-    https://github.com/radiantearth/stac-spec/blob/master/best-practices.md#searchable-identifiers
 
     Item file names should match their ids: 'core-item-bad-links' not equal to '20201211_223832_CS2
 
@@ -391,7 +387,6 @@ LINK format errors:
     http:/remotdata.io/catalog/20201211_223832_CS2/index.html
 
 LINK request errors:
-    http://catalog/collection.json
     http:/remotdata.io/catalog/20201211_223832_CS2/index.html
 
 This object has 4 links
@@ -400,30 +395,30 @@ This object has 4 links
 ### Invalid STAC
 
 ```bash
-stac-check sample_files/0.9.0/bad-item.json
+stac-check sample_files/1.0.0/bad-item.json
 ```
 
 <pre>
 <b>stac-check: STAC spec validation and linting tool</b>
 
-Please upgrade from version 0.9.0 to version 1.1.0!
+Please upgrade from version 1.0.0 to version 1.1.0!
 
-Validator: stac-validator 4.2.1
+Validator: stac-valid 4.6.4
 
-Valid : False
+Validation method: stac-valid FastValidator
 
-Schemas validated:
-    https://cdn.staclint.com/v0.9.0/item.json
+ITEM Passed: False
 
-STAC Best Practices:
-    A link to 'self' in links is strongly recommended
+Schemas checked:
+    https://schemas.stacspec.org/v1.0.0/item-spec/json-schema/item.json
+    https://stac-extensions.github.io/eo/v1.0.0/schema.json
 
 Validation error type:
-    ValidationError
+    FastValidationError
 Validation error message:
-    'id' is a required property of the root of the STAC object
+    [Base Item] Field '$': must contain ['id'] properties
 
-This object has 5 links
+This object has 4 links
 </pre>
 
 ### Using HTTP Headers
@@ -437,11 +432,13 @@ stac-check https://stac-catalog.eu/collections/sentinel-s2-l2a/items/item1 --ass
 
 Please upgrade from version 1.0.0 to version 1.1.0!
 
-Validator: stac-validator 4.2.1
+Validator: stac-valid 4.6.4
 
-Valid ITEM: True
+Validation method: stac-valid FastValidator
 
-Schemas validated: 
+ITEM Passed: True
+
+Schemas checked: 
     https://stac-extensions.github.io/timestamps/v1.1.0/schema.json
     https://schemas.stacspec.org/v1.0.0/item-spec/json-schema/item.json
 
@@ -457,16 +454,7 @@ This object has 4 links
 
 ### Fast Validation
 
-For large STAC collections or when you need maximum validation speed, use the `--fast` or `--fast-linting` flags to enable FastJSONSchema validation. Both modes skip geometry checks for maximum performance.
-
-**Two Fast Validation Modes:**
-
-- **`--fast`**: Fastest mode - skips geometry checks and best practices linting, focuses only on STAC spec compliance
-- **`--fast-linting`**: Fast mode with linting - skips geometry checks but includes best practices checks for code quality
-
-Fast validation also works with `--recursive`, validating a catalog and all its linked objects with FastJSONSchema in one pass (see [Recursive Validation](#recursive-validation)).
-
-**Fast Validation (Spec Only) of a Large Item Collection:**
+stac-check always validates with stac-valid FastValidator. By default it also runs best practices linting and geometry checks; for large collections or when you only need spec compliance, use `--fast` to skip them for maximum validation speed.
 
 ```bash
 stac-check large_collection.json --fast
@@ -474,9 +462,9 @@ stac-check large_collection.json --fast
 
 <pre><b>stac-check: STAC spec validation and linting tool</b>
 
-Validator: stac-valid 4.2.1
+Validator: stac-valid 4.6.4
 
-Validation method: FastJSONSchema
+Validation method: stac-valid FastValidator
 
  Validation Summary
 
@@ -498,22 +486,9 @@ Schemas checked:
    Affected Items: 2 | Examples: item_1, item_2
 </pre>
 
-**Fast Validation with Best Practices Linting:**
+`--fast` also applies to `--recursive`, skipping the per-object linting and geometry checks across the whole catalog walk (see [Recursive Validation](#recursive-validation)).
 
-Use `--fast-linting` to include best practices checks while maintaining fast performance:
-
-```bash
-stac-check large_collection.json --fast-linting
-```
-
-This will show both validation errors and best practices warnings in a compact, grouped format.
-
-**Performance Comparison:**
-
-- **`--fast` mode**: ~0.25ms per item (spec compliance only)
-- **`--fast-linting` mode**: ~0.5ms per item (spec + best practices)
-- **Regular mode**: ~1-2ms per item (includes geometry checks)
-- **Speedup**: 4-8x faster for large collections with `--fast`
+The `--fast-linting` flag was removed in 2.0.0: linting and geometry checks already run by default.
 
 Use `--fast` when:
 - Validating large collections (100+ items)
@@ -521,15 +496,9 @@ Use `--fast` when:
 - You only need STAC spec compliance
 - You want maximum validation speed
 
-Use `--fast-linting` when:
-- Validating large collections with best practices checks
-- You want to ensure code quality without geometry validation
-- You need a balance between speed and thoroughness
-- Performance is critical
-
 ### STAC API Validation
 
-stac-check can validate STAC API endpoints, including item collections and collections endpoints. It supports pagination and can validate multiple pages of results.
+stac-check can validate STAC API endpoints, including item collections, collections, and catalogs (STAC API catalogs extension) endpoints. It supports pagination and can validate multiple pages of results. Item collection (`{"type": "FeatureCollection", "features": [...]}`), collections endpoint (`{"collections": [...]}`), and catalogs endpoint (`{"catalogs": [...]}`) responses are auto-detected, so the corresponding flags are optional.
 
 **Validating an Item Collection Endpoint:**
 
@@ -539,7 +508,7 @@ stac-check https://stac.geobon.org/collections/chelsa-clim/items --item-collecti
 
 <pre><b>stac-check: STAC spec validation and linting tool</b>
 
-Validator: stac-validator 4.2.1
+Validator: stac-valid 4.6.4
 
 Item Collection: Validate all assets in a feature collection
 Pages = 1
@@ -560,7 +529,7 @@ stac-check https://stac.geobon.org/collections/chelsa-clim/items --item-collecti
 
 <pre><b>stac-check: STAC spec validation and linting tool</b>
 
-Validator: stac-validator 4.2.1
+Validator: stac-valid 4.6.4
 
 Item Collection: Validate all assets in a feature collection
 Pages = 3
@@ -581,7 +550,7 @@ stac-check https://stac.geobon.org/collections --collections
 
 <pre><b>stac-check: STAC spec validation and linting tool</b>
 
-Validator: stac-validator 4.2.1
+Validator: stac-valid 4.6.4
 
 Collections: Validate all collections in a STAC API
 Pages = 1

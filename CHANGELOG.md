@@ -6,6 +6,44 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 
 ## Unreleased
 
+## [v2.0.0] - 2026-11-26
+
+### Changed
+
+- **Single validation engine**: the legacy `StacValidate` (jsonschema) engine has been removed; all validation now runs through `FastValidator` (fastjsonschema) from stac-valid. `validation_method`/`validator_engine` report `"stac-valid FastValidator"` and `error_type` reports `"FastValidationError"` instead of `"JSONSchemaValidationError"`
+- `--fast` is redefined as "validation only": it skips linting and geometry checks for maximum speed in every mode
+- Linting and geometry checks now run by default in every mode, including per object during `--recursive`
+- `--max-depth` is now honored in recursive mode (objects at or beyond the limit are not validated); it was previously ignored in fast mode. Depth-capped objects are also no longer fetched at all — upstream previously prefetched every linked collection and its items pages before the cap was applied
+- `--pydantic` is now backed by `stac-pydantic` directly via the `stac-check[pydantic]` extra rather than `stac-valid[pydantic]`
+- Recursive display no longer re-fetches and re-validates every asset; per-asset linting runs on the documents already loaded during the walk, removing quadratic remote-fetch behavior on large catalogs
+- Recursive validation of in-memory dictionaries validates only the document itself (child links cannot be resolved without a base path) and warns
+- Local FeatureCollection files passed to `--collections`/`--item-collection` are always validated in a single batched pass; `--fast` only controls whether per-item linting runs
+- STAC API `{"collections": [...]}` endpoint responses are now auto-detected like item collections, so `stac-check <url-or-file>` validates every collection without requiring `--collections`
+- STAC API catalogs extension responses (`{"catalogs": [...]}`) are supported via auto-detection and a new `--catalogs` flag
+- `--links`/`--assets` checks are implemented natively: relative link hrefs resolve against the document URL with proper `urljoin` semantics, requests are streamed with timeouts, and `--headers` are honored
+- Validation messages no longer include `failed_schema`, `recommendation`, or `error_verbose`; the `errors` list carries `{error_message, affected_items, count}` entries instead
+- Multi-asset modes (`--recursive`, `--collections`, `--item-collection`) now print a header and validation summary by default; per-asset detail requires `--verbose`. The summary's failed-asset list now includes each asset's error message, and geometry linting findings are flagged with a count of affected assets and a hint to re-run with `--verbose` for details. The summary also shows total and average-per-object validation timing in every multi-asset mode, not just `--fast`
+
+### Removed
+
+- Support for STAC versions older than 1.0.0: pre-1.0 documents now fail fast with a clear `UnsupportedVersionError` instead of a cryptic schema fetch error
+- The `--fast-linting` CLI flag and `Linter`'s `fast_linting` parameter (linting is the default; use `--fast` to skip it), along with the `stac_check.fast_validator_wrapper` module (`validate_collection_fast` and `extract_schemas` moved to `stac_check.api_lint`)
+
+### Fixed
+
+- `--assets`/`--links` checks now run in every mode (they were silently skipped in fast mode)
+- Malformed self/alternate links no longer fabricate bogus resolved URLs (e.g. `http://catalog/collection.json`) in link checks
+- Local `{"collections": [...]}` files passed to `--collections` are validated per collection instead of being treated as a single object
+- `--recursive` on remote STAC APIs now descends the whole API (root → `rel=data` collections → `rel=items` features) instead of validating only the landing page; local/catalog files keep the `child`/`item` walk. `rel="catalogs"` (catalogs extension) and `rel="collections"` links on catalogs are now traversed too, so sub-catalogs and their collections are reachable
+- `--recursive` on remote APIs now follows `rel="next"` pagination on collections/items list responses — previously only the first page of each list was validated (stac-valid never follows `next`). `--pages` now also applies to `--recursive` as a per-list page cap (default one page per list, `--pages 0` for all pages), and a note is printed when a list is cut short by the cap. `--pages 0` now also means "all pages" for the `--collections`/`--item-collection`/`--catalogs` list modes, which previously had no way to follow every page
+- Items extracted from remote `items` pages during `--recursive` now get linting, geometry checks, `--verbose` detail, and `--pydantic` re-validation like every other object — they were previously skipped because their synthetic `items-page#id` result paths had no loaded document to attach
+- Recursive validation now prints live progress on stderr (objects validated, list pages being fetched) so long remote walks no longer appear frozen, and the summary's "Assets Checked" line shows a per-type breakdown (catalogs, collections, items)
+- `--collections --fast` no longer crashes aggregating FastValidator's float timing fields, and uses the same compact fast-mode summary as `--item-collection --fast`
+- `--item-collection` no longer reports objects as valid when validation fails at the file level (e.g. pre-1.0 STAC versions, load errors) — the failure message is applied to every item
+- Missing files and non-JSON input now exit 1 with a clean error message instead of an unhandled traceback
+- `--collections`/`--item-collection` no longer silently succeed validating nothing: a response containing the other list shape errors with a flag suggestion, an empty list warns that nothing was validated, and a bare STAC object passed to either flag is validated as itself
+- Extension schemas declaring an older JSON Schema dialect (e.g. draft-07 schemas like Portolan using the tuple form of `items`) no longer crash validation: extension schemas are compiled by fastjsonschema under their own semantics instead of the legacy engine's hardcoded 2020-12 resolver ([#159](https://github.com/stac-utils/stac-check/issues/159))
+
 ## [v1.15.1] - 2026-11-26
 
 ### Fixed
@@ -62,7 +100,7 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 
 ### Added
 
-- Support for FastJSONSchema validation method with --fast flag to validate items, item collections ([#150](https://github.com/stac-utils/stac-check/pull/150))
+- Support for stac-valid FastValidator validation method with --fast flag to validate items, item collections ([#150](https://github.com/stac-utils/stac-check/pull/150))
 
 ### Updated
 
@@ -380,7 +418,8 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 - Validation from stac-validator 2.3.0
 - Links and assets validation checks
 
-[Unreleased]: https://github.com/stac-utils/stac-check/compare/v1.15.1...main
+[Unreleased]: https://github.com/stac-utils/stac-check/compare/v2.0.0...main
+[v2.0.0]: https://github.com/stac-utils/stac-check/compare/v1.15.1...v2.0.0
 [v1.15.1]: https://github.com/stac-utils/stac-check/compare/v1.15.0...v1.15.1
 [v1.15.0]: https://github.com/stac-utils/stac-check/compare/v1.14.0...v1.15.0
 [v1.14.0]: https://github.com/stac-utils/stac-check/compare/v1.13.0...v1.14.0

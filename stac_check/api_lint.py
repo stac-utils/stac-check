@@ -1,12 +1,155 @@
+import json
 import time
 from dataclasses import dataclass
-from typing import Dict, Generator, List, Optional, Tuple
+from typing import Any, Dict, Generator, List, Optional, Tuple
 from urllib.parse import urlparse, urlunparse
 
 from stac_validator.utilities import fetch_and_parse_file
 
-from stac_check.fast_validator_wrapper import validate_collection_fast
 from stac_check.lint import Linter
+
+
+def extract_schemas(obj: Dict) -> List[str]:
+    """Extract schemas from a STAC object.
+
+    Args:
+        obj: A STAC object (Item, Collection, etc.)
+
+    Returns:
+        List of schema URLs
+    """
+    schemas = []
+    if isinstance(obj, dict):
+        stac_version = obj.get("stac_version", "1.0.0")
+        item_type = obj.get("type", "Item")
+
+        # Add base schema (handle both "Item" and "Feature" types for GeoJSON)
+        if item_type in ("Item", "Feature"):
+            schemas.append(
+                f"https://schemas.stacspec.org/v{stac_version}/item-spec/json-schema/item.json"
+            )
+        elif item_type == "Collection":
+            schemas.append(
+                f"https://schemas.stacspec.org/v{stac_version}/collection-spec/json-schema/collection.json"
+            )
+
+        # Add extension schemas
+        for ext in obj.get("stac_extensions", []):
+            schemas.append(ext)
+
+    return schemas
+
+
+def validate_collection_fast(
+    source: str,
+    linter_class: Any,
+    verbose: bool = False,
+    lint_items: bool = False,
+    headers: Optional[Dict] = None,
+) -> tuple[List[Dict], float, List[str]]:
+    """Validate a collection file using FastValidator.
+
+    Uses the updated FastValidator that exposes valid/invalid counts and error details
+    in the message dict, eliminating the need for temp files.
+
+    Args:
+        source: Path to the STAC collection file
+        linter_class: The Linter class to use for validation
+        verbose: Whether to show verbose output
+        lint_items: Whether to run linting checks on each item
+        headers: Optional HTTP headers forwarded to the linter instances
+
+    Returns:
+        Tuple of (results list, total_time in ms, schemas_checked list)
+    """
+    start_time = time.time()
+    results_by_url = {}
+
+    # Parse the source file to get items
+    with open(source) as f:
+        data = json.load(f)
+
+    items = (
+        data.get("features", []) if data.get("type") == "FeatureCollection" else [data]
+    )
+
+    # Validate the collection file with FastValidator
+    # FastValidator now exposes valid_count, invalid_count, and error details
+    linter = linter_class(source, verbose=verbose, fast=True, headers=headers or {})
+
+    # FastValidator returns message as a list with one dict
+    if isinstance(linter.message, list) and len(linter.message) > 0:
+        msg = linter.message[0]
+    else:
+        msg = linter.message if isinstance(linter.message, dict) else {}
+
+    # Extract validation results from FastValidator message
+    schemas_checked = msg.get("schemas_checked", [])
+    errors = msg.get("errors") or []
+
+    # Build a map of failed item IDs for quick lookup
+    failed_items: Dict[str, List[str]] = {}
+    for error in errors:
+        for item_id in error.get("affected_items", []):
+            if item_id not in failed_items:
+                failed_items[item_id] = []
+            failed_items[item_id].append(error.get("error_message", ""))
+
+    # Early-return failures (unsupported version, load errors) carry no
+    # per-item errors; the file-level error applies to every item
+    file_level_error = None
+    if not msg.get("valid_stac", True) and not failed_items:
+        file_level_error = msg.get("error_message") or "Validation failed"
+
+    # Create per-item results
+    for idx, obj in enumerate(items):
+        item_id = obj.get("id", f"unknown-{idx}")
+        obj_url = f"{source}/{item_id}"
+        item_schemas = extract_schemas(obj)
+
+        # Determine if item is valid
+        is_valid = item_id not in failed_items and file_level_error is None
+        error_messages = failed_items.get(item_id, [])
+        if file_level_error is not None:
+            error_messages = [file_level_error]
+
+        # Get best practices and geometry errors for this item (linting checks
+        # only, no re-validation)
+        best_practices = []
+        geometry_errors = []
+        if lint_items:
+            try:
+                item_linter = linter_class(
+                    obj,
+                    verbose=verbose,
+                    prevalidated=True,
+                    headers=headers or {},
+                )
+                best_practices = item_linter.best_practices_msg
+                geometry_errors = item_linter.geometry_errors_msg
+            except Exception:
+                best_practices = []
+                geometry_errors = []
+
+        result = {
+            "path": obj_url,
+            "valid_stac": is_valid,
+            "asset_type": "",
+            "version": obj.get("stac_version", ""),
+            "validation_method": "stac-valid FastValidator",
+            "error_type": "FastValidationError" if not is_valid else "",
+            "error_message": error_messages[0] if error_messages else "",
+            "best_practices": best_practices,
+            "geometry_errors": geometry_errors,
+            "schema": item_schemas,
+            "original_object": obj,
+        }
+        results_by_url[obj_url] = result
+
+    # Calculate total validation time
+    total_time = (time.time() - start_time) * 1000
+
+    return list(results_by_url.values()), total_time, schemas_checked
 
 
 @dataclass
@@ -27,7 +170,7 @@ class ApiLinter:
     Attributes:
         source (str): The source URL or file path.
         object_list_key (str): The key for the list of objects in the response.
-        pages (int): Maximum number of pages to process.
+        pages (int): Maximum number of pages to process (0 follows every page).
         headers (Dict): HTTP headers for requests.
         version (Optional[str]): STAC version detected from validated objects.
         validator_version (str): Version of stac-validator being used.
@@ -41,7 +184,6 @@ class ApiLinter:
         headers: Optional[Dict] = None,
         verbose: bool = False,
         fast: bool = False,
-        fast_linting: bool = False,
     ):
         self.source = source
         self.object_list_key = object_list_key
@@ -49,12 +191,14 @@ class ApiLinter:
         self.headers = headers or {}
         self.verbose = verbose
         self.fast = fast
-        self.fast_linting = fast_linting
         self.version = None
         self.validator_version = self._get_validator_version()
         self.start_time = time.time()
         self.total_time = 0.0
         self.schemas_checked: List[str] = []
+        # Set when the response contains a different list key than the one
+        # requested (e.g. "features" seen while validating --collections)
+        self.mismatched_list_key: Optional[str] = None
 
     def _get_validator_version(self) -> str:
         """Get the version of stac-validator being used.
@@ -122,7 +266,24 @@ class ApiLinter:
 
         while stac_file:
             response = self._fetch_and_parse(stac_file)
-            objects = response.get(self.object_list_key, [])
+            objects = response.get(self.object_list_key)
+            # Only list responses paginate — a bare STAC object with a
+            # rel="next" link (e.g. item navigation) is not a page of results
+            is_list_response = isinstance(objects, list)
+            if not is_list_response:
+                objects = []
+                for alt in ("features", "collections", "catalogs"):
+                    if alt != self.object_list_key and isinstance(
+                        response.get(alt), list
+                    ):
+                        self.mismatched_list_key = alt
+                        break
+                # A bare STAC object (not a list response) is validated
+                # as itself rather than silently checking nothing
+                if self.mismatched_list_key is None and (
+                    response.get("type") or response.get("stac_version")
+                ):
+                    objects = [response]
             for obj in objects:
                 obj_id = obj.get("id")
                 base_url = get_base_url(stac_file)
@@ -138,7 +299,13 @@ class ApiLinter:
                     next_link = link.get("href")
                     break
             # Check if we should continue to the next page
-            if next_link and next_link != stac_file and page < self.pages:
+            # (pages <= 0 means follow every page)
+            if (
+                next_link
+                and next_link != stac_file
+                and is_list_response
+                and (self.pages <= 0 or page < self.pages)
+            ):
                 stac_file = next_link
                 page += 1
             else:
@@ -158,18 +325,35 @@ class ApiLinter:
         """
         results_by_url = {}
 
-        # In fast mode with a file path, validate with FastValidator for better performance
-        if (
-            self.fast
-            and isinstance(self.source, str)
+        # Local FeatureCollection files are validated in one pass; --fast only
+        # controls whether per-item linting runs, not the engine. Other list
+        # shapes (e.g. {"collections": [...]}) go through iterate_objects since
+        # FastValidator only understands "features".
+        is_local_file = (
+            isinstance(self.source, str)
             and self.source.endswith((".json", ".geojson"))
-        ):
+            and not self.source.startswith(("http://", "https://"))
+            and self.object_list_key == "features"
+        )
+        if is_local_file:
+            try:
+                with open(self.source) as f:
+                    envelope = json.load(f)
+                if isinstance(envelope, dict):
+                    for alt in ("features", "collections", "catalogs"):
+                        if alt != self.object_list_key and isinstance(
+                            envelope.get(alt), list
+                        ):
+                            self.mismatched_list_key = alt
+                            return []
+            except (OSError, ValueError):
+                pass
             try:
                 results, total_time, schemas = validate_collection_fast(
                     self.source,
                     Linter,
                     self.verbose,
-                    self.fast_linting,
+                    lint_items=not self.fast,
                     headers=self.headers,
                 )
 
@@ -219,9 +403,6 @@ class ApiLinter:
                     "geometry_errors": [],
                     "version": None,
                     "schema": [],
-                    "recommendation": None,
-                    "error_verbose": None,
-                    "failed_schema": None,
                     "original_object": obj,  # Still include the original object even if validation failed
                 }
 

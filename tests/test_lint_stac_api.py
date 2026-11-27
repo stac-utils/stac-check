@@ -205,7 +205,7 @@ def test_fast_mode_validates_remote_objects():
     valid_result = next(r for r in results if r["path"].endswith("20201211_223832_CS2"))
     invalid_result = next(r for r in results if not r["valid_stac"])
     assert valid_result["valid_stac"] is True
-    assert invalid_result["validation_method"] == "FastJSONSchema"
+    assert invalid_result["validation_method"] == "stac-valid FastValidator"
     assert invalid_result["error_type"] == "FastValidationError"
 
 
@@ -230,13 +230,11 @@ def test_fast_mode_json_url_falls_back_and_validates():
     assert results[0]["valid_stac"] is False
 
 
-def test_fast_linting_populates_best_practices():
-    """--fast-linting runs best practices checks on collection items."""
+def test_lint_populates_best_practices():
+    """Best practices checks run on collection items by default."""
     linter = ApiLinter(
         source="sample_files/1.0.0/feature_collection.json",
         object_list_key="features",
-        fast=True,
-        fast_linting=True,
     )
     results = linter.lint_all()
 

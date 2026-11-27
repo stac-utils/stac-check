@@ -137,61 +137,36 @@ def test_lint_header():
         mock.get(url, request_headers=valid_headers, json=json.load(json_data))
 
         linter = Linter(url, assets=False, headers=valid_headers)
-        assert linter.message == {
-            "version": "1.0.0",
-            "path": "https://localhost/sample_files/1.0.0/core-item.json",
-            "schema": [
-                "https://schemas.stacspec.org/v1.0.0/item-spec/json-schema/item.json"
-            ],
-            "valid_stac": True,
-            "asset_type": "ITEM",
-            "validation_method": "default",
-        }
+        msg = linter.message
+        assert msg["version"] == "1.0.0"
+        assert msg["path"] == url
+        assert msg["valid_stac"] is True
+        assert msg["validation_method"] == "stac-valid FastValidator"
+        assert linter.asset_type == "ITEM"
+        assert linter.schema == [
+            "https://schemas.stacspec.org/v1.0.0/item-spec/json-schema/item.json"
+        ]
 
         linter = Linter(url, assets=False, headers=no_headers)
         msg = linter.message
         assert msg["valid_stac"] is False
-        assert msg["error_type"] == "HTTPError"
-        # Accept either 'message' or 'error_message' as the error string
-        error_msg = msg.get("error_message") or msg.get("message")
-        assert (
-            error_msg
-            == "403 Client Error: None for url: https://localhost/sample_files/1.0.0/core-item.json"
-        )
-        # Optionally check path, version, schema if present
-        if "path" in msg:
-            assert msg["path"] == "https://localhost/sample_files/1.0.0/core-item.json"
+        assert msg["error_type"] == "FastValidationError"
 
 
 def test_verbose_error_message():
-    """Test that verbose error messages are properly formatted and included."""
-    # Test with a known bad item that will generate validation errors
+    """Invalid items report the FastValidator error and structured
+    per-error details in the message's errors list."""
     file = "sample_files/1.0.0/bad-item.json"
     linter = Linter(file, verbose=True)
 
-    # Verify the item is invalid
     assert linter.valid_stac is False
-
-    # Check that we have the expected error message
     assert "id" in linter.error_msg.lower()
-    assert "required" in linter.error_msg.lower()
+    assert "must contain" in linter.error_msg.lower()
 
-    # Check that verbose error message contains expected structure
-    assert isinstance(linter.verbose_error_msg, dict)
-    assert "validator" in linter.verbose_error_msg
-    assert "path_in_schema" in linter.verbose_error_msg
-
-    # Check specific parts of the verbose error message
-    assert linter.verbose_error_msg.get("validator") == "required"
-
-    # Check path_in_schema - it might contain both strings and integers
-    path_in_schema = linter.verbose_error_msg.get("path_in_schema", [])
-    assert any(isinstance(p, (str, int)) for p in path_in_schema)
-
-    # Check that the error message is included in the string representation
-    verbose_str = str(linter.verbose_error_msg)
-    assert "required" in verbose_str
-    assert "id" in verbose_str
+    errors = linter.message.get("errors", [])
+    assert errors
+    assert errors[0]["error_message"]
+    assert "affected_items" in errors[0]
 
 
 def test_linter_fast_validates_valid_dict():
@@ -201,7 +176,7 @@ def test_linter_fast_validates_valid_dict():
         data = json.load(f)
     linter = Linter(data, fast=True)
     assert linter.valid_stac == True
-    assert linter.message["validation_method"] == "FastJSONSchema"
+    assert linter.message["validation_method"] == "stac-valid FastValidator"
 
 
 def test_linter_fast_validates_invalid_dict():
@@ -230,9 +205,86 @@ def test_linter_fast_skips_geometry_errors():
     assert linter.geometry_errors_msg == []
 
 
-def test_linter_fast_linting_geometry_errors():
-    """--fast-linting surfaces geometry validation errors."""
+def test_linter_geometry_errors_by_default():
+    """Geometry validation errors surface by default (without --fast)."""
     file = "sample_files/1.0.0/invalid-antimeridian-bbox.json"
-    linter = Linter(file, fast=True, fast_linting=True)
+    linter = Linter(file)
     assert linter.geometry_errors_msg[0] == "Geometry Validation [BETA]: "
     assert any("antimeridian" in msg for msg in linter.geometry_errors_msg)
+
+
+def test_linter_pre_1_0_rejected():
+    """Pre-1.0 STAC documents fail with a clear unsupported-version error
+    instead of a cryptic schema fetch failure."""
+    file = "sample_files/0.9.0/landsat8-sample.json"
+    linter = Linter(file)
+    assert linter.valid_stac is False
+    assert linter.error_type == "UnsupportedVersionError"
+    assert "0.9.0" in linter.error_msg
+    assert "1.0.0 and later" in linter.error_msg
+
+
+def test_linter_pre_1_0_rejected_recursive():
+    """Recursive fast validation reports pre-1.0 objects with the same
+    clear error and does not descend into their children."""
+    file = "sample_files/0.9.0/landsat8-sample.json"
+    linter = Linter(file, recursive=True, fast=True)
+    assert len(linter.validate_all) == 1
+    result = linter.validate_all[0]
+    assert result["valid_stac"] is False
+    assert result["error_type"] == "UnsupportedVersionError"
+    assert "1.0.0 and later" in result["error_message"]
+
+
+def test_linter_pre_1_0_rejected_dict():
+    """Dict input gets the same rejection."""
+    with open("sample_files/0.9.0/landsat8-sample.json") as f:
+        data = json.load(f)
+    linter = Linter(data)
+    assert linter.valid_stac is False
+    assert linter.error_type == "UnsupportedVersionError"
+
+
+def test_is_pre_1_0_two_part_version():
+    """A two-part "1.0" version is not pre-1.0; padding must not sort
+    it below "1.0.0"."""
+    from stac_check.lint import _is_pre_1_0
+
+    assert _is_pre_1_0({"stac_version": "1.0"}) is False
+    assert _is_pre_1_0({"stac_version": "0.9"}) is True
+    assert _is_pre_1_0({"stac_version": "1.0.0"}) is False
+
+
+def test_linter_unrecognized_json_reports_error():
+    """A JSON document that FastValidator cannot recognize reports its
+    own error line rather than a blank error_message."""
+    linter = Linter({"foo": "bar"})
+    assert linter.valid_stac is False
+    assert linter.error_type == "FastValidationError"
+    assert "type" in linter.error_msg.lower() or "Unknown" in linter.error_msg
+
+
+def test_linter_draft07_extension_schema():
+    """Draft-07 extension schemas validate under their declared dialect.
+
+    Regression test for https://github.com/stac-utils/stac-check/issues/159:
+    the Portolan extension declares draft-07 and uses the tuple form of
+    'items', which crashed the old jsonschema engine's hardcoded 2020-12
+    resolver. FastValidator compiles it with fastjsonschema instead.
+    """
+    item = {
+        "type": "Feature",
+        "stac_version": "1.0.0",
+        "id": "portolan-item",
+        "geometry": {"type": "Point", "coordinates": [0, 0]},
+        "bbox": [-180, -90, 180, 90],
+        "properties": {"datetime": "2020-01-01T00:00:00Z"},
+        "links": [],
+        "assets": {},
+        "stac_extensions": [
+            "https://schemas.portolan-sdi.org/portolan/v0.1.1/schema.json"
+        ],
+    }
+    linter = Linter(item)
+    assert linter.valid_stac is True
+    assert linter.error_type == ""

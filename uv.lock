@@ -1394,7 +1394,7 @@ wheels = [
 
 [[package]]
 name = "stac-check"
-version = "1.15.1"
+version = "2.0.0"
 source = { editable = "." }
 dependencies = [
     { name = "click" },
@@ -1409,7 +1409,7 @@ dependencies = [
 dev = [
     { name = "pytest" },
     { name = "requests-mock" },
-    { name = "stac-valid", extra = ["pydantic"] },
+    { name = "stac-pydantic" },
     { name = "types-setuptools" },
 ]
 docs = [
@@ -1423,7 +1423,7 @@ docs = [
     { name = "sphinx-rtd-theme", marker = "python_full_version >= '3.11'" },
 ]
 pydantic = [
-    { name = "stac-valid", extra = ["pydantic"] },
+    { name = "stac-pydantic" },
 ]
 
 [package.metadata]
@@ -1440,9 +1440,9 @@ requires-dist = [
     { name = "sphinx-autodoc-typehints", marker = "python_full_version >= '3.11' and extra == 'docs'", specifier = ">=3.2.0" },
     { name = "sphinx-click", marker = "python_full_version >= '3.11' and extra == 'docs'", specifier = ">=6.0.0" },
     { name = "sphinx-rtd-theme", marker = "python_full_version >= '3.11' and extra == 'docs'", specifier = ">=3.0.2" },
+    { name = "stac-pydantic", marker = "extra == 'dev'", specifier = ">=3.7,<4" },
+    { name = "stac-pydantic", marker = "extra == 'pydantic'", specifier = ">=3.7,<4" },
     { name = "stac-valid", specifier = ">=4.6.4,<5" },
-    { name = "stac-valid", extras = ["pydantic"], marker = "extra == 'dev'", specifier = ">=4.6.4,<5" },
-    { name = "stac-valid", extras = ["pydantic"], marker = "extra == 'pydantic'", specifier = ">=4.6.4,<5" },
     { name = "types-setuptools", marker = "extra == 'dev'" },
 ]
 provides-extras = ["dev", "docs", "pydantic"]
@@ -1478,11 +1478,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/a5/23/b5a44105ec3e1eb3b679164870e3e3734866bbbee26993e5c3591b0f42dc/stac_valid-4.6.4.tar.gz", hash = "sha256:273fca034d840dc2a374f4fdc1e77d7e08252d9cd2a7bfc11264259b11370610", size = 104889, upload-time = "2026-11-26T04:55:23.507Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/8e/c6/a6369f4269a3ddc8c7cd04ac384c4cf6f03528e7ef47a11920701cba5535/stac_valid-4.6.4-py3-none-any.whl", hash = "sha256:e2b1981af9f63039784cb17fdfe870310b31abea1af2d300da2eab6f4b429f51", size = 59266, upload-time = "2026-11-26T04:55:22.412Z" },
-]
-
-[package.optional-dependencies]
-pydantic = [
-    { name = "stac-pydantic" },
 ]
 
 [[package]]

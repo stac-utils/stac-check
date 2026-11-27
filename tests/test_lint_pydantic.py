@@ -52,10 +52,10 @@ def test_pydantic_fallback_without_import(monkeypatch):
     linter = Linter(file, pydantic=False)
     assert linter.valid_stac is True
     assert linter.asset_type == "ITEM"
-    assert linter.message["validation_method"] == "default"
+    assert linter.message["validation_method"] == "stac-valid FastValidator"
 
     # Test that pydantic=True falls back to JSONSchema when stac-pydantic is not available
     linter = Linter(file, pydantic=True)
     assert linter.valid_stac is True
     assert linter.asset_type == "ITEM"
-    assert linter.message["validation_method"] == "default"
+    assert linter.message["validation_method"] == "stac-valid FastValidator"

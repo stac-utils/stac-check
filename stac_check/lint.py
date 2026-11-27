@@ -1,21 +1,74 @@
 import importlib.metadata
 import importlib.resources
-import io
 import json
 import os
 import re
 import time
-from contextlib import contextmanager, nullcontext, redirect_stdout
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple, Union
+from urllib.parse import urljoin
 
 import requests
 import yaml
 from dotenv import load_dotenv
-from stac_validator.utilities import is_valid_url
-from stac_validator.validate import StacValidate
+from stac_validator.utilities import is_url, is_valid_url
 
 load_dotenv()
+
+
+def _http_head_status(url: str, headers: Dict) -> int:
+    """Return the HTTP status code for a URL, reading response headers only.
+
+    Uses a streamed GET (rather than HEAD, which some servers and signed
+    URLs reject) and closes before the body downloads.
+    """
+    resp = requests.get(url, headers=headers, timeout=15, stream=True)
+    try:
+        return resp.status_code
+    finally:
+        resp.close()
+
+
+def _is_pre_1_0(data: Dict[str, Any]) -> bool:
+    """Return True when a STAC document declares a version below 1.0.0.
+
+    Unparseable or missing versions return False so the validator reports
+    its own error rather than a misleading version message. Versions are
+    padded to three parts so "1.0" does not sort below "1.0.0".
+    """
+    version = data.get("stac_version", "") if isinstance(data, dict) else ""
+    try:
+        parts = [int(p) for p in str(version).split(".")]
+        return tuple((parts + [0, 0, 0])[:3]) < (1, 0, 0)
+    except (ValueError, AttributeError):
+        return False
+
+
+def _first_error_line(output: str) -> str:
+    """Extract the failure reason FastValidator printed to suppressed stdout."""
+    for line in output.splitlines():
+        if "❌" in line:
+            return line.split("❌", 1)[1].strip()
+    return ""
+
+
+def _unsupported_version_message(data: Dict[str, Any], path: str) -> Dict[str, Any]:
+    """Build a failed validation message for pre-1.0 STAC documents."""
+    version = data.get("stac_version", "")
+    return {
+        "version": version,
+        "path": path,
+        "schema": [],
+        "valid_stac": False,
+        "asset_type": "",
+        "validation_method": "stac-valid FastValidator",
+        "error_type": "UnsupportedVersionError",
+        "error_message": (
+            f"STAC version {version} is not supported; stac-check validates "
+            "STAC 1.0.0 and later."
+        ),
+    }
 
 
 @dataclass
@@ -29,13 +82,13 @@ class Linter:
         links (bool, optional): A boolean value indicating whether to validate links. Defaults to False.
         recursive (bool, optional): A boolean value indicating whether to perform recursive validation. Defaults to False.
         max_depth (Optional[int], optional): An optional integer indicating the maximum depth to validate recursively. Defaults to None.
+        pages (Optional[int], optional): Maximum number of "next" pages to follow per paginated API list during remote recursive validation. Defaults to None (one page per list); 0 follows every page.
         assets_open_urls (bool): Whether to open assets URLs when validating assets. Defaults to True.
         headers (dict): HTTP headers to include in the requests.
         pydantic (bool, optional): A boolean value indicating whether to use pydantic validation. Defaults to False.
         verbose (bool, optional): A boolean value indicating whether to enable verbose output. Defaults to False.
-        fast (bool, optional): A boolean value indicating whether to use fast validation mode (skips geometry checks for performance). Defaults to False.
-        fast_linting (bool, optional): A boolean value indicating whether to run linting checks in fast mode. Defaults to False.
-        prevalidated (bool, optional): A boolean value indicating that a dict input was already validated upstream (e.g. as part of a collection validated by FastValidator) so validation can be skipped in fast mode. Defaults to False.
+        fast (bool, optional): A boolean value indicating whether to skip linting and geometry checks for maximum validation speed. Defaults to False.
+        prevalidated (bool, optional): A boolean value indicating that a dict input was already validated upstream (e.g. as part of a collection validated by FastValidator) so validation can be skipped. Defaults to False.
 
     Attributes:
         data (dict): A dictionary representing the STAC JSON file.
@@ -144,12 +197,12 @@ class Linter:
     links: bool = False
     recursive: bool = False
     max_depth: Optional[int] = None
+    pages: Optional[int] = None
     assets_open_urls: bool = True
     headers: Dict = field(default_factory=dict)
     pydantic: bool = False
     verbose: bool = False
     fast: bool = False
-    fast_linting: bool = False
     prevalidated: bool = False
 
     def __post_init__(self):
@@ -169,7 +222,7 @@ class Linter:
                 self.pydantic = False
 
         self.data = self.load_data(self.item)
-        if self.recursive and self.fast and isinstance(self.item, str):
+        if self.recursive and isinstance(self.item, str):
             # run_recursive() already validates the root document, so reuse
             # its result instead of fetching and validating it a second time
             self.validate_all = self.recursive_validation(self.item)
@@ -199,9 +252,13 @@ class Linter:
         # Set error and info fields
         self.error_type = self.get_message_field("error_type")
         self.error_msg = self.get_message_field("error_message")
-        self.failed_schema = self.get_message_field("failed_schema")
-        self.recommendation = self.get_message_field("recommendation")
-        self.verbose_error_msg = self.get_message_field("error_verbose")
+        # Link/asset href checks are engine-independent; run them here and
+        # attach the same *_validated structure StacValidate produced so
+        # display code stays unchanged.
+        if self.links:
+            self.message["links_validated"] = self._validate_hrefs("links")
+        if self.assets:
+            self.message["assets_validated"] = self._validate_hrefs("assets")
         self.invalid_asset_format = (
             self.check_links_assets(10, "assets", "format") if self.assets else None
         )
@@ -304,7 +361,7 @@ class Linter:
 
         if isinstance(file, str):
             if is_valid_url(file):
-                resp = requests.get(file, headers=self.headers)
+                resp = requests.get(file, headers=self.headers, timeout=30)
                 data = resp.json()
             else:
                 with open(file) as json_file:
@@ -328,13 +385,14 @@ class Linter:
         from stac_validator.fast_validator import HTTP_SESSION
 
         old_stdout = sys.stdout
-        sys.stdout = io.StringIO()
+        captured = io.StringIO()
+        sys.stdout = captured
         original_headers = None
         if self.headers:
             original_headers = dict(HTTP_SESSION.headers)
             HTTP_SESSION.headers.update(self.headers)
         try:
-            yield
+            yield captured
         finally:
             sys.stdout = old_stdout
             if original_headers is not None:
@@ -355,99 +413,96 @@ class Linter:
         Raises:
             ValueError: If `file` is not a valid file path or STAC dictionary.
         """
-        # In fast mode, skip validation for dicts that were already validated
-        # upstream (e.g. items of a collection validated by FastValidator) and
-        # only run linting checks
-        if self.fast and self.prevalidated and isinstance(file, dict):
+        # Skip validation for dicts that were already validated upstream
+        # (e.g. objects linted from a recursive run) and only run linting
+        if self.prevalidated and isinstance(file, dict):
             return {
                 "valid_stac": True,
                 "asset_type": "",
                 "version": file.get("stac_version", ""),
-                "validation_method": "FastJSONSchema",
+                "validation_method": "stac-valid FastValidator",
                 "error_type": "",
                 "error_message": "",
             }
 
-        # Use FastValidator for fast mode
-        if self.fast:
-            try:
-                from stac_validator.fast_validator import FastValidator
+        data = file if isinstance(file, dict) else self.data
+        path = file if isinstance(file, str) else ""
+        if isinstance(data, dict) and _is_pre_1_0(data):
+            return _unsupported_version_message(data, path)
 
-                with self._fast_validator_context():
-                    fast_validator = FastValidator(
-                        file if isinstance(file, str) else "in-memory",
-                        quiet=False,
-                    )
-                    if isinstance(file, dict):
-                        fast_validator.run_dict(file)
-                    else:
-                        fast_validator.run()
+        # --pydantic swaps the validator for stac-pydantic models, matching
+        # StacValidate's pydantic semantics
+        if self.pydantic:
+            return self._pydantic_validate(data, path=path)
 
-                # Use the message attribute directly from FastValidator if available
-                # FastValidator.message is a list with one dict containing all validation info
-                fv_msg = {}
-                if hasattr(fast_validator, "message"):
-                    if (
-                        isinstance(fast_validator.message, list)
-                        and len(fast_validator.message) > 0
-                    ):
-                        fv_msg = fast_validator.message[0]
-                    elif isinstance(fast_validator.message, dict):
-                        fv_msg = fast_validator.message
-
-                # Extract error message from the first error if any
-                error_message = ""
-                if not fast_validator.valid and "errors" in fv_msg:
-                    errors = fv_msg.get("errors", [])
-                    if errors and len(errors) > 0:
-                        error_message = errors[0].get("error_message", "")
-
-                # Convert FastValidator result to StacValidate message format
-                return {
-                    "valid_stac": fast_validator.valid,
-                    "asset_type": "",
-                    "version": (
-                        self.data.get("stac_version", "")
-                        if isinstance(self.data, dict)
-                        else ""
-                    ),
-                    "validation_method": "FastJSONSchema",
-                    "error_type": (
-                        "FastValidationError" if not fast_validator.valid else ""
-                    ),
-                    "error_message": error_message,
-                    "fast_setup_time": fv_msg.get("setup_time_ms", ""),
-                    "fast_exec_time": fv_msg.get("execution_time_ms", ""),
-                    "valid_objects": fv_msg.get("valid_objects", 0),
-                    "invalid_objects": fv_msg.get("invalid_objects", 0),
-                    "schemas_checked": fv_msg.get("schemas_checked", []),
-                    "errors": fv_msg.get("errors", []),
-                }
-            except ImportError:
-                pass
-
-        if isinstance(file, str):
-            stac = StacValidate(
-                file,
-                links=self.links,
-                assets=self.assets,
-                assets_open_urls=self.assets_open_urls,
-                headers=self.headers,
-                pydantic=self.pydantic,
-                verbose=self.verbose,
-            )
-            stac.run()
-        elif isinstance(file, dict):
-            stac = StacValidate(
-                assets_open_urls=self.assets_open_urls,
-                headers=self.headers,
-                pydantic=self.pydantic,
-            )
-            stac.validate_dict(file)
-        else:
+        if not isinstance(file, (str, dict)):
             raise ValueError("Input must be a file path or STAC dictionary.")
 
-        return stac.message[0]
+        from stac_validator.fast_validator import FastValidator
+
+        with self._fast_validator_context() as captured:
+            fast_validator = FastValidator(
+                file if isinstance(file, str) else "in-memory",
+                quiet=False,
+            )
+            if isinstance(file, dict):
+                fast_validator.run_dict(file)
+            else:
+                fast_validator.run()
+
+        # FastValidator.message is a list with one dict containing all
+        # validation info
+        fv_msg = {}
+        if hasattr(fast_validator, "message"):
+            if (
+                isinstance(fast_validator.message, list)
+                and len(fast_validator.message) > 0
+            ):
+                fv_msg = fast_validator.message[0]
+            elif isinstance(fast_validator.message, dict):
+                fv_msg = fast_validator.message
+
+        # Extract error message from the first error if any
+        error_message = ""
+        if not fast_validator.valid:
+            if "errors" in fv_msg:
+                errors = fv_msg.get("errors", [])
+                if errors and len(errors) > 0:
+                    error_message = errors[0].get("error_message", "")
+            # run_dict() reports early-return failures on the message itself
+            if not error_message:
+                error_message = fv_msg.get("error_message", "")
+            # run() early-returns on load or type-detection failures
+            # without populating message; recover the reason it printed
+            # before stdout was suppressed
+            if not error_message:
+                error_message = _first_error_line(captured.getvalue()) or (
+                    f"Failed to validate {file if isinstance(file, str) else 'input'}"
+                )
+
+        from .utilities import determine_asset_type
+
+        # Convert FastValidator result to StacValidate message format
+        return {
+            "valid_stac": fast_validator.valid,
+            "asset_type": (
+                determine_asset_type(data) if isinstance(data, dict) else ""
+            ),
+            "path": fv_msg.get("path", path),
+            "version": (
+                self.data.get("stac_version", "") if isinstance(self.data, dict) else ""
+            ),
+            "validation_method": "stac-valid FastValidator",
+            "error_type": ("FastValidationError" if not fast_validator.valid else ""),
+            "error_message": error_message,
+            "schema": fv_msg.get("schemas_checked", []),
+            "fast_setup_time": fv_msg.get("setup_time_ms", ""),
+            "fast_exec_time": fv_msg.get("execution_time_ms", ""),
+            "valid_objects": fv_msg.get("valid_objects", 0),
+            "invalid_objects": fv_msg.get("invalid_objects", 0),
+            "schemas_checked": fv_msg.get("schemas_checked", []),
+            "errors": fv_msg.get("errors", []),
+        }
 
     def recursive_validation(
         self, file: Union[str, Dict[str, Any]]
@@ -466,61 +521,23 @@ class Linter:
             TypeError: If the input `file` is not a string or a dictionary.
         """
         if self.recursive:
-            if self.fast and isinstance(file, str):
-                try:
-                    return self._fast_recursive_validation(file)
-                except ImportError:
-                    pass
-            if self.fast and not isinstance(file, str):
-                import warnings
-
-                warnings.warn(
-                    "--fast recursive validation is not supported for "
-                    "in-memory dictionaries; falling back to the standard "
-                    "validator.",
-                    UserWarning,
-                    stacklevel=4,
-                )
             if isinstance(file, str):
-                stac = StacValidate(
-                    file,
-                    recursive=True,
-                    # Keep every validated object in stac.message even when
-                    # the run fails; otherwise run() drops valid results and
-                    # validate_all undercounts the assets checked.
-                    trace_recursion=True,
-                    max_depth=self.max_depth,
-                    assets_open_urls=self.assets_open_urls,
-                    headers=self.headers,
-                    pydantic=self.pydantic,
-                )
-            else:
-                stac = StacValidate(
-                    recursive=True,
-                    trace_recursion=True,
-                    max_depth=self.max_depth,
-                    assets_open_urls=self.assets_open_urls,
-                    headers=self.headers,
-                    pydantic=self.pydantic,
-                )
-            # trace_recursion dumps every validated message as JSON to
-            # stdout; keep the terminal clean unless --verbose was passed.
-            with nullcontext() if self.verbose else redirect_stdout(io.StringIO()):
-                if isinstance(file, str):
-                    stac.run()
-                else:
-                    stac.validate_dict(file)
-            return stac.message
+                return self._fast_recursive_validation(file)
+            import warnings
+
+            warnings.warn(
+                "Recursive traversal is not supported for in-memory "
+                "dictionaries; only the document itself is validated.",
+                UserWarning,
+                stacklevel=4,
+            )
+            return [self.validate_file(file)]
         else:
             return "Recursive validation is disabled."
 
     def _fast_recursive_validation(self, file: str) -> List[Dict]:
-        """Recursively validate a catalog and its children using FastValidator.
-
-        Note: --max-depth is not supported by FastValidator's recursive mode,
-        which uses a fixed internal depth limit.
-        """
-        import warnings
+        """Recursively validate a catalog and its children using FastValidator."""
+        import sys
 
         from stac_validator.fast_validator import FastValidator
 
@@ -539,11 +556,53 @@ class Linter:
                 # Documents as loaded, keyed by the path FastValidator
                 # records in its results (before URL repair).
                 self.loaded_objects: Dict[str, Dict[str, Any]] = {}
+                # Optional user-supplied depth cap; objects at or beyond
+                # it are not validated (root is depth 0).
+                self._max_depth: Optional[int] = None
+                # Objects encountered by the walk, for the stderr progress line
+                self._checked_count = 0
+                # Paginated API lists: follow rel="next" when enabled.
+                # _page_cap=None means follow every page; N caps the number
+                # of pages consumed per list (including the first).
+                self._follow_pagination = False
+                self._page_cap: Optional[int] = None
+                # (list_url, pages consumed) for lists cut short by _page_cap
+                self._truncated_lists: List[Tuple[str, int]] = []
+                # Depth tracking so resources for objects the _max_depth cap
+                # would exclude are never fetched in the first place
+                # (upstream's depth check runs after loading).
+                self._current_depth = 0
+                self._in_walk = False
+
+            def _write_progress(self, text: str) -> None:
+                """Overwrite the stderr status line, capped to a safe width."""
+                sys.stderr.write("\r" + text[:80].ljust(80))
+                sys.stderr.flush()
 
             def _load_json_resource(self, resource_path: str) -> Dict[str, Any]:
                 original_path = resource_path
+                if (
+                    self._in_walk
+                    and self._max_depth is not None
+                    and self._max_depth > 0
+                    and self._current_depth + 1 >= self._max_depth
+                ):
+                    # Called from a parent's link loop for a child that the
+                    # depth cap will exclude — skip the fetch (and its page
+                    # merges). The recursion into the empty dict is skipped
+                    # by the same cap, so no error result is produced. This
+                    # also neuters upstream's prefetch, which would otherwise
+                    # fetch every depth-capped collection and its items pages.
+                    return {}
                 if re.match(r"^https?:/[^/]", resource_path):
                     resource_path = resource_path.replace(":/", "://", 1)
+                if self._follow_pagination and resource_path.startswith("http"):
+                    label = (
+                        resource_path
+                        if len(resource_path) <= 68
+                        else "…" + resource_path[-67:]
+                    )
+                    self._write_progress(f"Fetching… {label}")
                 data = super()._load_json_resource(resource_path)
                 if isinstance(data, dict):
                     # The root's result path is os.path.abspath'ed by
@@ -553,68 +612,257 @@ class Linter:
                     if not original_path.startswith("http"):
                         self.loaded_objects[os.path.abspath(original_path)] = data
                     if "type" not in data:
-                        # Pre-1.0 documents have no type field. A Collection
-                        # always has 'extent'; a Catalog does not but can
-                        # carry 'license', which is not a usable signal.
+                        # STAC Catalogs have no 'type' member at any version;
+                        # a Collection always has 'extent'.
                         if "extent" in data:
                             data["type"] = "Collection"
                         elif "id" in data and "description" in data:
                             data["type"] = "Catalog"
+                    if self._follow_pagination:
+                        self._normalize_api_links(data)
+                        self._merge_next_pages(data, resource_path)
+                    # Index embedded objects under the synthetic
+                    # "{page_url}#{id}" paths upstream gives them — items
+                    # extracted from items pages are never loaded
+                    # individually, so without this they get no
+                    # original_object, linting, or pydantic coverage.
+                    for list_key in ("features", "collections", "catalogs"):
+                        objects = data.get(list_key)
+                        if isinstance(objects, list):
+                            for obj in objects:
+                                if isinstance(obj, dict) and obj.get("id"):
+                                    self.loaded_objects.setdefault(
+                                        f"{original_path}#{obj['id']}", obj
+                                    )
                 return data
 
-        if self.max_depth is not None:
-            warnings.warn(
-                "--max-depth is not supported in fast mode; the full catalog "
-                "will be validated.",
-                UserWarning,
-                stacklevel=5,
-            )
+            def _normalize_api_links(self, data: Dict[str, Any]) -> None:
+                """Make catalogs-extension links traversable by upstream.
+
+                The API walk only follows rel "data"/"child"/"item"/"items",
+                so a landing page's rel="catalogs" link (catalogs extension)
+                and a catalog's rel="collections" link are never traversed.
+                Both are rewritten to rel="data" — whose handling fetches the
+                endpoint and extracts its "collections" list — and a
+                "catalogs" payload is aliased to "collections" so the same
+                extraction produces correct ``{endpoint}/{id}`` URLs.
+                """
+                for link in data.get("links", []):
+                    if isinstance(link, dict) and link.get("rel") in (
+                        "catalogs",
+                        "collections",
+                    ):
+                        link["rel"] = "data"
+                if "collections" not in data and isinstance(data.get("catalogs"), list):
+                    data["collections"] = data["catalogs"]
+
+            def _merge_next_pages(self, data: Dict[str, Any], page_url: str) -> None:
+                """Merge later pages of a paginated list response into ``data``.
+
+                Upstream's walk never follows ``rel="next"``, so a remote
+                recursive run would otherwise validate only the first page of
+                every collections/items list. Later pages are fetched here and
+                their objects appended to the page-one list, leaving the
+                upstream link-following code to consume the merged result.
+                Page URLs are tracked to terminate on bad APIs that loop, and
+                a failed page fetch stops the chain rather than failing the
+                whole run.
+                """
+                list_key = next(
+                    (
+                        k
+                        for k in ("features", "collections", "catalogs")
+                        if isinstance(data.get(k), list)
+                    ),
+                    None,
+                )
+                if list_key is None:
+                    return
+                seen = {page_url}
+                label = page_url if len(page_url) <= 60 else "…" + page_url[-59:]
+                current_url, current = page_url, data
+                remaining = None if self._page_cap is None else self._page_cap - 1
+                while remaining is None or remaining > 0:
+                    next_href = next(
+                        (
+                            link.get("href")
+                            for link in current.get("links", [])
+                            if isinstance(link, dict) and link.get("rel") == "next"
+                        ),
+                        None,
+                    )
+                    if not next_href:
+                        break
+                    next_url = urljoin(current_url, next_href)
+                    if next_url in seen:
+                        break
+                    seen.add(next_url)
+                    self._write_progress(f"Fetching… page {len(seen)} of {label}")
+                    try:
+                        page = super()._load_json_resource(next_url)
+                    except Exception:
+                        break
+                    self._normalize_api_links(page)
+                    objects = page.get(list_key)
+                    if not isinstance(objects, list):
+                        break
+                    data[list_key].extend(objects)
+                    current_url, current = next_url, page
+                    if remaining is not None:
+                        remaining -= 1
+                if remaining == 0 and any(
+                    isinstance(link, dict) and link.get("rel") == "next"
+                    for link in current.get("links", [])
+                ):
+                    # The cap stopped the chain while more pages exist
+                    self._truncated_lists.append((page_url, len(seen)))
+
+            def _validate_recursive(
+                self,
+                data,
+                file_path,
+                results,
+                visited,
+                is_api=False,
+                collection_id=None,
+                prefetched_resources=None,
+                depth=0,
+                *args,
+                **kwargs,
+            ):
+                # Tolerate upstream adding parameters to this private
+                # method within the pinned stac-valid range
+                self._in_walk = True
+                prev_depth = self._current_depth
+                self._current_depth = depth
+                try:
+                    if (
+                        self._max_depth is not None
+                        and self._max_depth > 0
+                        and depth >= self._max_depth
+                    ):
+                        return
+                    self._checked_count += 1
+                    self._write_progress(
+                        f"Validating… {self._checked_count} objects checked"
+                    )
+                    if _is_pre_1_0(data):
+                        # Report a clear error instead of letting get_validator
+                        # fail on schemas.stacspec.org, which does not host
+                        # pre-1.0 schemas. Do not descend into its children.
+                        results.append(
+                            {
+                                "path": file_path,
+                                "id": data.get("id", "unknown"),
+                                "valid_stac": False,
+                                "stac_type": str(data.get("type", "unknown")).lower(),
+                                "stac_version": data.get("stac_version", ""),
+                                "error_type": "UnsupportedVersionError",
+                                "error_message": (
+                                    f"STAC version {data.get('stac_version', '')} "
+                                    "is not supported; stac-check validates "
+                                    "STAC 1.0.0 and later."
+                                ),
+                            }
+                        )
+                        return
+                    super()._validate_recursive(
+                        data,
+                        file_path,
+                        results,
+                        visited,
+                        is_api,
+                        collection_id=collection_id,
+                        prefetched_resources=prefetched_resources,
+                        depth=depth,
+                        *args,
+                        **kwargs,
+                    )
+                finally:
+                    self._current_depth = prev_depth
 
         start_time = time.perf_counter()
-        with self._fast_validator_context():
+        with self._fast_validator_context() as captured:
             fast_validator = _RecursiveFastValidator(file, quiet=False)
-            fast_validator.run_recursive()
+            fast_validator._max_depth = self.max_depth
+            # Remote sources are STAC APIs or hosted catalogs: API mode
+            # additionally follows "data"/"items" links (landing pages link
+            # to /collections via rel="data" rather than "child"/"item")
+            try:
+                if file.startswith("http"):
+                    fast_validator._follow_pagination = True
+                    # Default: first page of each paginated list; --pages N
+                    # overrides, --pages 0 consumes every page
+                    fast_validator._page_cap = (
+                        None
+                        if self.pages == 0
+                        else (self.pages if self.pages is not None else 1)
+                    )
+                    fast_validator.run_api()
+                else:
+                    fast_validator.run_recursive()
+            finally:
+                # Clear the stderr progress line even if the walk raised
+                if fast_validator._checked_count:
+                    sys.stderr.write("\r" + " " * 80 + "\r")
+                    sys.stderr.flush()
+        self.truncated_lists = list(fast_validator._truncated_lists)
         self.fast_total_time = (time.perf_counter() - start_time) * 1000
 
         results = [
             self._map_fast_recursive_result(result) for result in fast_validator.message
         ]
 
-        # --fast-linting: run linting and geometry checks per object using the
-        # already-loaded documents, without re-fetching or re-validating.
-        if self.fast_linting:
+        # --pydantic: re-validate each object with stac-pydantic models and
+        # overwrite the schema-validation fields, matching StacValidate's
+        # recursive pydantic mode
+        if self.pydantic:
             for raw_result, mapped in zip(fast_validator.message, results):
                 obj = fast_validator.loaded_objects.get(raw_result.get("path", ""))
                 if not isinstance(obj, dict):
                     continue
-                try:
-                    lint = Linter(
-                        obj,
-                        config_file=self.config_file,
-                        headers=self.headers,
-                        fast=True,
-                        fast_linting=True,
-                        prevalidated=True,
-                    )
-                    mapped["best_practices"] = lint.best_practices_msg
-                    mapped["geometry_errors"] = lint.geometry_errors_msg
-                except Exception:
-                    continue
+                mapped.update(self._pydantic_validate(obj, path=mapped["path"]))
+
+        # Attach the already-loaded documents so display can build lint-only
+        # Linters without re-fetching, and run linting and geometry checks
+        # per object without re-validating, unless --fast skips them.
+        for raw_result, mapped in zip(fast_validator.message, results):
+            obj = fast_validator.loaded_objects.get(raw_result.get("path", ""))
+            if not isinstance(obj, dict):
+                continue
+            mapped["original_object"] = obj
+            if self.fast:
+                continue
+            try:
+                lint = Linter(
+                    obj,
+                    config_file=self.config_file,
+                    headers=self.headers,
+                    prevalidated=True,
+                )
+                mapped["best_practices"] = lint.best_practices_msg
+                mapped["geometry_errors"] = lint.geometry_errors_msg
+            except Exception:
+                continue
 
         # run_recursive() returns early with an empty message list when the
         # root document cannot be loaded; surface that as a failed result
-        # instead of an empty summary.
+        # instead of an empty summary, carrying the reason it printed
+        # before stdout was suppressed.
         if not results and not fast_validator.valid:
+            error_message = _first_error_line(captured.getvalue()) or (
+                f"Failed to load: {file}"
+            )
             results.append(
                 {
                     "version": "",
                     "path": file,
                     "schema": [],
                     "asset_type": "",
-                    "validation_method": "FastJSONSchema",
+                    "validation_method": "stac-valid FastValidator",
                     "valid_stac": False,
                     "error_type": "FastValidationError",
-                    "error_message": f"Failed to load: {file}",
+                    "error_message": error_message,
                 }
             )
 
@@ -644,9 +892,11 @@ class Linter:
             "asset_type": (
                 stac_type.upper() if stac_type not in ("", "unknown") else ""
             ),
-            "validation_method": "FastJSONSchema",
+            "validation_method": "stac-valid FastValidator",
             "valid_stac": valid,
-            "error_type": "" if valid else "FastValidationError",
+            "error_type": (
+                "" if valid else result.get("error_type", "FastValidationError")
+            ),
             "error_message": result.get("error_message", ""),
         }
 
@@ -687,6 +937,149 @@ class Linter:
                 if num_links == 0:
                     return links
         return links
+
+    def _validate_hrefs(self, url_type: str) -> Dict[str, List[str]]:
+        """Validate link or asset hrefs for format and request validity.
+
+        Produces the same ``{url_type}_validated`` message structure that
+        StacValidate generated so downstream display is unchanged. Requests
+        are streamed (headers only, timeout-bounded) rather than full GETs,
+        and relative link hrefs resolve against the document URL.
+
+        Args:
+            url_type: Either "links" (checked unconditionally against the
+                network) or "assets" (requests skipped when
+                ``assets_open_urls`` is False).
+
+        Returns:
+            A dict with format_valid/format_invalid/request_valid/
+            request_invalid lists of hrefs.
+        """
+        result: Dict[str, List[str]] = {
+            "format_valid": [],
+            "format_invalid": [],
+            "request_valid": [],
+            "request_invalid": [],
+        }
+
+        hrefs: List[str] = []
+        if url_type == "links":
+            entries = self.data.get("links") or []
+            doc_url = (
+                self.item
+                if isinstance(self.item, str) and is_valid_url(self.item)
+                else ""
+            )
+            if not doc_url:
+                for link in entries:
+                    if not isinstance(link, dict):
+                        continue
+                    href = link.get("href")
+                    if link.get("rel") in ("self", "alternate") and is_url(str(href)):
+                        doc_url = href
+                        break
+            for link in entries:
+                href = link.get("href") if isinstance(link, dict) else None
+                if not isinstance(href, str) or not href:
+                    continue
+                if not is_url(href) and doc_url:
+                    href = urljoin(doc_url, href)
+                hrefs.append(href)
+        else:
+            entries = self.data.get("assets") or {}
+            hrefs = [
+                asset["href"]
+                for asset in entries.values()
+                if isinstance(asset, dict) and isinstance(asset.get("href"), str)
+            ]
+
+        open_urls = True if url_type == "links" else self.assets_open_urls
+        for href in hrefs:
+            if not is_url(href):
+                result["format_invalid"].append(href)
+                result["request_invalid"].append(href)
+                continue
+            result["format_valid"].append(href)
+            if open_urls:
+                try:
+                    status = _http_head_status(href, self.headers)
+                    bucket = "request_valid" if status == 200 else "request_invalid"
+                    result[bucket].append(href)
+                except Exception:
+                    result["request_invalid"].append(href)
+
+        return result
+
+    def _pydantic_validate(
+        self, data: Dict[str, Any], path: str = ""
+    ) -> Dict[str, Any]:
+        """Validate a STAC document using stac-pydantic models directly.
+
+        Reproduces the message shape StacValidate's pydantic mode produced
+        so downstream display is unchanged: ``validation_method`` is
+        ``"pydantic"``, ``schema`` names the model used, and failures are
+        reported as ``PydanticValidationError``.
+
+        Args:
+            data: The STAC document to validate.
+            path: Path or URL recorded in the message's ``path`` field.
+
+        Returns:
+            A message dict in StacValidate format.
+        """
+        from .utilities import determine_asset_type
+
+        asset_type = determine_asset_type(data)
+        message: Dict[str, Any] = {
+            "version": data.get("stac_version", ""),
+            "path": path,
+            "schema": [""],
+            "valid_stac": False,
+            "asset_type": asset_type,
+            "validation_method": "pydantic",
+            "error_type": "",
+            "error_message": "",
+        }
+        try:
+            from pydantic import ValidationError
+            from stac_pydantic import Catalog, Collection, Item, ItemCollection
+            from stac_pydantic.extensions import validate_extensions
+
+            models: Dict[str, Any] = {
+                "ITEM": Item,
+                "COLLECTION": Collection,
+                "CATALOG": Catalog,
+                "FEATURECOLLECTION": ItemCollection,
+            }
+            model = models.get(asset_type)
+            if model is None:
+                raise ValueError(
+                    f"Unsupported STAC type for Pydantic validation: {asset_type}"
+                )
+            validated = model.model_validate(data)
+            message["schema"] = [f"stac-pydantic {model.__name__} model"]
+
+            if data.get("stac_extensions"):
+                if asset_type in ("ITEM", "COLLECTION"):
+                    validate_extensions(validated, reraise_exception=True)
+                message["extension_schemas"] = list(data["stac_extensions"])
+
+            message["valid_stac"] = True
+            message["model_validation"] = "passed"
+        except ValidationError as e:
+            error_details = [
+                f"{' -> '.join(map(str, err.get('loc', [])))}: {err.get('msg', '')}"
+                for err in e.errors()
+            ]
+            message["error_type"] = "PydanticValidationError"
+            message["error_message"] = (
+                f"Pydantic validation failed for {asset_type}: "
+                f"{'; '.join(error_details)}"
+            )
+        except Exception as e:
+            message["error_type"] = "PydanticValidationError"
+            message["error_message"] = str(e)
+        return message
 
     def get_message_field(self, field_name: str) -> str:
         """Get a field from the validation message.
@@ -1327,8 +1720,8 @@ class Linter:
         base_string = "STAC Best Practices: "
         best_practices.append(base_string)
 
-        # Skip best practices checks in fast mode (unless fast_linting is enabled)
-        if self.fast and not self.fast_linting:
+        # --fast skips best practices checks
+        if self.fast:
             return best_practices
 
         best_practices_dict = self.create_best_practices_dict()
@@ -1363,8 +1756,8 @@ class Linter:
             'Geometry Validation Errors [BETA]:' base string and is followed by specific details. Each message is indented
             with four spaces, and there is an empty string between each message for readability.
         """
-        # Skip geometry validation in fast mode (unless fast_linting is enabled)
-        if self.fast and not self.fast_linting:
+        # --fast skips geometry validation
+        if self.fast:
             return []
 
         # Check if geometry validation is enabled
