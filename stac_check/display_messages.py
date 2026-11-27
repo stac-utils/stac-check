@@ -519,7 +519,10 @@ def _display_validation_summary(
             click.secho()
             click.secho("⚡ Timing Information:", bold=True, fg="cyan")
             click.secho(f"  Total Validation Time: {total_time:.2f} ms")
-            click.secho(f"  Average per Object: {total_time / len(all_paths):.3f} ms")
+            if all_paths:
+                click.secho(
+                    f"  Average per Object: {total_time / len(all_paths):.3f} ms"
+                )
 
         click.secho()
 

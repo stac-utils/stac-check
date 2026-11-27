@@ -376,17 +376,33 @@ class Linter:
         FastValidator prints liberally to stdout; capture it for the
         duration of a run so consumers can opt into quiet output while
         still recovering printed error details when needed.
+
+        FastValidator sends ``headers`` per-request for document fetches,
+        but upstream's module-level ``fetch_schema`` has no headers
+        parameter — it issues bare ``HTTP_SESSION.get`` calls. Custom
+        headers are therefore also applied to the shared session for the
+        duration of the run and restored afterwards, so STAC/extension
+        schema fetches honor ``--header`` too.
         """
         import io
         import sys
 
+        from stac_validator.fast_validator import HTTP_SESSION
+
         old_stdout = sys.stdout
         captured = io.StringIO()
         sys.stdout = captured
+        original_headers = None
+        if self.headers:
+            original_headers = dict(HTTP_SESSION.headers)
+            HTTP_SESSION.headers.update(self.headers)
         try:
             yield captured
         finally:
             sys.stdout = old_stdout
+            if original_headers is not None:
+                HTTP_SESSION.headers.clear()
+                HTTP_SESSION.headers.update(original_headers)
 
     def validate_file(self, file: Union[str, dict]) -> Dict[str, Any]:
         """Validates the given file path or STAC dictionary against the validation schema.
@@ -630,9 +646,11 @@ class Linter:
             fast_validator = _RecursiveFastValidator(
                 file,
                 quiet=False,
-                # max_depth=0 means unlimited here (falsy); upstream's 0
-                # would exclude the root itself
-                max_depth=self.max_depth or None,
+                # max_depth<=0 means unlimited here; upstream's 0 or
+                # negative would exclude the root itself
+                max_depth=(
+                    self.max_depth if self.max_depth and self.max_depth > 0 else None
+                ),
                 keep_documents=True,
                 headers=self.headers or None,
                 # Default: first page of each paginated list; --pages N
