@@ -16,13 +16,50 @@ from stac_validator.utilities import is_url, is_valid_url
 load_dotenv()
 
 
+_http_retries_installed = False
+
+
+def _install_http_retries() -> None:
+    """Retry HTTP 429 (rate limited) on stac-valid's shared adapter.
+
+    Upstream's HTTPAdapter only retries 5xx, so throttled APIs like the
+    Copernicus Data Space otherwise fail requests outright. The adapter
+    object is mounted on ``HTTP_SESSION`` and on every per-thread
+    prefetch session, so one patch covers all document and schema
+    fetches. Idempotent; called lazily by :func:`_remote_get`.
+    """
+    global _http_retries_installed
+    if _http_retries_installed:
+        return
+    from stac_validator.fast_validator import HTTP_SESSION
+    from urllib3.util.retry import Retry
+
+    adapter = HTTP_SESSION.get_adapter("https://")
+    if adapter is not None:
+        adapter.max_retries = Retry(
+            total=8,
+            backoff_factor=1.0,
+            status_forcelist={429, 500, 502, 503, 504},
+            respect_retry_after_header=True,
+        )
+    _http_retries_installed = True
+
+
+def _remote_get(url: str, **kwargs: Any) -> requests.Response:
+    """GET a remote URL through stac-valid's shared, retrying session."""
+    from stac_validator.fast_validator import HTTP_SESSION
+
+    _install_http_retries()
+    return HTTP_SESSION.get(url, **kwargs)
+
+
 def _http_head_status(url: str, headers: Dict) -> int:
     """Return the HTTP status code for a URL, reading response headers only.
 
     Uses a streamed GET (rather than HEAD, which some servers and signed
     URLs reject) and closes before the body downloads.
     """
-    resp = requests.get(url, headers=headers, timeout=15, stream=True)
+    resp = _remote_get(url, headers=headers, timeout=15, stream=True)
     try:
         return resp.status_code
     finally:
@@ -362,8 +399,16 @@ class Linter:
 
         if isinstance(file, str):
             if is_valid_url(file):
-                resp = requests.get(file, headers=self.headers, timeout=30)
-                data = resp.json()
+                resp = _remote_get(file, headers=self.headers, timeout=30)
+                try:
+                    data = resp.json()
+                except json.JSONDecodeError:
+                    # An error status with a non-JSON body (e.g. a WAF
+                    # 429 page) should surface as an HTTP error, not a
+                    # misleading "invalid JSON"; error responses that DO
+                    # carry JSON keep legacy parse-and-validate behavior
+                    resp.raise_for_status()
+                    raise
             else:
                 with open(file) as json_file:
                     data = json.load(json_file)
@@ -385,18 +430,11 @@ class Linter:
         headers are therefore also applied to the shared session for the
         duration of the run and restored afterwards, so STAC/extension
         schema fetches honor ``--header`` too.
-
-        Upstream's retry policy only covers 5xx; 429 (rate limited) is
-        retried here too, honoring Retry-After, so throttled APIs like
-        CDSE don't fail objects outright. The adapter object is shared
-        with prefetch workers' thread-local sessions, so this covers
-        every document and schema fetch.
         """
         import io
         import sys
 
         from stac_validator.fast_validator import HTTP_SESSION
-        from urllib3.util.retry import Retry
 
         old_stdout = sys.stdout
         captured = io.StringIO()
@@ -405,15 +443,6 @@ class Linter:
         if self.headers:
             original_headers = dict(HTTP_SESSION.headers)
             HTTP_SESSION.headers.update(self.headers)
-        adapter = HTTP_SESSION.get_adapter("https://")
-        original_retry = adapter.max_retries if adapter is not None else None
-        if adapter is not None:
-            adapter.max_retries = Retry(
-                total=8,
-                backoff_factor=1.0,
-                status_forcelist={429, 500, 502, 503, 504},
-                respect_retry_after_header=True,
-            )
         try:
             yield captured
         finally:
@@ -421,8 +450,6 @@ class Linter:
             if original_headers is not None:
                 HTTP_SESSION.headers.clear()
                 HTTP_SESSION.headers.update(original_headers)
-            if original_retry is not None:
-                adapter.max_retries = original_retry
 
     def validate_file(self, file: Union[str, dict]) -> Dict[str, Any]:
         """Validates the given file path or STAC dictionary against the validation schema.

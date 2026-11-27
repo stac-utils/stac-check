@@ -15,7 +15,7 @@ from stac_check.display_messages import (
     item_collection_message,
     recursive_message,
 )
-from stac_check.lint import Linter
+from stac_check.lint import Linter, _remote_get
 from stac_check.utilities import handle_output
 
 
@@ -33,7 +33,8 @@ def detect_api_response_type(file: str, headers: dict = None) -> Optional[str]:
     """
     try:
         if is_valid_url(file):
-            resp = requests.get(file, headers=headers or {})
+            resp = _remote_get(file, headers=headers or {}, timeout=30)
+            resp.raise_for_status()
             data = resp.json()
         else:
             with open(file) as f:

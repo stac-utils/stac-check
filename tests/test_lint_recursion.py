@@ -56,7 +56,7 @@ def test_recursive_remote_uses_api_mode(monkeypatch):
 
     resp = MagicMock()
     resp.json.return_value = {"type": "Catalog", "id": "root", "links": []}
-    monkeypatch.setattr("stac_check.lint.requests.get", lambda *a, **k: resp)
+    monkeypatch.setattr("stac_check.lint._remote_get", lambda *a, **k: resp)
 
     Linter("https://example.com/stac", recursive=True)
     Linter("sample_files/1.0.0/catalog.json", recursive=True)
@@ -177,7 +177,7 @@ def _mock_remote(monkeypatch, payloads):
         return resp
 
     monkeypatch.setattr("stac_validator.fast_validator.HTTP_SESSION.get", fake_get)
-    monkeypatch.setattr("stac_check.lint.requests.get", fake_get)
+    monkeypatch.setattr("stac_check.lint._remote_get", fake_get)
 
 
 def test_recursive_remote_follows_next_pages(monkeypatch):
@@ -636,22 +636,18 @@ def test_recursive_remote_no_rps_does_not_throttle(monkeypatch):
     assert sleeps == []
 
 
-def test_fast_validator_context_retries_429():
-    """The shared HTTP adapter retries 429 with Retry-After for the
-    duration of a validation run and is restored afterwards."""
+def test_remote_get_installs_429_retries():
+    """The first remote fetch installs a 429-retrying Retry policy on
+    the shared HTTP adapter (covers documents, schemas, prefetch)."""
     from stac_validator.fast_validator import HTTP_SESSION
 
-    linter = Linter("sample_files/1.0.0/catalog.json")
+    from stac_check.lint import _install_http_retries
+
     adapter = HTTP_SESSION.get_adapter("https://")
-    original = adapter.max_retries
-    assert 429 not in (original.status_forcelist or ())
-
-    with linter._fast_validator_context():
-        retries = adapter.max_retries
-        assert 429 in retries.status_forcelist
-        assert retries.respect_retry_after_header
-
-    assert adapter.max_retries is original
+    _install_http_retries()
+    retries = adapter.max_retries
+    assert 429 in retries.status_forcelist
+    assert retries.respect_retry_after_header
 
 
 def test_recursive_remote_retries_exhausted_429(monkeypatch):
@@ -682,7 +678,6 @@ def test_recursive_remote_retries_exhausted_429(monkeypatch):
         return resp
 
     monkeypatch.setattr("stac_validator.fast_validator.HTTP_SESSION.get", fake_get)
-    monkeypatch.setattr("stac_check.lint.requests.get", fake_get)
     monkeypatch.setattr(time, "sleep", lambda d: None)
 
     linter = Linter("https://api.test/stac", recursive=True)
@@ -719,7 +714,6 @@ def test_recursive_remote_gives_up_on_persistent_429(monkeypatch):
         return resp
 
     monkeypatch.setattr("stac_validator.fast_validator.HTTP_SESSION.get", fake_get)
-    monkeypatch.setattr("stac_check.lint.requests.get", fake_get)
     monkeypatch.setattr(time, "sleep", lambda d: None)
 
     linter = Linter("https://api.test/stac", recursive=True)

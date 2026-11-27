@@ -297,7 +297,7 @@ def test_is_item_collection_with_mock_url():
     }
 
     with (
-        patch("stac_check.cli.requests.get", return_value=mock_response),
+        patch("stac_check.cli._remote_get", return_value=mock_response),
         patch("stac_check.cli.is_valid_url", return_value=True),
     ):
         assert is_item_collection("https://example.com/items") is True
@@ -360,7 +360,7 @@ def test_detect_api_response_type_collections_mock_url():
     }
 
     with (
-        patch("stac_check.cli.requests.get", return_value=mock_response),
+        patch("stac_check.cli._remote_get", return_value=mock_response),
         patch("stac_check.cli.is_valid_url", return_value=True),
     ):
         assert (
