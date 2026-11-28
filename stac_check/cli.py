@@ -110,6 +110,13 @@ def is_item_collection(file: str, headers: dict = None) -> bool:
     help="Maximum remote requests per second during --recursive. Use to stay under API rate limits (e.g. 429 responses).",
 )
 @click.option(
+    "--items-limit",
+    type=int,
+    default=100,
+    show_default=True,
+    help="Items per page to request on remote API items endpoints during --recursive (0 = auto-negotiate starting at 10000; negative = leave URLs unchanged).",
+)
+@click.option(
     "-a", "--assets", is_flag=True, help="Validate assets for format and response."
 )
 @click.option(
@@ -160,6 +167,7 @@ def main(
     recursive: bool,
     max_depth: Optional[int],
     rps: Optional[float],
+    items_limit: int,
     assets: bool,
     links: bool,
     no_assets_urls: bool,
@@ -180,6 +188,7 @@ def main(
         recursive: Recursively validate linked STAC objects
         max_depth: Maximum depth for recursive validation
         rps: Maximum remote requests per second during recursion
+        items_limit: Items per page to request on remote items endpoints
         assets: Validate assets
         links: Validate links
         no_assets_urls: Disable URL validation for assets
@@ -309,6 +318,7 @@ def main(
                 max_depth=max_depth,
                 pages=pages,
                 rps=rps,
+                items_limit=items_limit,
                 assets_open_urls=not no_assets_urls,
                 headers=dict(header),
                 pydantic=pydantic,

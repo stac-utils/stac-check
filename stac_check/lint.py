@@ -66,6 +66,12 @@ def _http_head_status(url: str, headers: Dict) -> int:
         resp.close()
 
 
+# Descending ladder of items page sizes to try when an API rejects the
+# requested limit — covers permissive (stac-fastapi), capped (CDSE: 100),
+# and strict-validation backends
+_ITEMS_LIMIT_STEPS = (10000, 1000, 100, 10)
+
+
 def _with_items_limit(url: str, limit: int) -> str:
     """Append ``limit=N`` to a bare STAC API ``items`` endpoint URL.
 
@@ -141,7 +147,7 @@ class Linter:
         max_depth (Optional[int], optional): An optional integer indicating the maximum depth to validate recursively. Defaults to None.
         pages (Optional[int], optional): Maximum number of "next" pages to follow per paginated API list during remote recursive validation. Defaults to None (one page per list); 0 follows every page.
         rps (Optional[float], optional): Maximum remote requests per second during recursive validation; spaces document fetches to stay under API rate limits (e.g. 429 responses). Defaults to None (no throttle).
-        items_limit (int): Page size requested on remote ``items`` endpoint fetches during recursive validation; servers clamp to their own cap (e.g. CDSE: 100). Defaults to 100.
+        items_limit (Optional[int]): Page size requested on remote ``items`` endpoint fetches during recursive validation; servers clamp or are stepped down on 4xx rejection. Defaults to 100; 0 auto-negotiates starting at 10000; None or negative leaves URLs untouched.
         assets_open_urls (bool): Whether to open assets URLs when validating assets. Defaults to True.
         headers (dict): HTTP headers to include in the requests.
         pydantic (bool, optional): A boolean value indicating whether to use pydantic validation. Defaults to False.
@@ -258,7 +264,7 @@ class Linter:
     max_depth: Optional[int] = None
     pages: Optional[int] = None
     rps: Optional[float] = None
-    items_limit: int = 100
+    items_limit: Optional[int] = 100
     assets_open_urls: bool = True
     headers: Dict = field(default_factory=dict)
     pydantic: bool = False
@@ -638,8 +644,9 @@ class Linter:
                 # Serializes stderr writes from prefetch worker threads
                 self._progress_lock = threading.Lock()
                 # Page size to request on remote items endpoints; set
-                # from Linter.items_limit (0 = leave URLs untouched)
-                self._items_limit = 0
+                # from Linter.items_limit (negative = leave URLs
+                # untouched, 0 = auto-negotiate from _ITEMS_LIMIT_STEPS[0])
+                self._items_limit = -1
                 # Minimum seconds between remote document fetches, shared
                 # across prefetch workers; set from Linter.rps (0 = off)
                 self._min_interval = 0.0
@@ -678,26 +685,34 @@ class Linter:
                     time.sleep(delay)
 
             def _load_json_resource(self, resource_path: str) -> Dict[str, Any]:
-                if resource_path.startswith("http") and self._items_limit:
-                    # Ask items endpoints for the largest page the API
-                    # will serve — fewer fetches under a request quota
-                    resource_path = _with_items_limit(resource_path, self._items_limit)
-                label = (
-                    resource_path
-                    if len(resource_path) <= 60
-                    else "…" + resource_path[-59:]
-                )
+                original_path = resource_path
+                limit_to_try: Optional[int] = None
                 if resource_path.startswith("http"):
                     self._throttle()
                     # Remote fetches are the slow part of a walk — keep the
                     # status line alive from prefetch worker threads too,
                     # since prefetch is where most fetches actually happen.
                     self._fetch_count += 1
+                    if self._items_limit >= 0:
+                        # Ask items endpoints for the largest page the API
+                        # will serve — fewer fetches under a request quota.
+                        # 0 = auto-negotiate, starting at the top of the
+                        # ladder and stepping down on 4xx rejections
+                        start = self._items_limit or _ITEMS_LIMIT_STEPS[0]
+                        rewritten = _with_items_limit(resource_path, start)
+                        if rewritten != resource_path:
+                            limit_to_try = start
+                            resource_path = rewritten
+                    label = (
+                        resource_path
+                        if len(resource_path) <= 60
+                        else "…" + resource_path[-59:]
+                    )
                     self._write_progress(f"Fetching #{self._fetch_count}… {label}")
                 attempts = 0
                 while True:
                     try:
-                        return super()._load_json_resource(resource_path)
+                        result = super()._load_json_resource(resource_path)
                     except requests.exceptions.RetryError as e:
                         # requests reports exhausted retries as RetryError;
                         # the inner reason string names the status code
@@ -705,9 +720,31 @@ class Linter:
                             raise
                         last_error: requests.exceptions.RequestException = e
                     except requests.exceptions.HTTPError as e:
-                        if e.response is None or e.response.status_code != 429:
+                        status = e.response.status_code if e.response is not None else 0
+                        if status == 429:
+                            last_error = e
+                        elif limit_to_try is not None and 400 <= status < 500:
+                            # The API rejected our page size — step down
+                            # the ladder, then retry without any limit
+                            smaller = next(
+                                (s for s in _ITEMS_LIMIT_STEPS if s < limit_to_try),
+                                None,
+                            )
+                            limit_to_try = smaller
+                            resource_path = (
+                                _with_items_limit(original_path, smaller)
+                                if smaller is not None
+                                else original_path
+                            )
+                            continue
+                        else:
                             raise
-                        last_error = e
+                    else:
+                        if limit_to_try is not None:
+                            # Remember the largest working page size so
+                            # later items fetches skip the probe
+                            self._items_limit = limit_to_try
+                        return result
                     if attempts >= self._rate_limit_attempts:
                         raise last_error
                     attempts += 1
@@ -800,7 +837,10 @@ class Linter:
                 fast_validator._min_interval = 1.0 / self.rps
             # Request `items_limit` items per page on remote items
             # endpoints — fewer page fetches under a request quota
-            fast_validator._items_limit = self.items_limit
+            # (None/negative = don't modify URLs, 0 = auto-negotiate)
+            fast_validator._items_limit = (
+                self.items_limit if self.items_limit is not None else -1
+            )
             # Remote sources are STAC APIs or hosted catalogs: API mode
             # additionally follows "data"/"items" links (landing pages link
             # to /collections via rel="data" rather than "child"/"item")
