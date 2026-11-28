@@ -6,6 +6,12 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 
 ## Unreleased
 
+## [v2.1.0] - 2026-11-28
+
+### Changed
+
+- Raised the stac-valid floor to >=4.7.1, which stops collection `items` pages being prefetched one level past `--max-depth` — roughly halves the request count of depth-capped walks
+
 ### Added
 
 - New `--rps` flag: maximum remote requests per second during `--recursive`, spacing document fetches (including prefetch worker threads) to stay under API rate limits
@@ -425,7 +431,8 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 - Validation from stac-validator 2.3.0
 - Links and assets validation checks
 
-[Unreleased]: https://github.com/stac-utils/stac-check/compare/v2.0.0...main
+[Unreleased]: https://github.com/stac-utils/stac-check/compare/v2.1.0...main
+[v2.1.0]: https://github.com/stac-utils/stac-check/compare/v2.0.0...v2.1.0
 [v2.0.0]: https://github.com/stac-utils/stac-check/compare/v1.15.1...v2.0.0
 [v1.15.1]: https://github.com/stac-utils/stac-check/compare/v1.15.0...v1.15.1
 [v1.15.0]: https://github.com/stac-utils/stac-check/compare/v1.14.0...v1.15.0
