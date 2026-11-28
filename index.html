@@ -1,0 +1,754 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>stac-check documentation &mdash; stac-check 1.11.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css?v=7dc6ce7e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=c8897f99"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="CLI Reference" href="cli.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="#" class="icon icon-home">
+            stac-check
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">CLI Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">stac-check</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">stac-check</span></code> documentation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="stac-check-documentation">
+<h1><code class="docutils literal notranslate"><span class="pre">stac-check</span></code> documentation<a class="headerlink" href="#stac-check-documentation" title="Link to this heading"></a></h1>
+<!-- markdownlint-disable MD033 MD041 -->
+<p align="left">
+  <img src="https://raw.githubusercontent.com/stac-utils/stac-check/main/assets/stac-check.png" width=560>
+</p>
+<p><a class="reference external" href="https://pepy.tech/project/stac-check"><img alt="Downloads" src="https://static.pepy.tech/badge/stac-check?color=blue" /></a>
+<a class="reference external" href="https://github.com/stac-utils/stac-check/graphs/contributors"><img alt="GitHub contributors" src="https://img.shields.io/github/contributors/stac-utils/stac-check?color=blue" /></a>
+<a class="reference external" href="https://github.com/stac-utils/stac-check/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/stac-utils/stac-check.svg?color=blue" /></a>
+<a class="reference external" href="https://github.com/stac-utils/stac-check/network/members"><img alt="GitHub forks" src="https://img.shields.io/github/forks/stac-utils/stac-check.svg?color=blue" /></a>
+<a class="reference external" href="https://pypi.org/project/stac-check/"><img alt="PyPI version" src="https://img.shields.io/pypi/v/stac-check.svg?color=blue" /></a>
+<a class="reference external" href="https://github.com/radiantearth/stac-spec/tree/v1.1.0"><img alt="STAC" src="https://img.shields.io/badge/STAC-1.1.0-blue.svg" /></a></p>
+<section id="a-linting-and-validation-tool-for-stac-assets">
+<h2>A linting and validation tool for STAC assets<a class="headerlink" href="#a-linting-and-validation-tool-for-stac-assets" title="Link to this heading"></a></h2>
+<p>The intent of this project is to provide a validation tool that also follows the official <a class="reference external" href="https://github.com/radiantearth/stac-spec/blob/master/best-practices.md">STAC Best Practices document</a></p>
+</section>
+<section id="latest-news">
+<h2>Latest News<a class="headerlink" href="#latest-news" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><strong>11/26/2026:</strong> 🚀 <strong>stac-check 2.0!</strong> The legacy validation engine has been removed — stac-check now validates everything with stac-valid FastValidator in a single pass, and recursive display no longer re-fetches or re-validates every asset. <code class="docutils literal notranslate"><span class="pre">--fast</span></code> now means “validation only”: it skips linting and geometry checks for maximum speed, and <code class="docutils literal notranslate"><span class="pre">--fast-linting</span></code> has been removed (linting runs by default). <code class="docutils literal notranslate"><span class="pre">--max-depth</span></code> is honored in recursive mode, <code class="docutils literal notranslate"><span class="pre">--assets</span></code>/<code class="docutils literal notranslate"><span class="pre">--links</span></code> checks now work with every mode, and STAC documents older than 1.0.0 are rejected with a clear error instead of a cryptic schema failure. See the <a class="reference internal" href="#CHANGELOG.md#v200"><span class="xref myst">2.0.0 changelog entry</span></a> for the full migration notes.</p></li>
+<li><p><strong>11/26/2026:</strong> ⚡ <strong>Fast Recursive Validation! (v1.15.0)</strong> <code class="docutils literal notranslate"><span class="pre">--fast</span></code> now works with <code class="docutils literal notranslate"><span class="pre">--recursive</span></code>, validating an entire catalog and all of its linked objects with stac-valid FastValidator in a single pass instead of re-fetching and re-validating every asset during display. In our benchmarks it validated a local catalog of 61 objects <strong>~30× faster</strong> than standard recursion (0.08s vs 2.5s validation time, ~19× end-to-end) and a remote catalog end-to-end <strong>~6× faster</strong> (2.9s vs 17.6s). Custom <code class="docutils literal notranslate"><span class="pre">--headers</span></code> are applied to remote fetches, <code class="docutils literal notranslate"><span class="pre">--fast-linting</span></code> additionally runs linting and geometry checks per object (removed in 2.0.0 — linting is now the default), and results are shown in the compact summary with errors grouped across the whole walk.</p></li>
+</ul>
+</section>
+<section id="table-of-contents">
+<h2>Table of Contents<a class="headerlink" href="#table-of-contents" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="#latest-news">Latest News</a></p></li>
+<li><p><a class="reference internal" href="#documentation">Documentation</a></p></li>
+<li><p><a class="reference internal" href="#installation">Installation</a></p>
+<ul>
+<li><p><a class="reference internal" href="#pip">Pip</a></p></li>
+<li><p><a class="reference internal" href="#docker">Docker</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#usage">Usage</a></p>
+<ul>
+<li><p><a class="reference internal" href="#cli-usage">CLI Usage</a></p></li>
+<li><p><a class="reference internal" href="#configuration">Configuration</a></p></li>
+<li><p><a class="reference internal" href="#geometry-validation">Geometry Validation</a></p></li>
+<li><p><a class="reference internal" href="#python-api-usage">Python API Usage</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#examples">Examples</a></p>
+<ul>
+<li><p><a class="reference internal" href="#basic-validation">Basic Validation</a></p></li>
+<li><p><a class="reference internal" href="#recursive-validation">Recursive Validation</a></p></li>
+<li><p><a class="reference internal" href="#asset-validation">Asset Validation</a></p></li>
+<li><p><a class="reference internal" href="#link-and-asset-validation">Link and Asset Validation</a></p></li>
+<li><p><a class="reference internal" href="#invalid-stac">Invalid STAC</a></p></li>
+<li><p><a class="reference internal" href="#using-http-headers">Using HTTP Headers</a></p></li>
+<li><p><a class="reference internal" href="#fast-validation">Fast Validation</a></p></li>
+<li><p><a class="reference internal" href="#stac-api-validation">STAC API Validation</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#development">Development</a></p>
+<ul>
+<li><p><a class="reference internal" href="#building-documentation">Building Documentation</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#sponsors-and-supporters">Sponsors and Supporters</a></p></li>
+<li><p><a class="reference internal" href="#contributing">Contributing</a></p>
+<ul>
+<li><p><a class="reference internal" href="#how-to-contribute">How to Contribute</a></p></li>
+<li><p><a class="reference internal" href="#development-guidelines">Development Guidelines</a></p></li>
+<li><p><a class="reference internal" href="#reporting-issues">Reporting Issues</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#license"><span class="xref myst">License</span></a></p></li>
+</ul>
+</section>
+<section id="documentation">
+<h2>Documentation<a class="headerlink" href="#documentation" title="Link to this heading"></a></h2>
+<p>The documentation is hosted on GitHub Pages at <a class="reference external" href="https://stac-utils.github.io/stac-check/">stac-utils.github.io/stac-check</a>.</p>
+<p>For development and building the documentation locally, see the <a class="reference internal" href="#development">Development</a> section below.</p>
+</section>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h2>
+<section id="pip">
+<h3>Pip<a class="headerlink" href="#pip" title="Link to this heading"></a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>stac-check
+</pre></div>
+</div>
+<p>For local development, this project uses <a class="reference external" href="https://docs.astral.sh/uv/">uv</a>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>uv<span class="w"> </span>sync<span class="w"> </span>--extra<span class="w"> </span>dev
+</pre></div>
+</div>
+<p>Or with pip:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s1">'.[dev]'</span>
+</pre></div>
+</div>
+</section>
+<section id="docker">
+<h3>Docker<a class="headerlink" href="#docker" title="Link to this heading"></a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>make<span class="w"> </span>build
+$<span class="w"> </span>make<span class="w"> </span>shell
+</pre></div>
+</div>
+</section>
+</section>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Link to this heading"></a></h2>
+<section id="cli-usage">
+<h3>CLI Usage<a class="headerlink" href="#cli-usage" title="Link to this heading"></a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Usage</span><span class="p">:</span> <span class="n">stac</span><span class="o">-</span><span class="n">check</span> <span class="p">[</span><span class="n">OPTIONS</span><span class="p">]</span> <span class="n">FILE</span>
+
+<span class="n">Options</span><span class="p">:</span>
+  <span class="o">--</span><span class="n">version</span>                <span class="n">Show</span> <span class="n">the</span> <span class="n">version</span> <span class="ow">and</span> <span class="n">exit</span><span class="o">.</span>
+  <span class="o">-</span><span class="n">l</span><span class="p">,</span> <span class="o">--</span><span class="n">links</span>              <span class="n">Validate</span> <span class="n">links</span> <span class="k">for</span> <span class="nb">format</span> <span class="ow">and</span> <span class="n">response</span><span class="o">.</span>
+  <span class="o">-</span><span class="n">a</span><span class="p">,</span> <span class="o">--</span><span class="n">assets</span>             <span class="n">Validate</span> <span class="n">assets</span> <span class="k">for</span> <span class="nb">format</span> <span class="ow">and</span> <span class="n">response</span><span class="o">.</span>
+  <span class="o">-</span><span class="n">m</span><span class="p">,</span> <span class="o">--</span><span class="nb">max</span><span class="o">-</span><span class="n">depth</span> <span class="n">INTEGER</span>  <span class="n">Maximum</span> <span class="n">depth</span> <span class="n">to</span> <span class="n">traverse</span> <span class="n">when</span> <span class="n">recursing</span><span class="o">.</span> <span class="n">Omit</span> <span class="n">this</span>
+                           <span class="n">argument</span> <span class="n">to</span> <span class="n">get</span> <span class="n">full</span> <span class="n">recursion</span><span class="o">.</span>
+  <span class="o">-</span><span class="n">r</span><span class="p">,</span> <span class="o">--</span><span class="n">recursive</span>          <span class="n">Recursively</span> <span class="n">validate</span> <span class="nb">all</span> <span class="n">related</span> <span class="n">stac</span> <span class="n">objects</span><span class="o">.</span>
+  <span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">assets</span><span class="o">-</span><span class="n">urls</span>         <span class="n">Disables</span> <span class="n">the</span> <span class="n">opening</span> <span class="n">of</span> <span class="n">href</span> <span class="n">links</span> <span class="n">when</span> <span class="n">validating</span> <span class="n">assets</span>
+                           <span class="p">(</span><span class="n">enabled</span> <span class="n">by</span> <span class="n">default</span><span class="p">)</span><span class="o">.</span>
+  <span class="o">--</span><span class="n">header</span> <span class="n">KEY</span> <span class="n">VALUE</span>       <span class="n">HTTP</span> <span class="n">header</span> <span class="n">to</span> <span class="n">include</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">requests</span><span class="o">.</span> <span class="n">Can</span> <span class="n">be</span> <span class="n">used</span>
+                           <span class="n">multiple</span> <span class="n">times</span><span class="o">.</span>
+  <span class="o">--</span><span class="n">pydantic</span>               <span class="n">Use</span> <span class="n">stac</span><span class="o">-</span><span class="n">pydantic</span> <span class="k">for</span> <span class="n">enhanced</span> <span class="n">validation</span> <span class="k">with</span> <span class="n">Pydantic</span> <span class="n">models</span><span class="o">.</span>
+  <span class="o">-</span><span class="n">v</span><span class="p">,</span> <span class="o">--</span><span class="n">verbose</span>            <span class="n">Show</span> <span class="n">per</span><span class="o">-</span><span class="n">asset</span> <span class="n">validation</span> <span class="n">details</span><span class="p">;</span> <span class="n">without</span> <span class="n">it</span> <span class="n">only</span>
+                           <span class="n">a</span> <span class="n">summary</span> <span class="ow">is</span> <span class="n">printed</span><span class="o">.</span>
+  <span class="o">-</span><span class="n">o</span><span class="p">,</span> <span class="o">--</span><span class="n">output</span> <span class="n">FILE</span>        <span class="n">Save</span> <span class="n">output</span> <span class="n">to</span> <span class="n">the</span> <span class="n">specified</span> <span class="n">file</span><span class="o">.</span>
+  <span class="o">--</span><span class="n">fast</span>                   <span class="n">Skip</span> <span class="n">linting</span> <span class="ow">and</span> <span class="n">geometry</span> <span class="n">checks</span> <span class="k">for</span> <span class="n">maximum</span> <span class="n">validation</span>
+                           <span class="n">speed</span><span class="o">.</span> <span class="n">Also</span> <span class="n">applies</span> <span class="n">to</span> <span class="o">--</span><span class="n">recursive</span><span class="o">.</span>
+  <span class="o">--</span><span class="n">item</span><span class="o">-</span><span class="n">collection</span>        <span class="n">Validate</span> <span class="n">item</span> <span class="n">collection</span> <span class="n">response</span><span class="o">.</span> <span class="n">Can</span> <span class="n">be</span> <span class="n">combined</span> <span class="k">with</span>
+                           <span class="o">--</span><span class="n">pages</span><span class="o">.</span> <span class="n">Defaults</span> <span class="n">to</span> <span class="n">one</span> <span class="n">page</span><span class="o">.</span>
+  <span class="o">--</span><span class="n">collections</span>            <span class="n">Validate</span> <span class="n">collections</span> <span class="n">endpoint</span> <span class="n">response</span><span class="o">.</span> <span class="n">Can</span> <span class="n">be</span> <span class="n">combined</span> <span class="k">with</span>
+                           <span class="o">--</span><span class="n">pages</span><span class="o">.</span> <span class="n">Defaults</span> <span class="n">to</span> <span class="n">one</span> <span class="n">page</span><span class="o">.</span>
+  <span class="o">--</span><span class="n">catalogs</span>               <span class="n">Validate</span> <span class="n">catalogs</span> <span class="n">endpoint</span> <span class="n">response</span> <span class="p">(</span><span class="n">STAC</span> <span class="n">API</span> <span class="n">catalogs</span>
+                           <span class="n">extension</span><span class="p">)</span><span class="o">.</span> <span class="n">Can</span> <span class="n">be</span> <span class="n">combined</span> <span class="k">with</span> <span class="o">--</span><span class="n">pages</span><span class="o">.</span> <span class="n">Defaults</span> <span class="n">to</span> <span class="n">one</span> <span class="n">page</span><span class="o">.</span>
+  <span class="o">-</span><span class="n">p</span><span class="p">,</span> <span class="o">--</span><span class="n">pages</span> <span class="n">INTEGER</span>      <span class="n">Maximum</span> <span class="n">number</span> <span class="n">of</span> <span class="n">pages</span> <span class="n">to</span> <span class="n">validate</span> <span class="n">per</span> <span class="n">paginated</span> <span class="nb">list</span><span class="p">,</span>
+                           <span class="n">via</span> <span class="o">--</span><span class="n">item</span><span class="o">-</span><span class="n">collection</span><span class="o">/--</span><span class="n">collections</span><span class="o">/--</span><span class="n">catalogs</span> <span class="ow">or</span>
+                           <span class="o">--</span><span class="n">recursive</span> <span class="p">(</span><span class="n">default</span><span class="p">:</span> <span class="n">one</span> <span class="n">page</span> <span class="n">per</span> <span class="nb">list</span><span class="p">;</span> <span class="mi">0</span> <span class="k">for</span> <span class="nb">all</span>
+                           <span class="n">pages</span><span class="p">)</span><span class="o">.</span>
+  <span class="o">--</span><span class="n">help</span>                   <span class="n">Show</span> <span class="n">this</span> <span class="n">message</span> <span class="ow">and</span> <span class="n">exit</span><span class="o">.</span>
+</pre></div>
+</div>
+</section>
+<section id="configuration">
+<h3>Configuration<a class="headerlink" href="#configuration" title="Link to this heading"></a></h3>
+<p>stac-check uses a configuration file to control which validation checks are performed. By default, it uses the built-in configuration at <code class="docutils literal notranslate"><span class="pre">stac_check/stac-check.config.yml</span></code>. You can customize the validation behavior by creating your own configuration file.</p>
+<p>The configuration file has three main sections:</p>
+<ol class="arabic simple">
+<li><p><strong>linting</strong>: Controls which general best practices checks are enabled</p></li>
+<li><p><strong>geometry_validation</strong>: Controls geometry-specific validation checks [BETA]</p></li>
+<li><p><strong>settings</strong>: Configures thresholds for certain checks</p></li>
+</ol>
+<p>Here’s an example of the configuration options:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">linting</span><span class="p">:</span>
+<span class="w">  </span><span class="c1"># Identifiers should consist of only lowercase characters, numbers, '_', and '-'</span>
+<span class="w">  </span><span class="nt">searchable_identifiers</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="c1"># Item name '{self.object_id}' should not contain ':' or '/'</span>
+<span class="w">  </span><span class="nt">percent_encoded</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="c1"># Item file names should match their ids</span>
+<span class="w">  </span><span class="nt">item_id_file_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="c1"># Collections and catalogs should be named collection.json and catalog.json</span>
+<span class="w">  </span><span class="nt">catalog_id_file_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="c1"># A STAC collection should contain a summaries field</span>
+<span class="w">  </span><span class="nt">check_summaries</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="c1"># Datetime fields should not be set to null</span>
+<span class="w">  </span><span class="nt">null_datetime</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="c1"># best practices - check unlocated items to make sure bbox field is not set</span>
+<span class="w">  </span><span class="nt">check_unlocated</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="c1"># best practices - recommend items have a geometry</span>
+<span class="w">  </span><span class="nt">check_geometry</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="c1"># check to see if there are too many links</span>
+<span class="w">  </span><span class="nt">bloated_links</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="c1"># best practices - check for bloated metadata in properties</span>
+<span class="w">  </span><span class="nt">bloated_metadata</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="c1"># best practices - ensure thumbnail is a small file size ["png", "jpeg", "jpg", "webp"]</span>
+<span class="w">  </span><span class="nt">check_thumbnail</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="c1"># best practices - ensure that links in catalogs and collections include a title field</span>
+<span class="w">  </span><span class="nt">links_title</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="c1"># best practices - ensure that links in catalogs and collections include self link</span>
+<span class="w">  </span><span class="nt">links_self</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+
+<span class="nt">geometry_validation</span><span class="p">:</span>
+<span class="w">  </span><span class="c1"># Master switch to enable/disable all geometry validation checks</span>
+<span class="w">  </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="c1"># check if geometry coordinates are potentially ordered incorrectly (longitude, latitude)</span>
+<span class="w">  </span><span class="nt">geometry_coordinates_order</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="c1"># check if geometry coordinates contain definite errors (latitude &gt; ±90°, longitude &gt; ±180°)</span>
+<span class="w">  </span><span class="nt">geometry_coordinates_definite_errors</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="c1"># check if bbox matches the bounds of the geometry</span>
+<span class="w">  </span><span class="nt">bbox_geometry_match</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="c1"># check if a bbox that crosses the antimeridian is correctly formatted</span>
+<span class="w">  </span><span class="nt">bbox_antimeridian</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+
+<span class="nt">settings</span><span class="p">:</span>
+<span class="w">  </span><span class="c1"># number of links before the bloated links warning is shown</span>
+<span class="w">  </span><span class="nt">max_links</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20</span>
+<span class="w">  </span><span class="c1"># number of properties before the bloated metadata warning is shown</span>
+<span class="w">  </span><span class="nt">max_properties</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20</span>
+</pre></div>
+</div>
+<p>To use a custom configuration file, set the <code class="docutils literal notranslate"><span class="pre">STAC_CHECK_CONFIG</span></code> environment variable to the path of your configuration file:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">STAC_CHECK_CONFIG</span><span class="o">=</span>/path/to/your/config.yml
+stac-check<span class="w"> </span>sample_files/1.0.0/core-item.json
+</pre></div>
+</div>
+</section>
+<section id="geometry-validation">
+<h3>Geometry Validation<a class="headerlink" href="#geometry-validation" title="Link to this heading"></a></h3>
+<p>Geometry validation is a feature of stac-check that allows you to validate the geometry of your STAC items. This feature is enabled by default, but can be disabled by setting <code class="docutils literal notranslate"><span class="pre">geometry_validation.enabled</span></code> to <code class="docutils literal notranslate"><span class="pre">false</span></code> in your configuration file.</p>
+<p>The geometry validation feature checks for the following:</p>
+<ul class="simple">
+<li><p>Geometry coordinates are potentially ordered incorrectly (longitude, latitude)</p></li>
+<li><p>Geometry coordinates contain definite errors (latitude &gt; ±90°, longitude &gt; ±180°)</p></li>
+<li><p>Bbox matches the bounds of the geometry</p></li>
+<li><p>Bbox that crosses the antimeridian is correctly formatted</p></li>
+</ul>
+<p>You can customize the geometry validation behavior by setting the following options in your configuration file:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">geometry_validation.geometry_coordinates_order</span></code>: Check if geometry coordinates are potentially ordered incorrectly (longitude, latitude)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">geometry_validation.geometry_coordinates_definite_errors</span></code>: Check if geometry coordinates contain definite errors (latitude &gt; ±90°, longitude &gt; ±180°)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">geometry_validation.bbox_geometry_match</span></code>: Check if bbox matches the bounds of the geometry</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">geometry_validation.bbox_antimeridian</span></code>: Check if a bbox that crosses the antimeridian is correctly formatted</p></li>
+</ul>
+</section>
+<section id="python-api-usage">
+<h3>Python API Usage<a class="headerlink" href="#python-api-usage" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">stac_check.lint</span><span class="w"> </span><span class="kn">import</span> <span class="n">Linter</span>
+
+<span class="n">linter</span> <span class="o">=</span> <span class="n">Linter</span><span class="p">(</span><span class="s1">'&lt;json_path&gt;'</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">linter</span><span class="o">.</span><span class="n">create_best_practices_dict</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="s2">":"</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h2>
+<section id="basic-validation">
+<h3>Basic Validation<a class="headerlink" href="#basic-validation" title="Link to this heading"></a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>stac-check<span class="w"> </span>sample_files/1.0.0/core-item.json
+</pre></div>
+</div>
+<pre><b>stac-check: STAC spec validation and linting tool</b>
+
+Please upgrade from version 1.0.0 to version 1.1.0!
+
+Validator: stac-valid 4.7.0
+
+Validation method: stac-valid FastValidator
+
+ITEM Passed: True
+
+Schemas checked:
+    https://schemas.stacspec.org/v1.0.0/item-spec/json-schema/item.json
+
+STAC Best Practices:
+    Item name '20201211_223832_CS2' should only contain Searchable identifiers
+    Identifiers should consist of only lowercase characters, numbers, '_', and '-'
+
+    Item file names should match their ids: 'core-item' not equal to '20201211_223832_CS2
+
+    Please avoid setting the datetime field to null, many clients search on this field
+
+Geometry Validation [BETA]:
+    Geometry coordinates may be in the wrong order (required order: longitude, latitude)
+
+This object has 4 links
+</pre>
+</section>
+<section id="recursive-validation">
+<h3>Recursive Validation<a class="headerlink" href="#recursive-validation" title="Link to this heading"></a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>stac-check<span class="w"> </span>https://digital-atlas.s3.amazonaws.com/stac/public_stac/population/worldpop_2020/collection.json<span class="w"> </span>--recursive<span class="w"> </span>--verbose
+</pre></div>
+</div>
+<p>Recursive validation walks the whole catalog in a single pass with stac-valid FastValidator and runs linting and geometry checks on every object by default. Add <code class="docutils literal notranslate"><span class="pre">--fast</span></code> to skip those checks for maximum speed:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>stac-check<span class="w"> </span>catalog.json<span class="w"> </span>--recursive<span class="w"> </span>--fast
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">--max-depth</span></code> caps how deep the walk goes (objects at or beyond the limit are not validated), and <code class="docutils literal notranslate"><span class="pre">--headers</span></code> apply to remote fetches. On remote STAC APIs the walk follows <code class="docutils literal notranslate"><span class="pre">rel=data</span></code>/<code class="docutils literal notranslate"><span class="pre">rel=items</span></code> links and paginates through each collections/items list — the first <code class="docutils literal notranslate"><span class="pre">rel=&quot;next&quot;</span></code> page of each list by default (<code class="docutils literal notranslate"><span class="pre">--pages</span> <span class="pre">N</span></code> raises the cap, <code class="docutils literal notranslate"><span class="pre">--pages</span> <span class="pre">0</span></code> follows every page; a note is printed when a list is cut short). Note that stac-check validates STAC 1.0.0 and later; documents declaring an older <code class="docutils literal notranslate"><span class="pre">stac_version</span></code> fail with a clear unsupported-version error instead of a cryptic schema failure.</p>
+<p>Multi-asset modes (<code class="docutils literal notranslate"><span class="pre">--recursive</span></code>, <code class="docutils literal notranslate"><span class="pre">--collections</span></code>, <code class="docutils literal notranslate"><span class="pre">--item-collection</span></code>) print a header and a validation summary by default. Add <code class="docutils literal notranslate"><span class="pre">--verbose</span></code>/<code class="docutils literal notranslate"><span class="pre">-v</span></code> for per-asset detail, as shown below:</p>
+<pre><b>stac-check: STAC spec validation and linting tool</b>
+
+Please upgrade from version 1.0.0 to version 1.1.0!
+
+Validator: stac-valid 4.7.0
+
+Validation method: stac-valid FastValidator
+
+
+Recursive: Validate all assets in a collection or catalog
+Max-depth = unlimited
+-------------------------
+
+ Asset 1: https://digital-atlas.s3.amazonaws.com/stac/public_stac/population/worldpop_2020/collection.json
+
+COLLECTION Passed: True
+
+Schemas checked:
+    https://schemas.stacspec.org/v1.0.0/collection-spec/json-schema/collection.json
+
+STAC Best Practices:
+    A STAC collection should contain a summaries field
+    It is recommended to store information like eo:bands in summaries
+
+-------------------------
+ Asset 2: https://digital-atlas.s3.amazonaws.com/stac/public_stac/population/worldpop_2020/pop_2020/pop_2020.json
+
+ITEM Passed: True
+-------------------------
+
+ Validation Summary
+
+✅ Passed: 4/4
+</pre>
+</section>
+<section id="asset-validation">
+<h3>Asset Validation<a class="headerlink" href="#asset-validation" title="Link to this heading"></a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>stac-check<span class="w"> </span>sample_files/1.0.0/core-item.json<span class="w"> </span>--assets
+</pre></div>
+</div>
+<pre>
+<b>stac-check: STAC spec validation and linting tool</b>
+
+Please upgrade from version 1.0.0 to version 1.1.0!
+
+Validator: stac-valid 4.7.0
+
+Validation method: stac-valid FastValidator
+
+ITEM Passed: True
+
+Schemas checked:
+    https://schemas.stacspec.org/v1.0.0/item-spec/json-schema/item.json
+
+STAC Best Practices:
+    Item name '20201211_223832_CS2' should only contain Searchable identifiers
+    Identifiers should consist of only lowercase characters, numbers, '_', and '-'
+
+    Item file names should match their ids: 'core-item' not equal to '20201211_223832_CS2
+
+    Please avoid setting the datetime field to null, many clients search on this field
+
+    A link to 'self' in links is strongly recommended
+
+
+No ASSET format errors!
+
+ASSET request errors:
+    http://cool-sat.com/catalog/20201211_223832_CS2/20201211_223832_CS2.EPH
+
+This object has 4 links
+</pre>
+</section>
+<section id="link-and-asset-validation">
+<h3>Link and Asset Validation<a class="headerlink" href="#link-and-asset-validation" title="Link to this heading"></a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>stac-check<span class="w"> </span>sample_files/1.0.0/core-item-bad-links.json<span class="w"> </span>--links<span class="w"> </span>--assets
+</pre></div>
+</div>
+<pre>
+<b>stac-check: STAC spec validation and linting tool</b>
+
+Please upgrade from version 1.0.0 to version 1.1.0!
+
+Validator: stac-valid 4.7.0
+
+Validation method: stac-valid FastValidator
+
+ITEM Passed: True
+
+Schemas checked:
+    https://schemas.stacspec.org/v1.0.0/item-spec/json-schema/item.json
+
+STAC Best Practices:
+    Item name '20201211_223832_CS2' should only contain Searchable identifiers
+    Identifiers should consist of only lowercase characters, numbers, '_', and '-'
+
+    Item file names should match their ids: 'core-item-bad-links' not equal to '20201211_223832_CS2
+
+    Please avoid setting the datetime field to null, many clients search on this field
+
+    A link to 'self' in links is strongly recommended
+
+
+ASSET format errors:
+    https:/storage.googleapis.com/open-cogs/stac-examples/20201211_223832_CS2.jpg
+
+ASSET request errors:
+    https:/storage.googleapis.com/open-cogs/stac-examples/20201211_223832_CS2.jpg
+    http://cool-sat.com/catalog/20201211_223832_CS2/20201211_223832_CS2.EPH
+
+LINK format errors:
+    http:/remotdata.io/catalog/20201211_223832_CS2/index.html
+
+LINK request errors:
+    http:/remotdata.io/catalog/20201211_223832_CS2/index.html
+
+This object has 4 links
+</pre>
+</section>
+<section id="invalid-stac">
+<h3>Invalid STAC<a class="headerlink" href="#invalid-stac" title="Link to this heading"></a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>stac-check<span class="w"> </span>sample_files/1.0.0/bad-item.json
+</pre></div>
+</div>
+<pre>
+<b>stac-check: STAC spec validation and linting tool</b>
+
+Please upgrade from version 1.0.0 to version 1.1.0!
+
+Validator: stac-valid 4.7.0
+
+Validation method: stac-valid FastValidator
+
+ITEM Passed: False
+
+Schemas checked:
+    https://schemas.stacspec.org/v1.0.0/item-spec/json-schema/item.json
+    https://stac-extensions.github.io/eo/v1.0.0/schema.json
+
+Validation error type:
+    FastValidationError
+Validation error message:
+    [Base Item] Field '$': must contain ['id'] properties
+
+This object has 4 links
+</pre>
+</section>
+<section id="using-http-headers">
+<h3>Using HTTP Headers<a class="headerlink" href="#using-http-headers" title="Link to this heading"></a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>stac-check<span class="w"> </span>https://stac-catalog.eu/collections/sentinel-s2-l2a/items/item1<span class="w"> </span>--assets<span class="w"> </span>--no-assets-urls<span class="w"> </span>--header<span class="w"> </span>x-api-key<span class="w"> </span><span class="nv">$MY_API_KEY</span><span class="w"> </span>--header<span class="w"> </span>foo<span class="w"> </span>bar
+</pre></div>
+</div>
+<pre>
+<b>stac-check: STAC spec validation and linting tool</b>
+
+Please upgrade from version 1.0.0 to version 1.1.0!
+
+Validator: stac-valid 4.7.0
+
+Validation method: stac-valid FastValidator
+
+ITEM Passed: True
+
+Schemas checked: 
+    https://stac-extensions.github.io/timestamps/v1.1.0/schema.json
+    https://schemas.stacspec.org/v1.0.0/item-spec/json-schema/item.json
+
+STAC Best Practices: 
+    A STAC collection should contain a summaries field
+    It is recommended to store information like eo:bands in summaries
+
+
+No ASSET format errors!
+
+This object has 4 links
+</pre>
+</section>
+<section id="fast-validation">
+<h3>Fast Validation<a class="headerlink" href="#fast-validation" title="Link to this heading"></a></h3>
+<p>stac-check always validates with stac-valid FastValidator. By default it also runs best practices linting and geometry checks; for large collections or when you only need spec compliance, use <code class="docutils literal notranslate"><span class="pre">--fast</span></code> to skip them for maximum validation speed.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>stac-check<span class="w"> </span>large_collection.json<span class="w"> </span>--fast
+</pre></div>
+</div>
+<pre><b>stac-check: STAC spec validation and linting tool</b>
+
+Validator: stac-valid 4.7.0
+
+Validation method: stac-valid FastValidator
+
+ Validation Summary
+
+✅ Passed: 998/1000
+❌ Failed: 2/1000
+
+⚡ Timing Information:
+  Total Validation Time: 245.67 ms
+  Average per Object: 0.246 ms
+
+Schemas checked:
+    https://schemas.stacspec.org/v1.0.0/item-spec/json-schema/item.json
+    https://stac-extensions.github.io/eo/v1.0.0/schema.json
+    https://stac-extensions.github.io/projection/v1.0.0/schema.json
+
+ Validation Errors
+
+❌ STAC Spec Violation: Missing {'rel': 'collection'} in links array.
+   Affected Items: 2 | Examples: item_1, item_2
+</pre>
+<p><code class="docutils literal notranslate"><span class="pre">--fast</span></code> also applies to <code class="docutils literal notranslate"><span class="pre">--recursive</span></code>, skipping the per-object linting and geometry checks across the whole catalog walk (see <a class="reference internal" href="#recursive-validation">Recursive Validation</a>).</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">--fast-linting</span></code> flag was removed in 2.0.0: linting and geometry checks already run by default.</p>
+<p>Use <code class="docutils literal notranslate"><span class="pre">--fast</span></code> when:</p>
+<ul class="simple">
+<li><p>Validating large collections (100+ items)</p></li>
+<li><p>Recursively validating large or remote catalogs (<code class="docutils literal notranslate"><span class="pre">--recursive</span> <span class="pre">--fast</span></code>)</p></li>
+<li><p>You only need STAC spec compliance</p></li>
+<li><p>You want maximum validation speed</p></li>
+</ul>
+</section>
+<section id="stac-api-validation">
+<h3>STAC API Validation<a class="headerlink" href="#stac-api-validation" title="Link to this heading"></a></h3>
+<p>stac-check can validate STAC API endpoints, including item collections, collections, and catalogs (STAC API catalogs extension) endpoints. It supports pagination and can validate multiple pages of results. Item collection (<code class="docutils literal notranslate"><span class="pre">{&quot;type&quot;:</span> <span class="pre">&quot;FeatureCollection&quot;,</span> <span class="pre">&quot;features&quot;:</span> <span class="pre">[...]}</span></code>), collections endpoint (<code class="docutils literal notranslate"><span class="pre">{&quot;collections&quot;:</span> <span class="pre">[...]}</span></code>), and catalogs endpoint (<code class="docutils literal notranslate"><span class="pre">{&quot;catalogs&quot;:</span> <span class="pre">[...]}</span></code>) responses are auto-detected, so the corresponding flags are optional.</p>
+<p><strong>Validating an Item Collection Endpoint:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>stac-check<span class="w"> </span>https://stac.geobon.org/collections/chelsa-clim/items<span class="w"> </span>--item-collection
+</pre></div>
+</div>
+<pre><b>stac-check: STAC spec validation and linting tool</b>
+
+Validator: stac-valid 4.7.0
+
+Item Collection: Validate all assets in a feature collection
+Pages = 1
+
+Valid ITEM: True
+
+Schemas validated:
+    https://schemas.stacspec.org/v1.0.0/item-spec/json-schema/item.json
+
+This object has 10 items
+</pre>
+<p><strong>Validating Multiple Pages of an Item Collection:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>stac-check<span class="w"> </span>https://stac.geobon.org/collections/chelsa-clim/items<span class="w"> </span>--item-collection<span class="w"> </span>--pages<span class="w"> </span><span class="m">3</span>
+</pre></div>
+</div>
+<pre><b>stac-check: STAC spec validation and linting tool</b>
+
+Validator: stac-valid 4.7.0
+
+Item Collection: Validate all assets in a feature collection
+Pages = 3
+
+Valid ITEM: True
+
+Schemas validated:
+    https://schemas.stacspec.org/v1.0.0/item-spec/json-schema/item.json
+
+This object has 30 items
+</pre>
+<p><strong>Validating a Collections Endpoint:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>stac-check<span class="w"> </span>https://stac.geobon.org/collections<span class="w"> </span>--collections
+</pre></div>
+</div>
+<pre><b>stac-check: STAC spec validation and linting tool</b>
+
+Validator: stac-valid 4.7.0
+
+Collections: Validate all collections in a STAC API
+Pages = 1
+
+Valid COLLECTION: True
+
+Schemas validated:
+    https://schemas.stacspec.org/v1.0.0/collection-spec/json-schema/collection.json
+
+This object has 5 collections
+</pre>
+</section>
+</section>
+<section id="development">
+<h2>Development<a class="headerlink" href="#development" title="Link to this heading"></a></h2>
+<section id="building-documentation">
+<h3>Building Documentation<a class="headerlink" href="#building-documentation" title="Link to this heading"></a></h3>
+<p>Documentation is automatically built and published to GitHub Pages on every push to the <code class="docutils literal notranslate"><span class="pre">main</span></code> branch. You can view the latest version at <a class="reference external" href="https://stac-utils.github.io/stac-check/">stac-utils.github.io/stac-check</a>.</p>
+<p>To build the documentation locally (for development or testing), you’ll need Python &gt;= 3.11 and the documentation dependencies:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Install the package with documentation dependencies</span>
+uv<span class="w"> </span>sync<span class="w"> </span>--extra<span class="w"> </span>docs
+
+<span class="c1"># Build the documentation</span>
+make<span class="w"> </span>docs
+
+<span class="c1"># Open the built documentation</span>
+xdg-open<span class="w"> </span>docs/_build/html/index.html<span class="w">  </span><span class="c1"># On Linux</span>
+open<span class="w"> </span>docs/_build/html/index.html<span class="w">    </span><span class="c1"># On macOS</span>
+start<span class="w"> </span>docs/_build/html/index.html<span class="w">   </span><span class="c1"># On Windows</span>
+</pre></div>
+</div>
+<p>Or using Docker:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Build the Docker image and documentation</span>
+make<span class="w"> </span>docker-docs
+</pre></div>
+</div>
+<p>The documentation is built using Sphinx with the following extensions:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">sphinx.ext.autodoc</span></code> for API documentation</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sphinx_click</span></code> for CLI documentation</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sphinx_rtd_theme</span></code> for the ReadTheDocs theme</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">myst_parser</span></code> for Markdown support</p></li>
+</ul>
+</section>
+</section>
+<section id="sponsors-and-supporters">
+<h2>Sponsors and Supporters<a class="headerlink" href="#sponsors-and-supporters" title="Link to this heading"></a></h2>
+<p>The following organizations have contributed time and/or funding to support the development of this project:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://healy-hyperspatial.github.io/">Healy Hyperspatial</a></p></li>
+<li><p><a class="reference external" href="https://radiant.earth/">Radiant Earth Foundation</a></p></li>
+</ul>
+<p align="left">
+  <a href="https://healy-hyperspatial.github.io/"><img src="https://raw.githubusercontent.com/stac-utils/stac-fastapi-elasticsearch-opensearch/refs/heads/main/assets/hh-logo-blue.png" alt="Healy Hyperspatial" height="100" hspace="20"></a>
+  <a href="https://radiant.earth/"><img src="assets/radiant-earth.webp" alt="Radiant Earth Foundation" height="100" hspace="20"></a>
+</p>
+<p>We are grateful for the support of our sponsors who help make this project possible. If your organization uses stac-check and would like to become a sponsor, please reach out to us!</p>
+</section>
+<section id="contributing">
+<h2>Contributing<a class="headerlink" href="#contributing" title="Link to this heading"></a></h2>
+<p>Contributions are welcome! Please feel free to submit a Pull Request.</p>
+<section id="how-to-contribute">
+<h3>How to Contribute<a class="headerlink" href="#how-to-contribute" title="Link to this heading"></a></h3>
+<ol class="arabic simple">
+<li><p><strong>Fork the repository</strong> - Create your own fork of the project</p></li>
+<li><p><strong>Create a feature branch</strong> - <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">checkout</span> <span class="pre">-b</span> <span class="pre">feature/your-feature-name</span></code></p></li>
+<li><p><strong>Commit your changes</strong> - Make sure to write clear, concise commit messages</p></li>
+<li><p><strong>Push to your branch</strong> - <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">push</span> <span class="pre">origin</span> <span class="pre">feature/your-feature-name</span></code></p></li>
+<li><p><strong>Open a Pull Request</strong> - Describe your changes in detail</p></li>
+</ol>
+</section>
+<section id="development-guidelines">
+<h3>Development Guidelines<a class="headerlink" href="#development-guidelines" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Follow the existing code style</p></li>
+<li><p>Add tests for new features</p></li>
+<li><p>Update documentation as needed</p></li>
+<li><p>Make sure all tests pass before submitting a PR</p></li>
+</ul>
+</section>
+<section id="reporting-issues">
+<h3>Reporting Issues<a class="headerlink" href="#reporting-issues" title="Link to this heading"></a></h3>
+<p>If you find a bug or have a feature request, please open an issue on the <a class="reference external" href="https://github.com/stac-utils/stac-check/issues">GitHub repository</a>.</p>
+</section>
+</section>
+<p>For more detailed documentation, please see the following pages:</p>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">CLI Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="cli.html#stac_check.cli.detect_api_response_type"><code class="docutils literal notranslate"><span class="pre">detect_api_response_type()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="cli.html#stac_check.cli.is_item_collection"><code class="docutils literal notranslate"><span class="pre">is_item_collection()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="cli.html#stac-check">stac-check</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api.html#stac_check.lint.Linter"><code class="docutils literal notranslate"><span class="pre">Linter</span></code></a></li>
+</ul>
+</li>
+</ul>
+</div>
+<section id="indices-and-tables">
+<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="cli.html" class="btn btn-neutral float-right" title="CLI Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Jonathan Healy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

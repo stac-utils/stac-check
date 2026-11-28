@@ -1,0 +1,494 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>stac_check.cli &mdash; stac-check 1.11.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=7dc6ce7e" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=c8897f99"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            stac-check
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../cli.html">CLI Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">stac-check</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">stac_check.cli</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for stac_check.cli</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">importlib.metadata</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">click</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">stac_validator.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_valid_url</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">stac_check.api_lint</span><span class="w"> </span><span class="kn">import</span> <span class="n">ApiLinter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">stac_check.display_messages</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">cli_message</span><span class="p">,</span>
+    <span class="n">collections_message</span><span class="p">,</span>
+    <span class="n">intro_message</span><span class="p">,</span>
+    <span class="n">item_collection_message</span><span class="p">,</span>
+    <span class="n">recursive_message</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">stac_check.lint</span><span class="w"> </span><span class="kn">import</span> <span class="n">Linter</span><span class="p">,</span> <span class="n">_remote_get</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">stac_check.utilities</span><span class="w"> </span><span class="kn">import</span> <span class="n">handle_output</span>
+
+
+<div class="viewcode-block" id="detect_api_response_type">
+<a class="viewcode-back" href="../../cli.html#stac_check.cli.detect_api_response_type">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">detect_api_response_type</span><span class="p">(</span><span class="n">file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">headers</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Detect if a file or URL is a STAC API list response.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        file: Path or URL to the file</span>
+<span class="sd">        headers: Optional HTTP headers for URL requests</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        "item_collection" for a FeatureCollection with features,</span>
+<span class="sd">        "collections" for a collections endpoint response,</span>
+<span class="sd">        None otherwise</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">is_valid_url</span><span class="p">(</span><span class="n">file</span><span class="p">):</span>
+            <span class="n">resp</span> <span class="o">=</span> <span class="n">_remote_get</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span> <span class="ow">or</span> <span class="p">{},</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+            <span class="n">resp</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="c1"># If we can't determine, return None</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"type"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"FeatureCollection"</span>
+        <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"features"</span><span class="p">),</span> <span class="nb">list</span><span class="p">)</span>
+        <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">"features"</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span>
+    <span class="p">):</span>
+        <span class="k">return</span> <span class="s2">"item_collection"</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"collections"</span><span class="p">),</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">"collections"</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"collections"</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"catalogs"</span><span class="p">),</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">"catalogs"</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"catalogs"</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="is_item_collection">
+<a class="viewcode-back" href="../../cli.html#stac_check.cli.is_item_collection">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_item_collection</span><span class="p">(</span><span class="n">file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">headers</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Detect if a file is an item collection (FeatureCollection with features).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        file: Path or URL to the file</span>
+<span class="sd">        headers: Optional HTTP headers for URL requests</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        True if the file is an item collection, False otherwise</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">detect_api_response_type</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">headers</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"item_collection"</span></div>
+
+
+
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">"--collections"</span><span class="p">,</span>
+    <span class="n">is_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Validate collections endpoint response. Can be combined with --pages. Defaults to one page."</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">"--item-collection"</span><span class="p">,</span>
+    <span class="n">is_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Validate item collection response. Can be combined with --pages. Defaults to one page."</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">"--catalogs"</span><span class="p">,</span>
+    <span class="n">is_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Validate catalogs endpoint response (STAC API catalogs extension). Can be combined with --pages. Defaults to one page."</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">"--pages"</span><span class="p">,</span>
+    <span class="s2">"-p"</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Maximum number of pages to validate per paginated list — with --item-collection/--collections/--catalogs or --recursive (default: one page per list; 0 for all pages)."</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">"--recursive"</span><span class="p">,</span>
+    <span class="s2">"-r"</span><span class="p">,</span>
+    <span class="n">is_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Recursively validate all related stac objects. Can be combined with --fast for stac-valid FastValidator validation."</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">"--max-depth"</span><span class="p">,</span>
+    <span class="s2">"-m"</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Maximum depth to traverse when recursing. Omit this argument to get full recursion. Ignored if `recursive == False` or in fast mode."</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">"--rps"</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Maximum remote requests per second during --recursive. Use to stay under API rate limits (e.g. 429 responses)."</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">"--items-limit"</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+    <span class="n">default</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">show_default</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Items per page to request on remote API items endpoints during --recursive (0 = auto-negotiate starting at 10000; negative = leave URLs unchanged)."</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">"-a"</span><span class="p">,</span> <span class="s2">"--assets"</span><span class="p">,</span> <span class="n">is_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"Validate assets for format and response."</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">"-l"</span><span class="p">,</span> <span class="s2">"--links"</span><span class="p">,</span> <span class="n">is_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">"Validate links for format and response."</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">"--output"</span><span class="p">,</span>
+    <span class="s2">"-o"</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">click</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">dir_okay</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">writable</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Save output to the specified file. Only works with --collections, --item-collection, or --recursive."</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">"--no-assets-urls"</span><span class="p">,</span>
+    <span class="n">is_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Disables the opening of href links when validating assets (enabled by default)."</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">"--header"</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">),</span>
+    <span class="n">multiple</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"HTTP header to include in the requests. Can be used multiple times."</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">"--pydantic"</span><span class="p">,</span>
+    <span class="n">is_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Use pydantic validation (requires stac-pydantic to be installed)."</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">"--verbose"</span><span class="p">,</span>
+    <span class="s2">"-v"</span><span class="p">,</span>
+    <span class="n">is_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Show per-asset validation details; without it only a summary is printed."</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">"--fast"</span><span class="p">,</span>
+    <span class="n">is_flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">"Skip linting and geometry checks for maximum validation speed. Also applies to --recursive."</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">command</span><span class="p">()</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">argument</span><span class="p">(</span><span class="s2">"file"</span><span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">version_option</span><span class="p">(</span><span class="n">version</span><span class="o">=</span><span class="n">importlib</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">distribution</span><span class="p">(</span><span class="s2">"stac-check"</span><span class="p">)</span><span class="o">.</span><span class="n">version</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span>
+    <span class="n">file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">collections</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">item_collection</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">catalogs</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">pages</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+    <span class="n">recursive</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">max_depth</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+    <span class="n">rps</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+    <span class="n">items_limit</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">assets</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">links</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">no_assets_urls</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">header</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="o">...</span><span class="p">],</span>
+    <span class="n">pydantic</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">output</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">fast</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Main entry point for the stac-check CLI.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        file: The STAC file or URL to validate</span>
+<span class="sd">        collections: Validate a collections endpoint</span>
+<span class="sd">        item_collection: Validate an item collection</span>
+<span class="sd">        catalogs: Validate a catalogs endpoint (STAC API catalogs extension)</span>
+<span class="sd">        pages: Number of pages to validate (for API endpoints)</span>
+<span class="sd">        recursive: Recursively validate linked STAC objects</span>
+<span class="sd">        max_depth: Maximum depth for recursive validation</span>
+<span class="sd">        rps: Maximum remote requests per second during recursion</span>
+<span class="sd">        items_limit: Items per page to request on remote items endpoints</span>
+<span class="sd">        assets: Validate assets</span>
+<span class="sd">        links: Validate links</span>
+<span class="sd">        no_assets_urls: Disable URL validation for assets</span>
+<span class="sd">        header: Additional HTTP headers</span>
+<span class="sd">        pydantic: Use stac-pydantic for validation</span>
+<span class="sd">        verbose: Show verbose output</span>
+<span class="sd">        output: Save output to file (only with --collections, --item-collection, --catalogs, or --recursive)</span>
+<span class="sd">        fast: Skip linting and geometry checks for maximum validation speed</span>
+<span class="sd">    """</span>
+    <span class="c1"># Check if output is used without a multi-asset mode</span>
+    <span class="k">if</span> <span class="n">output</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">([</span><span class="n">collections</span><span class="p">,</span> <span class="n">item_collection</span><span class="p">,</span> <span class="n">catalogs</span><span class="p">,</span> <span class="n">recursive</span><span class="p">]):</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span>
+            <span class="s2">"Error: --output can only be used with --collections, --item-collection, --catalogs, or --recursive"</span><span class="p">,</span>
+            <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># Check if pydantic validation is requested but not installed</span>
+    <span class="k">if</span> <span class="n">pydantic</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="s2">"stac_pydantic"</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+            <span class="n">click</span><span class="o">.</span><span class="n">secho</span><span class="p">(</span>
+                <span class="s2">"Warning: stac-pydantic is not installed. Pydantic validation will be disabled.</span><span class="se">\n</span><span class="s2">"</span>
+                <span class="s2">"To enable pydantic validation, install it with: pip install stac-check[pydantic]"</span><span class="p">,</span>
+                <span class="n">fg</span><span class="o">=</span><span class="s2">"yellow"</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">pydantic</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="c1"># Auto-detect API list responses if no explicit flag is set</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">collections</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">item_collection</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">catalogs</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">recursive</span><span class="p">:</span>
+        <span class="n">detected</span> <span class="o">=</span> <span class="n">detect_api_response_type</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">header</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">detected</span> <span class="o">==</span> <span class="s2">"item_collection"</span><span class="p">:</span>
+            <span class="n">item_collection</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="n">detected</span> <span class="o">==</span> <span class="s2">"collections"</span><span class="p">:</span>
+            <span class="n">collections</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="n">detected</span> <span class="o">==</span> <span class="s2">"catalogs"</span><span class="p">:</span>
+            <span class="n">catalogs</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">if</span> <span class="n">collections</span> <span class="ow">or</span> <span class="n">item_collection</span> <span class="ow">or</span> <span class="n">catalogs</span><span class="p">:</span>
+        <span class="c1"># Handle API-based validation (collections, item collections, catalogs)</span>
+        <span class="n">object_list_key</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">"collections"</span> <span class="k">if</span> <span class="n">collections</span> <span class="k">else</span> <span class="s2">"catalogs"</span> <span class="k">if</span> <span class="n">catalogs</span> <span class="k">else</span> <span class="s2">"features"</span>
+        <span class="p">)</span>
+        <span class="n">api_linter</span> <span class="o">=</span> <span class="n">ApiLinter</span><span class="p">(</span>
+            <span class="n">source</span><span class="o">=</span><span class="n">file</span><span class="p">,</span>
+            <span class="n">object_list_key</span><span class="o">=</span><span class="n">object_list_key</span><span class="p">,</span>
+            <span class="n">pages</span><span class="o">=</span><span class="n">pages</span> <span class="k">if</span> <span class="n">pages</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="n">headers</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">header</span><span class="p">),</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+            <span class="n">fast</span><span class="o">=</span><span class="n">fast</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="n">api_linter</span><span class="o">.</span><span class="n">lint_all</span><span class="p">()</span>
+            <span class="c1"># Create a dummy Linter instance for display purposes</span>
+            <span class="n">display_linter</span> <span class="o">=</span> <span class="n">Linter</span><span class="p">(</span>
+                <span class="n">file</span><span class="p">,</span>
+                <span class="n">assets</span><span class="o">=</span><span class="n">assets</span><span class="p">,</span>
+                <span class="n">links</span><span class="o">=</span><span class="n">links</span><span class="p">,</span>
+                <span class="n">headers</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">header</span><span class="p">),</span>
+                <span class="n">pydantic</span><span class="o">=</span><span class="n">pydantic</span><span class="p">,</span>
+                <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+                <span class="n">fast</span><span class="o">=</span><span class="n">fast</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">RequestException</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">click</span><span class="o">.</span><span class="n">secho</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">fg</span><span class="o">=</span><span class="s2">"red"</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">results</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">api_linter</span><span class="o">.</span><span class="n">mismatched_list_key</span><span class="p">:</span>
+                <span class="n">suggested</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">"features"</span><span class="p">:</span> <span class="s2">"--item-collection"</span><span class="p">,</span>
+                    <span class="s2">"collections"</span><span class="p">:</span> <span class="s2">"--collections"</span><span class="p">,</span>
+                    <span class="s2">"catalogs"</span><span class="p">:</span> <span class="s2">"--catalogs"</span><span class="p">,</span>
+                <span class="p">}[</span><span class="n">api_linter</span><span class="o">.</span><span class="n">mismatched_list_key</span><span class="p">]</span>
+                <span class="n">click</span><span class="o">.</span><span class="n">secho</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Error: no '</span><span class="si">{</span><span class="n">api_linter</span><span class="o">.</span><span class="n">object_list_key</span><span class="si">}</span><span class="s2">' objects found in "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">; the response contains "</span>
+                    <span class="sa">f</span><span class="s2">"'</span><span class="si">{</span><span class="n">api_linter</span><span class="o">.</span><span class="n">mismatched_list_key</span><span class="si">}</span><span class="s2">' — did you mean </span><span class="si">{</span><span class="n">suggested</span><span class="si">}</span><span class="s2">?"</span><span class="p">,</span>
+                    <span class="n">fg</span><span class="o">=</span><span class="s2">"red"</span><span class="p">,</span>
+                    <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">click</span><span class="o">.</span><span class="n">secho</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Warning: no '</span><span class="si">{</span><span class="n">api_linter</span><span class="o">.</span><span class="n">object_list_key</span><span class="si">}</span><span class="s2">' objects found in "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">; nothing was validated."</span><span class="p">,</span>
+                <span class="n">fg</span><span class="o">=</span><span class="s2">"yellow"</span><span class="p">,</span>
+                <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1"># Show intro message in the terminal</span>
+        <span class="n">intro_message</span><span class="p">(</span><span class="n">display_linter</span><span class="p">)</span>
+
+        <span class="c1"># Define output generation function (without intro message since we already showed it)</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">generate_output</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">collections</span> <span class="ow">or</span> <span class="n">catalogs</span><span class="p">:</span>
+                <span class="n">collections_message</span><span class="p">(</span>
+                    <span class="n">api_linter</span><span class="p">,</span>
+                    <span class="n">results</span><span class="o">=</span><span class="n">results</span><span class="p">,</span>
+                    <span class="n">cli_message_func</span><span class="o">=</span><span class="n">cli_message</span><span class="p">,</span>
+                    <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+                    <span class="n">title</span><span class="o">=</span><span class="p">(</span>
+                        <span class="s2">"Catalogs: Validate all catalogs in a STAC API"</span>
+                        <span class="k">if</span> <span class="n">catalogs</span>
+                        <span class="k">else</span> <span class="s2">"Collections: Validate all collections in a STAC API"</span>
+                    <span class="p">),</span>
+                <span class="p">)</span>
+            <span class="k">elif</span> <span class="n">item_collection</span><span class="p">:</span>
+                <span class="n">item_collection_message</span><span class="p">(</span>
+                    <span class="n">api_linter</span><span class="p">,</span>
+                    <span class="n">results</span><span class="o">=</span><span class="n">results</span><span class="p">,</span>
+                    <span class="n">cli_message_func</span><span class="o">=</span><span class="n">cli_message</span><span class="p">,</span>
+                    <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+                <span class="p">)</span>
+
+        <span class="c1"># Handle output (without duplicating the intro message)</span>
+        <span class="n">handle_output</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">generate_output</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span> <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"valid_stac"</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">True</span> <span class="k">for</span> <span class="n">msg</span> <span class="ow">in</span> <span class="n">results</span><span class="p">)</span> <span class="k">else</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Handle file-based validation (single file or recursive)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">linter</span> <span class="o">=</span> <span class="n">Linter</span><span class="p">(</span>
+                <span class="n">file</span><span class="p">,</span>
+                <span class="n">assets</span><span class="o">=</span><span class="n">assets</span><span class="p">,</span>
+                <span class="n">links</span><span class="o">=</span><span class="n">links</span><span class="p">,</span>
+                <span class="n">recursive</span><span class="o">=</span><span class="n">recursive</span><span class="p">,</span>
+                <span class="n">max_depth</span><span class="o">=</span><span class="n">max_depth</span><span class="p">,</span>
+                <span class="n">pages</span><span class="o">=</span><span class="n">pages</span><span class="p">,</span>
+                <span class="n">rps</span><span class="o">=</span><span class="n">rps</span><span class="p">,</span>
+                <span class="n">items_limit</span><span class="o">=</span><span class="n">items_limit</span><span class="p">,</span>
+                <span class="n">assets_open_urls</span><span class="o">=</span><span class="ow">not</span> <span class="n">no_assets_urls</span><span class="p">,</span>
+                <span class="n">headers</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">header</span><span class="p">),</span>
+                <span class="n">pydantic</span><span class="o">=</span><span class="n">pydantic</span><span class="p">,</span>
+                <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+                <span class="n">fast</span><span class="o">=</span><span class="n">fast</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+            <span class="n">click</span><span class="o">.</span><span class="n">secho</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Error: file not found: </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">fg</span><span class="o">=</span><span class="s2">"red"</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">click</span><span class="o">.</span><span class="n">secho</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Error: invalid JSON in </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">fg</span><span class="o">=</span><span class="s2">"red"</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">OSError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">RequestException</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">click</span><span class="o">.</span><span class="n">secho</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">fg</span><span class="o">=</span><span class="s2">"red"</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">intro_message</span><span class="p">(</span><span class="n">linter</span><span class="p">)</span>
+
+        <span class="c1"># Define output generation function (without intro message since we already showed it)</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">generate_output</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">recursive</span><span class="p">:</span>
+                <span class="n">recursive_message</span><span class="p">(</span><span class="n">linter</span><span class="p">,</span> <span class="n">cli_message_func</span><span class="o">=</span><span class="n">cli_message</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">fast</span><span class="p">:</span>
+                <span class="c1"># For fast mode, use item_collection_message to show compact summary</span>
+                <span class="c1"># even for single items</span>
+                <span class="kn">from</span><span class="w"> </span><span class="nn">stac_check.display_messages</span><span class="w"> </span><span class="kn">import</span> <span class="n">_display_fast_validation_summary</span>
+
+                <span class="n">result</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">"path"</span><span class="p">:</span> <span class="n">file</span><span class="p">,</span>
+                    <span class="s2">"valid_stac"</span><span class="p">:</span> <span class="n">linter</span><span class="o">.</span><span class="n">valid_stac</span><span class="p">,</span>
+                    <span class="s2">"asset_type"</span><span class="p">:</span> <span class="n">linter</span><span class="o">.</span><span class="n">asset_type</span><span class="p">,</span>
+                    <span class="s2">"version"</span><span class="p">:</span> <span class="n">linter</span><span class="o">.</span><span class="n">version</span><span class="p">,</span>
+                    <span class="s2">"validation_method"</span><span class="p">:</span> <span class="s2">"stac-valid FastValidator"</span><span class="p">,</span>
+                    <span class="s2">"error_type"</span><span class="p">:</span> <span class="n">linter</span><span class="o">.</span><span class="n">error_type</span><span class="p">,</span>
+                    <span class="s2">"error_message"</span><span class="p">:</span> <span class="n">linter</span><span class="o">.</span><span class="n">error_msg</span><span class="p">,</span>
+                    <span class="s2">"best_practices"</span><span class="p">:</span> <span class="n">linter</span><span class="o">.</span><span class="n">best_practices_msg</span><span class="p">,</span>
+                    <span class="s2">"geometry_errors"</span><span class="p">:</span> <span class="n">linter</span><span class="o">.</span><span class="n">geometry_errors_msg</span><span class="p">,</span>
+                    <span class="s2">"schema"</span><span class="p">:</span> <span class="n">linter</span><span class="o">.</span><span class="n">schema</span><span class="p">,</span>
+                    <span class="s2">"original_object"</span><span class="p">:</span> <span class="n">linter</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+                <span class="p">}</span>
+                <span class="n">results</span> <span class="o">=</span> <span class="p">[</span><span class="n">result</span><span class="p">]</span>
+                <span class="n">_display_fast_validation_summary</span><span class="p">(</span>
+                    <span class="n">results</span><span class="p">,</span>
+                    <span class="n">total_time</span><span class="o">=</span><span class="p">(</span>
+                        <span class="n">linter</span><span class="o">.</span><span class="n">total_time</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">linter</span><span class="p">,</span> <span class="s2">"total_time"</span><span class="p">)</span> <span class="k">else</span> <span class="mi">0</span>
+                    <span class="p">),</span>
+                    <span class="n">schemas</span><span class="o">=</span><span class="p">(</span>
+                        <span class="n">linter</span><span class="o">.</span><span class="n">schemas_checked</span>
+                        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">linter</span><span class="p">,</span> <span class="s2">"schemas_checked"</span><span class="p">)</span>
+                        <span class="k">else</span> <span class="kc">None</span>
+                    <span class="p">),</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">cli_message</span><span class="p">(</span><span class="n">linter</span><span class="p">)</span>
+
+        <span class="c1"># Handle output (without duplicating the intro message)</span>
+        <span class="n">handle_output</span><span class="p">(</span><span class="n">output</span> <span class="k">if</span> <span class="n">recursive</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span> <span class="n">generate_output</span><span class="p">)</span>
+
+        <span class="n">valid</span> <span class="o">=</span> <span class="n">linter</span><span class="o">.</span><span class="n">valid_stac</span>
+        <span class="k">if</span> <span class="n">recursive</span><span class="p">:</span>
+            <span class="n">valid</span> <span class="o">=</span> <span class="n">valid</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span>
+                <span class="n">msg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"valid_stac"</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">True</span> <span class="k">for</span> <span class="n">msg</span> <span class="ow">in</span> <span class="n">linter</span><span class="o">.</span><span class="n">validate_all</span>
+            <span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span> <span class="k">if</span> <span class="n">valid</span> <span class="k">else</span> <span class="mi">1</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Jonathan Healy.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
