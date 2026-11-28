@@ -765,3 +765,145 @@ def test_recursive_remote_requests_items_limit(monkeypatch):
     assert items_fetches
     assert all("limit=100" in u for u in items_fetches)
     assert any("limit=100" not in u for u in seen_urls)  # non-items untouched
+
+
+def test_recursive_remote_items_limit_auto_fallback(monkeypatch):
+    """items_limit=0 probes from 10000 down the ladder on 4xx rejections
+    and caches the working page size."""
+    import copy
+    from unittest.mock import MagicMock
+    from urllib.parse import parse_qsl, urlparse
+
+    import requests
+
+    payloads = _paginated_api_payloads()
+    seen_limits = []
+
+    def fake_get(url, *a, **k):
+        query = dict(parse_qsl(urlparse(url).query))
+        if "limit" in query:
+            limit = int(query["limit"])
+            seen_limits.append(limit)
+            if limit > 50:
+                resp = MagicMock()
+                resp.status_code = 422
+                resp.raise_for_status.side_effect = requests.exceptions.HTTPError(
+                    "422 Client Error", response=resp
+                )
+                return resp
+        url = _strip_limit_param(url)
+        resp = MagicMock()
+        resp.json.return_value = copy.deepcopy(payloads[url])
+        resp.raise_for_status.return_value = None
+        resp.status_code = 200
+        return resp
+
+    monkeypatch.setattr("stac_validator.fast_validator.HTTP_SESSION.get", fake_get)
+    monkeypatch.setattr("stac_check.lint._remote_get", fake_get)
+
+    linter = Linter("https://api.test/stac", recursive=True, items_limit=0)
+    assert len(linter.validate_all) == 7
+    # probes started at the top of the ladder and landed on a working size
+    assert seen_limits[0] == 10000
+    assert 10 in seen_limits
+
+
+def test_recursive_remote_items_limit_off(monkeypatch):
+    """items_limit=None leaves items URLs untouched."""
+    import copy
+    from unittest.mock import MagicMock
+
+    payloads = _paginated_api_payloads()
+    seen_urls = []
+
+    def fake_get(url, *a, **k):
+        seen_urls.append(url)
+        resp = MagicMock()
+        resp.json.return_value = copy.deepcopy(payloads[url])
+        resp.raise_for_status.return_value = None
+        resp.status_code = 200
+        return resp
+
+    monkeypatch.setattr("stac_validator.fast_validator.HTTP_SESSION.get", fake_get)
+    monkeypatch.setattr("stac_check.lint._remote_get", fake_get)
+
+    linter = Linter("https://api.test/stac", recursive=True, items_limit=None)
+    assert len(linter.validate_all) == 7
+    assert not any("limit=" in u for u in seen_urls)
+
+
+def test_recursive_headers_on_all_wire_requests(monkeypatch):
+    """--header values reach every remote fetch during a remote walk:
+    the initial document fetch, list pages, and prefetch-worker fetches
+    all carry the header on the wire."""
+    import requests
+
+    root = "https://api.example.com"
+    collections_url = f"{root}/collections"
+    items_url = f"{root}/collections/c1/items"
+    items_url2 = f"{root}/collections/c2/items"
+    payloads = {
+        root: {
+            "conformsTo": ["https://api.stacspec.org/v1.0.0/core"],
+            "id": "api-root",
+            "type": "Catalog",
+            "links": [{"rel": "data", "href": collections_url}],
+        },
+        collections_url: {"collections": [{"id": "c1"}, {"id": "c2"}]},
+        f"{collections_url}/c1": {
+            "stac_version": "1.0.0",
+            "type": "Collection",
+            "id": "c1",
+            "license": "MIT",
+            "extent": {
+                "spatial": {"bbox": [[-180, -90, 180, 90]]},
+                "temporal": {"interval": [["2023-01-01T00:00:00Z", None]]},
+            },
+            "links": [{"rel": "items", "href": items_url}],
+        },
+        f"{collections_url}/c2": {
+            "stac_version": "1.0.0",
+            "type": "Collection",
+            "id": "c2",
+            "license": "MIT",
+            "extent": {
+                "spatial": {"bbox": [[-180, -90, 180, 90]]},
+                "temporal": {"interval": [["2023-01-01T00:00:00Z", None]]},
+            },
+            "links": [{"rel": "items", "href": items_url2}],
+        },
+        items_url: {"type": "FeatureCollection", "features": []},
+        items_url2: {"type": "FeatureCollection", "features": []},
+    }
+
+    sent = []  # (session id, wire Authorization) per request
+
+    def fake_send(self, request, **kwargs):
+        sent.append((id(self), request.headers.get("Authorization")))
+        url = request.url
+        resp = requests.Response()
+        resp.status_code = 200
+        resp._content = json.dumps(
+            payloads[url] if url in payloads else payloads[url.rstrip("/")]
+        ).encode()
+        resp.url = url
+        resp.headers["Content-Type"] = "application/json"
+        return resp
+
+    monkeypatch.setattr(requests.Session, "send", fake_send)
+
+    from stac_validator.fast_validator import HTTP_SESSION
+
+    linter = Linter(
+        root, recursive=True, headers={"Authorization": "Bearer cdse-token"}
+    )
+    assert linter.validate_all
+
+    assert sent, "expected remote fetches"
+    # every wire request carries the token, regardless of which session
+    # (shared session, prefetch-worker sessions) issued it
+    assert all(auth == "Bearer cdse-token" for _, auth in sent)
+    # fetches went through more than one session (shared + workers)
+    assert len({sid for sid, _ in sent}) > 1
+    # and the shared session's headers are restored afterwards
+    assert "Authorization" not in HTTP_SESSION.headers
