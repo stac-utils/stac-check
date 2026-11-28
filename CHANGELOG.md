@@ -6,6 +6,18 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 
 ## Unreleased
 
+## [v2.1.0] - 2026-11-28
+
+### Changed
+
+- Raised the stac-valid floor to >=4.7.1, which stops collection `items` pages being prefetched one level past `--max-depth` — roughly halves the request count of depth-capped walks
+
+### Added
+
+- New `--rps` flag: maximum remote requests per second during `--recursive`, spacing document fetches (including prefetch worker threads) to stay under API rate limits
+- New `--items-limit` flag: page size requested on remote `items` endpoint fetches during `--recursive` (default 100, the common STAC API cap — up to 10x more items per request than the usual API default of 10). `--items-limit 0` auto-negotiates: starts at 10000 and steps down on 4xx rejection, caching the working size; negative values leave URLs untouched
+- HTTP 429 (rate limited) responses are now retried with backoff, honoring `Retry-After`: all remote fetches (the initial document, API list pages, recursive walks, `--links`/`--assets` href checks) go through stac-valid's shared session whose retry policy previously only covered 5xx — throttled APIs like the Copernicus Data Space previously failed objects outright as "Failed to load: 429". Fetches that still exhaust the adapter's retries during `--recursive` get a second-level 60s document retry
+
 ## [v2.0.0] - 2026-11-27
 
 ### Changed
@@ -419,7 +431,8 @@ The format is (loosely) based on [Keep a Changelog](http://keepachangelog.com/) 
 - Validation from stac-validator 2.3.0
 - Links and assets validation checks
 
-[Unreleased]: https://github.com/stac-utils/stac-check/compare/v2.0.0...main
+[Unreleased]: https://github.com/stac-utils/stac-check/compare/v2.1.0...main
+[v2.1.0]: https://github.com/stac-utils/stac-check/compare/v2.0.0...v2.1.0
 [v2.0.0]: https://github.com/stac-utils/stac-check/compare/v1.15.1...v2.0.0
 [v1.15.1]: https://github.com/stac-utils/stac-check/compare/v1.15.0...v1.15.1
 [v1.15.0]: https://github.com/stac-utils/stac-check/compare/v1.14.0...v1.15.0

@@ -142,9 +142,9 @@ def test_api_linter_initialization(item_collection_url, collections_url):
 def test_error_handling_with_individual_items():
     """Test that ApiLinter handles errors with individual items gracefully."""
     # Create a mock that returns a valid response but with an item that will cause an error
-    with mock.patch("stac_check.api_lint.fetch_and_parse_file") as mock_fetch:
+    with mock.patch("stac_check.api_lint._remote_get") as mock_fetch:
         # Return a response with a malformed item that will cause an exception during validation
-        mock_fetch.return_value = {
+        mock_fetch.return_value.json.return_value = {
             "features": [
                 {
                     "id": "valid-item",
@@ -190,8 +190,10 @@ def test_fast_mode_validates_remote_objects():
     valid_item = _load_sample("core-item.json")
     invalid_item = _load_sample("bad-item.json")
 
-    with mock.patch("stac_check.api_lint.fetch_and_parse_file") as mock_fetch:
-        mock_fetch.return_value = {"features": [valid_item, invalid_item]}
+    with mock.patch("stac_check.api_lint._remote_get") as mock_fetch:
+        mock_fetch.return_value.json.return_value = {
+            "features": [valid_item, invalid_item]
+        }
 
         linter = ApiLinter(
             source="https://example.com/api/items",
@@ -213,8 +215,8 @@ def test_fast_mode_json_url_falls_back_and_validates():
     """--fast on a remote .json URL falls back from FastValidator and still validates."""
     invalid_item = _load_sample("bad-item.json")
 
-    with mock.patch("stac_check.api_lint.fetch_and_parse_file") as mock_fetch:
-        mock_fetch.return_value = {"features": [invalid_item]}
+    with mock.patch("stac_check.api_lint._remote_get") as mock_fetch:
+        mock_fetch.return_value.json.return_value = {"features": [invalid_item]}
 
         # A .json URL triggers the FastValidator path, which fails on open()
         # and must fall back to per-object validation

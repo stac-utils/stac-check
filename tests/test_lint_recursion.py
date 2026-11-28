@@ -56,7 +56,7 @@ def test_recursive_remote_uses_api_mode(monkeypatch):
 
     resp = MagicMock()
     resp.json.return_value = {"type": "Catalog", "id": "root", "links": []}
-    monkeypatch.setattr("stac_check.lint.requests.get", lambda *a, **k: resp)
+    monkeypatch.setattr("stac_check.lint._remote_get", lambda *a, **k: resp)
 
     Linter("https://example.com/stac", recursive=True)
     Linter("sample_files/1.0.0/catalog.json", recursive=True)
@@ -160,6 +160,16 @@ def _paginated_api_payloads():
     }
 
 
+def _strip_limit_param(url):
+    """Drop the ``limit`` query param stac-check appends to items
+    endpoints so fixtures can stay keyed by the plain URL."""
+    from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
+
+    parts = urlparse(url)
+    query = {k: v for k, v in parse_qsl(parts.query) if k != "limit"}
+    return urlunparse(parts._replace(query=urlencode(query)))
+
+
 def _mock_remote(monkeypatch, payloads):
     """Serve ``payloads`` for both the Linter's initial fetch and
     FastValidator's HTTP_SESSION-backed _load_json_resource."""
@@ -168,6 +178,7 @@ def _mock_remote(monkeypatch, payloads):
     def fake_get(url, *a, **k):
         import copy
 
+        url = _strip_limit_param(url)
         resp = MagicMock()
         # deepcopy: the validator merges later pages into the returned
         # page-one dict in place, which must not corrupt the fixture
@@ -177,7 +188,7 @@ def _mock_remote(monkeypatch, payloads):
         return resp
 
     monkeypatch.setattr("stac_validator.fast_validator.HTTP_SESSION.get", fake_get)
-    monkeypatch.setattr("stac_check.lint.requests.get", fake_get)
+    monkeypatch.setattr("stac_check.lint._remote_get", fake_get)
 
 
 def test_recursive_remote_follows_next_pages(monkeypatch):
@@ -599,3 +610,300 @@ def test_linter_recursive_100():
     assert all(
         "digital-atlas.s3.amazonaws.com" in msg["path"] for msg in stac.validate_all
     )
+
+
+def test_recursive_remote_rps_throttles_fetches(monkeypatch):
+    """--rps spaces remote document fetches across the whole walk."""
+    import time
+
+    payloads = _paginated_api_payloads()
+    _mock_remote(monkeypatch, payloads)
+
+    sleeps = []
+    monkeypatch.setattr(time, "sleep", lambda d: sleeps.append(d))
+
+    linter = Linter("https://api.test/stac", recursive=True, rps=100)
+    assert len(linter.validate_all) == 7
+    # ~13 remote fetches at one per 10ms → the slots push into the future
+    # and most calls end up sleeping
+    assert len(sleeps) >= 2
+    # prefetch workers can claim several slots ahead, so a single delay can
+    # exceed one interval but stays well under the whole walk's budget
+    assert all(0 < d <= 0.5 for d in sleeps)
+
+
+def test_recursive_remote_no_rps_does_not_throttle(monkeypatch):
+    """Without --rps remote fetches are never delayed."""
+    import time
+
+    payloads = _paginated_api_payloads()
+    _mock_remote(monkeypatch, payloads)
+
+    sleeps = []
+    monkeypatch.setattr(time, "sleep", lambda d: sleeps.append(d))
+
+    linter = Linter("https://api.test/stac", recursive=True)
+    assert len(linter.validate_all) == 7
+    assert sleeps == []
+
+
+def test_remote_get_installs_429_retries():
+    """The first remote fetch installs a 429-retrying Retry policy on
+    the shared HTTP adapter (covers documents, schemas, prefetch)."""
+    from stac_validator.fast_validator import HTTP_SESSION
+
+    from stac_check.lint import _install_http_retries
+
+    adapter = HTTP_SESSION.get_adapter("https://")
+    _install_http_retries()
+    retries = adapter.max_retries
+    assert 429 in retries.status_forcelist
+    assert retries.respect_retry_after_header
+
+
+def test_recursive_remote_retries_exhausted_429(monkeypatch):
+    """429s that exhaust the adapter's own retries get a second-level
+    document fetch retry instead of failing the object."""
+    import copy
+    import time
+    from unittest.mock import MagicMock
+
+    import requests
+
+    payloads = _paginated_api_payloads()
+    flaky = "https://api.test/stac/collections/c1"
+    calls = []
+
+    def fake_get(url, *a, **k):
+        url = _strip_limit_param(url)
+        if url == flaky and calls.count(url) < 2:
+            calls.append(url)
+            raise requests.exceptions.RetryError(
+                "Max retries exceeded with url: "
+                + url
+                + " (Caused by ResponseError('too many 429 error responses'))"
+            )
+        resp = MagicMock()
+        resp.json.return_value = copy.deepcopy(payloads[url])
+        resp.raise_for_status.return_value = None
+        resp.status_code = 200
+        return resp
+
+    monkeypatch.setattr("stac_validator.fast_validator.HTTP_SESSION.get", fake_get)
+    monkeypatch.setattr(time, "sleep", lambda d: None)
+
+    linter = Linter("https://api.test/stac", recursive=True)
+    assert len(calls) == 2  # two 429s before the fetch succeeded
+    assert len(linter.validate_all) == 7
+    assert all(
+        "Failed to load" not in (m.get("error_message") or "")
+        for m in linter.validate_all
+    )
+
+
+def test_recursive_remote_gives_up_on_persistent_429(monkeypatch):
+    """A URL that 429s past every retry layer fails as a load error."""
+    import copy
+    import time
+    from unittest.mock import MagicMock
+
+    import requests
+
+    payloads = _paginated_api_payloads()
+    dead = "https://api.test/stac/collections/c1"
+
+    def fake_get(url, *a, **k):
+        url = _strip_limit_param(url)
+        if url == dead:
+            raise requests.exceptions.RetryError(
+                "Max retries exceeded with url: "
+                + url
+                + " (Caused by ResponseError('too many 429 error responses'))"
+            )
+        resp = MagicMock()
+        resp.json.return_value = copy.deepcopy(payloads[url])
+        resp.raise_for_status.return_value = None
+        resp.status_code = 200
+        return resp
+
+    monkeypatch.setattr("stac_validator.fast_validator.HTTP_SESSION.get", fake_get)
+    monkeypatch.setattr(time, "sleep", lambda d: None)
+
+    linter = Linter("https://api.test/stac", recursive=True)
+    assert any(
+        "Failed to load" in (m.get("error_message") or "") for m in linter.validate_all
+    )
+
+
+def test_recursive_remote_requests_items_limit(monkeypatch):
+    """Items endpoint fetches request the largest page size (limit=100)
+    so a walk needs fewer requests; explicit limits are left alone."""
+    import copy
+    from unittest.mock import MagicMock
+    from urllib.parse import urlparse
+
+    payloads = _paginated_api_payloads()
+    seen_urls = []
+
+    def fake_get(url, *a, **k):
+        seen_urls.append(url)
+        url = _strip_limit_param(url)
+        resp = MagicMock()
+        resp.json.return_value = copy.deepcopy(payloads[url])
+        resp.raise_for_status.return_value = None
+        resp.status_code = 200
+        return resp
+
+    monkeypatch.setattr("stac_validator.fast_validator.HTTP_SESSION.get", fake_get)
+    monkeypatch.setattr("stac_check.lint._remote_get", fake_get)
+
+    linter = Linter("https://api.test/stac", recursive=True)
+    assert len(linter.validate_all) == 7
+    items_fetches = [
+        u for u in seen_urls if urlparse(u).path.rstrip("/").endswith("/items")
+    ]
+    assert items_fetches
+    assert all("limit=100" in u for u in items_fetches)
+    assert any("limit=100" not in u for u in seen_urls)  # non-items untouched
+
+
+def test_recursive_remote_items_limit_auto_fallback(monkeypatch):
+    """items_limit=0 probes from 10000 down the ladder on 4xx rejections
+    and caches the working page size."""
+    import copy
+    from unittest.mock import MagicMock
+    from urllib.parse import parse_qsl, urlparse
+
+    import requests
+
+    payloads = _paginated_api_payloads()
+    seen_limits = []
+
+    def fake_get(url, *a, **k):
+        query = dict(parse_qsl(urlparse(url).query))
+        if "limit" in query:
+            limit = int(query["limit"])
+            seen_limits.append(limit)
+            if limit > 50:
+                resp = MagicMock()
+                resp.status_code = 422
+                resp.raise_for_status.side_effect = requests.exceptions.HTTPError(
+                    "422 Client Error", response=resp
+                )
+                return resp
+        url = _strip_limit_param(url)
+        resp = MagicMock()
+        resp.json.return_value = copy.deepcopy(payloads[url])
+        resp.raise_for_status.return_value = None
+        resp.status_code = 200
+        return resp
+
+    monkeypatch.setattr("stac_validator.fast_validator.HTTP_SESSION.get", fake_get)
+    monkeypatch.setattr("stac_check.lint._remote_get", fake_get)
+
+    linter = Linter("https://api.test/stac", recursive=True, items_limit=0)
+    assert len(linter.validate_all) == 7
+    # probes started at the top of the ladder and landed on a working size
+    assert seen_limits[0] == 10000
+    assert 10 in seen_limits
+
+
+def test_recursive_remote_items_limit_off(monkeypatch):
+    """items_limit=None leaves items URLs untouched."""
+    import copy
+    from unittest.mock import MagicMock
+
+    payloads = _paginated_api_payloads()
+    seen_urls = []
+
+    def fake_get(url, *a, **k):
+        seen_urls.append(url)
+        resp = MagicMock()
+        resp.json.return_value = copy.deepcopy(payloads[url])
+        resp.raise_for_status.return_value = None
+        resp.status_code = 200
+        return resp
+
+    monkeypatch.setattr("stac_validator.fast_validator.HTTP_SESSION.get", fake_get)
+    monkeypatch.setattr("stac_check.lint._remote_get", fake_get)
+
+    linter = Linter("https://api.test/stac", recursive=True, items_limit=None)
+    assert len(linter.validate_all) == 7
+    assert not any("limit=" in u for u in seen_urls)
+
+
+def test_recursive_headers_on_all_wire_requests(monkeypatch):
+    """--header values reach every remote fetch during a remote walk:
+    the initial document fetch, list pages, and prefetch-worker fetches
+    all carry the header on the wire."""
+    import requests
+
+    root = "https://api.example.com"
+    collections_url = f"{root}/collections"
+    items_url = f"{root}/collections/c1/items"
+    items_url2 = f"{root}/collections/c2/items"
+    payloads = {
+        root: {
+            "conformsTo": ["https://api.stacspec.org/v1.0.0/core"],
+            "id": "api-root",
+            "type": "Catalog",
+            "links": [{"rel": "data", "href": collections_url}],
+        },
+        collections_url: {"collections": [{"id": "c1"}, {"id": "c2"}]},
+        f"{collections_url}/c1": {
+            "stac_version": "1.0.0",
+            "type": "Collection",
+            "id": "c1",
+            "license": "MIT",
+            "extent": {
+                "spatial": {"bbox": [[-180, -90, 180, 90]]},
+                "temporal": {"interval": [["2023-01-01T00:00:00Z", None]]},
+            },
+            "links": [{"rel": "items", "href": items_url}],
+        },
+        f"{collections_url}/c2": {
+            "stac_version": "1.0.0",
+            "type": "Collection",
+            "id": "c2",
+            "license": "MIT",
+            "extent": {
+                "spatial": {"bbox": [[-180, -90, 180, 90]]},
+                "temporal": {"interval": [["2023-01-01T00:00:00Z", None]]},
+            },
+            "links": [{"rel": "items", "href": items_url2}],
+        },
+        items_url: {"type": "FeatureCollection", "features": []},
+        items_url2: {"type": "FeatureCollection", "features": []},
+    }
+
+    sent = []  # (session id, wire Authorization) per request
+
+    def fake_send(self, request, **kwargs):
+        sent.append((id(self), request.headers.get("Authorization")))
+        url = request.url
+        resp = requests.Response()
+        resp.status_code = 200
+        resp._content = json.dumps(
+            payloads[url] if url in payloads else payloads[url.rstrip("/")]
+        ).encode()
+        resp.url = url
+        resp.headers["Content-Type"] = "application/json"
+        return resp
+
+    monkeypatch.setattr(requests.Session, "send", fake_send)
+
+    from stac_validator.fast_validator import HTTP_SESSION
+
+    linter = Linter(
+        root, recursive=True, headers={"Authorization": "Bearer cdse-token"}
+    )
+    assert linter.validate_all
+
+    assert sent, "expected remote fetches"
+    # every wire request carries the token, regardless of which session
+    # (shared session, prefetch-worker sessions) issued it
+    assert all(auth == "Bearer cdse-token" for _, auth in sent)
+    # fetches went through more than one session (shared + workers)
+    assert len({sid for sid, _ in sent}) > 1
+    # and the shared session's headers are restored afterwards
+    assert "Authorization" not in HTTP_SESSION.headers

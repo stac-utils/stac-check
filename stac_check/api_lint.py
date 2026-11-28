@@ -4,9 +4,9 @@ from dataclasses import dataclass
 from typing import Any, Dict, Generator, List, Optional, Tuple
 from urllib.parse import urlparse, urlunparse
 
-from stac_validator.utilities import fetch_and_parse_file
+from stac_validator.utilities import fetch_and_parse_file, is_url
 
-from stac_check.lint import Linter
+from stac_check.lint import Linter, _remote_get
 
 
 def extract_schemas(obj: Dict) -> List[str]:
@@ -230,12 +230,19 @@ class ApiLinter:
     def _fetch_and_parse(self, url: str) -> Dict:
         """Fetch and parse a STAC file from a URL.
 
+        Remote URLs go through the shared retrying session (429-aware);
+        local files use upstream's parser.
+
         Args:
             url (str): The URL to fetch the STAC file from.
 
         Returns:
             Dict: The parsed STAC file as a dictionary.
         """
+        if is_url(url):
+            resp = _remote_get(url, headers=self.headers, timeout=10)
+            resp.raise_for_status()
+            return resp.json()
         return fetch_and_parse_file(url, self.headers)
 
     def iterate_objects(self) -> Generator[Tuple[Dict, str], None, None]:

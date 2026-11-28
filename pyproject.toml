@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "stac_check"
-version = "2.0.0"
+version = "2.1.0"
 description = "Linting and validation tool for STAC assets"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -16,7 +16,7 @@ dependencies = [
     "requests>=2.32.4",
     "jsonschema>=4.25.0",
     "click>=8.1.8",
-    "stac-valid>=4.7.0,<5",
+    "stac-valid>=4.7.1,<5",
     "PyYAML",
     "python-dotenv",
 ]
