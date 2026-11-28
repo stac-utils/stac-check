@@ -1394,7 +1394,7 @@ wheels = [
 
 [[package]]
 name = "stac-check"
-version = "2.0.0"
+version = "2.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "click" },
@@ -1442,7 +1442,7 @@ requires-dist = [
     { name = "sphinx-rtd-theme", marker = "python_full_version >= '3.11' and extra == 'docs'", specifier = ">=3.0.2" },
     { name = "stac-pydantic", marker = "extra == 'dev'", specifier = ">=3.7,<4" },
     { name = "stac-pydantic", marker = "extra == 'pydantic'", specifier = ">=3.7,<4" },
-    { name = "stac-valid", specifier = ">=4.7.0,<5" },
+    { name = "stac-valid", specifier = ">=4.7.1,<5" },
     { name = "types-setuptools", marker = "extra == 'dev'" },
 ]
 provides-extras = ["dev", "docs", "pydantic"]
@@ -1464,7 +1464,7 @@ wheels = [
 
 [[package]]
 name = "stac-valid"
-version = "4.7.0"
+version = "4.7.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
@@ -1475,9 +1475,9 @@ dependencies = [
     { name = "requests" },
     { name = "tqdm" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/4c/20/b01cf0b5e2ac2c4795f29bb1530f12c9307337643994c07f7bcdc83f3c3d/stac_valid-4.7.0.tar.gz", hash = "sha256:57c1a3c1c163479018bd604c8a96481522d4415183ee84f788e9bca4af11fd54", size = 111313, upload-time = "2026-11-27T05:55:28.63Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/28/53/b11a46316b9a4c5223fdfc17db300454d3083aac3d007f739c5b05b7c55e/stac_valid-4.7.1.tar.gz", hash = "sha256:ad77bb3e13875c35979fa319ebb1089a0d28750c7daf8b5d202d583f2ba594e6", size = 113978, upload-time = "2026-11-28T12:02:38.622Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/9d/e4/6a06190c4188e0fc0b7b42297f4a995da118fdecd2afba126305b02f4537/stac_valid-4.7.0-py3-none-any.whl", hash = "sha256:b4c6bfcfbfe7b179cec5740c60263b20cf0b0220fc1ba7f4c1daa874a3a48f50", size = 62669, upload-time = "2026-11-27T05:55:27.428Z" },
+    { url = "https://files.pythonhosted.org/packages/b3/87/48e802b4873502b5ce4264f86c61572875a6a28fba4f5a4aedd410e47ea1/stac_valid-4.7.1-py3-none-any.whl", hash = "sha256:2d470e26e843885c5572c2f8fd9b489cd67faefbae07ea1864a1d99b17d2edb3", size = 63445, upload-time = "2026-11-28T12:02:37.366Z" },
 ]
 
 [[package]]
